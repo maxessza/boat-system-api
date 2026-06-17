@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Boat Monitoring Dashboard</title>
+
+    <link rel="stylesheet"
+        href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+
+        body{
+            font-family: Arial, sans-serif;
+            margin:20px;
+            background:#f5f7fa;
+        }
+
+        h1{
+            color:#0f4c81;
+        }
+
+        #info{
+            padding:15px;
+            background:white;
+            border-radius:10px;
+            width:350px;
+            margin-bottom:15px;
+            box-shadow:0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #map{
+            height:600px;
+            border-radius:10px;
+        }
+
+        p{
+            margin:8px 0;
+        }
+
+        .online{
+            color:green;
+            font-weight:bold;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h1>Boat Monitoring Dashboard</h1>
+
+<div id="info">
+
+    <h3>Boat Status</h3>
+
+    <p><b>Status:</b>
+        <span id="status" class="online">
+            Online
+        </span>
+    </p>
+
+    <p><b>Boat ID:</b>
+        <span id="boat_id">-</span>
+    </p>
+
+    <p><b>Temperature:</b>
+        <span id="temp">-</span> °C
+    </p>
+
+    <p><b>pH:</b>
+        <span id="ph">-</span>
+    </p>
+
+    <p><b>Turbidity:</b>
+        <span id="turbidity">-</span> NTU
+    </p>
+
+    <p><b>Last Update:</b>
+        <span id="last_update">-</span>
+    </p>
+
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+const map =
+L.map('map').setView([13.7563,100.5018],13);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+    attribution:'© OpenStreetMap'
+}
+).addTo(map);
+
+let marker = null;
+let pathLine = null;
+
+// โหลดตำแหน่งล่าสุด
+async function loadBoat(){
+
+    try{
+
+        const response =
+        await fetch(
+        "http://127.0.0.1:8000/latest"
+        );
+
+        const data =
+        await response.json();
+
+        document.getElementById("boat_id")
+        .innerText =
+        data.boat_id;
+
+        document.getElementById("temp")
+        .innerText =
+        data.temp_c;
+
+        document.getElementById("ph")
+        .innerText =
+        data.ph_level;
+
+        document.getElementById("turbidity")
+        .innerText =
+        data.turbidity_ntu;
+
+        document.getElementById("last_update")
+        .innerText =
+        new Date().toLocaleTimeString();
+
+        const lat =
+        parseFloat(data.latitude);
+
+        const lng =
+        parseFloat(data.longitude);
+
+        if(!marker){
+
+            marker =
+            L.marker([lat,lng])
+            .addTo(map);
+
+            map.setView([lat,lng],15);
+
+        }else{
+
+            marker.setLatLng([lat,lng]);
+
+        }
+
+        marker.bindPopup(
+        `
+        <b>${data.boat_id}</b><br>
+        Temp: ${data.temp_c} °C<br>
+        pH: ${data.ph_level}<br>
+        Turbidity: ${data.turbidity_ntu} NTU
+        `
+        );
+
+    }
+    catch(error){
+
+        console.log(error);
+
+        document.getElementById("status")
+        .innerText =
+        "Offline";
+
+    }
+
+}
+
+// โหลดเส้นทางเรือ
+async function loadPath(){
+
+    try{
+
+        const response =
+        await fetch(
+        "http://127.0.0.1:8000/path"
+        );
+
+        const data =
+        await response.json();
+
+        const coords = [];
+
+        data.forEach(point => {
+
+            coords.push([
+                point.latitude,
+                point.longitude
+            ]);
+
+        });
+
+        if(pathLine){
+
+            map.removeLayer(pathLine);
+
+        }
+
+        pathLine =
+        L.polyline(
+            coords,
+            {
+                color:'blue',
+                weight:4
+            }
+        ).addTo(map);
+
+    }
+    catch(error){
+
+        console.log(error);
+
+    }
+
+}
+
+loadBoat();
+loadPath();
+
+setInterval(loadBoat,5000);
+setInterval(loadPath,5000);
+
+</script>
+
+</body>
+</html>

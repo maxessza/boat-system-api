@@ -1,18 +1,29 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pymysql
 import os
 
 app = FastAPI()
 
+# ✅ CORS สำหรับ Dashboard
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ✅ ฟังก์ชันเชื่อม MySQL Railway
 def get_connection():
     return pymysql.connect(
-        host=os.getenv("MYSQLHOST"),
-        user=os.getenv("MYSQLUSER"),
-        password=os.getenv("MYSQLPASSWORD"),
-        database=os.getenv("MYSQLDATABASE"),
-        port=int(os.getenv("MYSQLPORT"))
+        host="127.0.0.1",
+        user="root",
+        password="123456M@x",
+        database="boat_system",
+        port=3306,
+        cursorclass=pymysql.cursors.DictCursor
     )
 
 # ✅ Model รับข้อมูล
@@ -80,6 +91,7 @@ def receive_data(data: SensorData):
     ))
 
     conn.commit()
+
     cursor.close()
     conn.close()
 
@@ -94,3 +106,88 @@ def receive_data(data: SensorData):
             "predicted_lng": predicted_lng
         }
     }
+
+# ✅ ดูข้อมูล sensor_logs ล่าสุด 100 รายการ
+@app.get("/logs")
+def get_logs():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM sensor_logs
+        ORDER BY log_id DESC
+        LIMIT 100
+    """)
+
+    data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return data
+
+# ✅ ดูข้อมูล prediction ล่าสุด 100 รายการ
+@app.get("/predictions")
+def get_predictions():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM drift_predictions
+        ORDER BY predict_id DESC
+        LIMIT 100
+    """)
+
+    data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return data
+
+
+# ✅ ดูเส้นทางเรือทั้งหมด
+@app.get("/path")
+def get_path():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT latitude, longitude
+        FROM sensor_logs
+        ORDER BY log_id ASC
+    """)
+
+    data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return data
+
+
+# ✅ ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
+@app.get("/latest")
+def get_latest():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM sensor_logs
+        ORDER BY log_id DESC
+        LIMIT 1
+    """)
+
+    data = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return data
