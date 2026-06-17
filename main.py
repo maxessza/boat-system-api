@@ -40,157 +40,174 @@ class SensorData(BaseModel):
 def home():
     return {"message": "API is running"}
 
+
 # ✅ รับข้อมูล + บันทึก DB + คำนวณ
 @app.post("/data")
 def receive_data(data: SensorData):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO sensor_logs
+            (boat_id, log_time, latitude, longitude, temp_c, ph_level, turbidity_ntu)
+            VALUES (%s, NOW(), %s, %s, %s, %s, %s)
+        """, (
+            data.boat_id,
+            data.latitude,
+            data.longitude,
+            data.temp_c,
+            data.ph_level,
+            data.turbidity_ntu
+        ))
 
-    # บันทึก sensor_logs
-    sql1 = """
-    INSERT INTO sensor_logs
-    (boat_id, log_time, latitude, longitude, temp_c, ph_level, turbidity_ntu)
-    VALUES (%s, NOW(), %s, %s, %s, %s, %s)
-    """
+        flow_v_lat = data.latitude * 0.0001
+        flow_v_lng = data.longitude * 0.0001
 
-    cursor.execute(sql1, (
-        data.boat_id,
-        data.latitude,
-        data.longitude,
-        data.temp_c,
-        data.ph_level,
-        data.turbidity_ntu
-    ))
+        predicted_lat = data.latitude + flow_v_lat * 100
+        predicted_lng = data.longitude + flow_v_lng * 100
 
-    # คำนวณเวกเตอร์น้ำ
-    flow_v_lat = data.latitude * 0.0001
-    flow_v_lng = data.longitude * 0.0001
+        cursor.execute("""
+            INSERT INTO drift_predictions
+            (log_time,start_lat,start_lng,end_lat,end_lng,
+            flow_v_lat,flow_v_lng,predicted_lat,predicted_lng)
+            VALUES
+            (NOW(),%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            data.latitude,
+            data.longitude,
+            predicted_lat,
+            predicted_lng,
+            flow_v_lat,
+            flow_v_lng,
+            predicted_lat,
+            predicted_lng
+        ))
 
-    # คาดการณ์ตำแหน่ง
-    predicted_lat = data.latitude + flow_v_lat * 100
-    predicted_lng = data.longitude + flow_v_lng * 100
+        conn.commit()
 
-    # บันทึก drift_predictions
-    sql2 = """
-    INSERT INTO drift_predictions
-    (log_time, start_lat, start_lng, end_lat, end_lng,
-     flow_v_lat, flow_v_lng, predicted_lat, predicted_lng)
-    VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s, %s)
-    """
-
-    cursor.execute(sql2, (
-        data.latitude,
-        data.longitude,
-        predicted_lat,
-        predicted_lng,
-        flow_v_lat,
-        flow_v_lng,
-        predicted_lat,
-        predicted_lng
-    ))
-
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-    return {
-        "status": "success",
-        "flow_vector": {
-            "lat": flow_v_lat,
-            "lng": flow_v_lng
-        },
-        "prediction": {
-            "predicted_lat": predicted_lat,
-            "predicted_lng": predicted_lng
+        return {
+            "status": "success",
+            "flow_vector": {
+                "lat": flow_v_lat,
+                "lng": flow_v_lng
+            },
+            "prediction": {
+                "predicted_lat": predicted_lat,
+                "predicted_lng": predicted_lng
+            }
         }
-    }
+
+    except Exception as e:
+        return {"error": str(e)}
+
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
 # ✅ ดูข้อมูล sensor_logs ล่าสุด 100 รายการ
 @app.get("/logs")
 def get_logs():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+        cursor.execute("SELECT * FROM sensor_logs LIMIT 100")
 
-    cursor.execute("""
-        SELECT *
-        FROM sensor_logs
-        ORDER BY log_id DESC
-        LIMIT 100
-    """)
+        data = cursor.fetchall()
 
-    data = cursor.fetchall()
+        return data
 
-    cursor.close()
-    conn.close()
+    except Exception as e:
+        return {"error": str(e)}
 
-    return data
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
 # ✅ ดูข้อมูล prediction ล่าสุด 100 รายการ
 @app.get("/predictions")
 def get_predictions():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+        cursor.execute("SELECT * FROM drift_predictions LIMIT 100")
 
-    cursor.execute("""
-        SELECT *
-        FROM drift_predictions
-        ORDER BY predict_id DESC
-        LIMIT 100
-    """)
+        data = cursor.fetchall()
 
-    data = cursor.fetchall()
+        return data
 
-    cursor.close()
-    conn.close()
+    except Exception as e:
+        return {"error": str(e)}
 
-    return data
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
 
 # ✅ ดูเส้นทางเรือทั้งหมด
 @app.get("/path")
 def get_path():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+        cursor.execute("""
+            SELECT latitude, longitude
+            FROM sensor_logs
+        """)
 
-    cursor.execute("""
-        SELECT latitude, longitude
-        FROM sensor_logs
-        ORDER BY log_id ASC
-    """)
+        data = cursor.fetchall()
 
-    data = cursor.fetchall()
+        return data
 
-    cursor.close()
-    conn.close()
+    except Exception as e:
+        return {"error": str(e)}
 
-    return data
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
 
 # ✅ ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
 @app.get("/latest")
 def get_latest():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+        cursor.execute("""
+            SELECT *
+            FROM sensor_logs
+            LIMIT 1
+        """)
 
-    cursor.execute("""
-        SELECT *
-        FROM sensor_logs
-        ORDER BY log_id DESC
-        LIMIT 1
-    """)
+        data = cursor.fetchone()
 
-    data = cursor.fetchone()
+        return data
 
-    cursor.close()
-    conn.close()
+    except Exception as e:
+        return {"error": str(e)}
 
-    return data
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
 @app.get("/dbtest")
 def dbtest():
