@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pymysql
@@ -217,3 +218,7 @@ def dbtest():
         return {"status": "database connected"}
     except Exception as e:
         return {"error": str(e)}
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse("dashboard.html")
