@@ -191,3 +191,12 @@ def get_latest():
     conn.close()
 
     return data
+
+@app.get("/dbtest")
+def dbtest():
+    try:
+        conn = get_connection()
+        conn.close()
+        return {"status": "database connected"}
+    except Exception as e:
+        return {"error": str(e)}
