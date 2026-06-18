@@ -72,8 +72,8 @@ def receive_data(data: SensorData):
         flow_v_lat = data.latitude * 0.0001
         flow_v_lng = data.longitude * 0.0001
 
-        predicted_lat = data.latitude + flow_v_lat * 100
-        predicted_lng = data.longitude + flow_v_lng * 100
+        predicted_lat = data.latitude + 0.0003
+        predicted_lng = data.longitude + 0.0003
 
         cursor.execute("""
             INSERT INTO drift_predictions

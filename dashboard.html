@@ -5,401 +5,561 @@
     <meta charset="UTF-8">
     <title>Boat Monitoring Dashboard</title>
 
-    <link rel="stylesheet"
-        href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
     <style>
-        canvas{
-                width:100%;
-                max-width:1200px;
-                background:white;
-                padding:10px;
-                border-radius:10px;
-                box-shadow:0 2px 5px rgba(0,0,0,0.2);
-                
-           }
+        canvas {
+            width: 100% !important;
+            max-width: 1200px;
+            height: 400px !important;
+            display: block;
+            margin: 20px auto;
 
-        body{
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
             font-family: Arial, sans-serif;
-            margin:20px;
-            background:#f5f7fa;
+            margin: 20px;
+            background: #f5f7fa;
         }
 
-        h1{
-            color:#0f4c81;
+        h1 {
+            color: #0f4c81;
         }
 
-        #info{
-            padding:15px;
-            background:white;
-            border-radius:10px;
-            width:350px;
-            margin-bottom:15px;
-            box-shadow:0 2px 5px rgba(0,0,0,0.2);
+        #info {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            width: 350px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        #map{
-            height:600px;
-            border-radius:10px;
+        #map {
+            height: 600px;
+            border-radius: 10px;
         }
 
-        p{
-            margin:8px 0;
+        p {
+            margin: 8px 0;
         }
 
-        .online{
-            color:green;
-            font-weight:bold;
+        .online {
+            color: green;
+            font-weight: bold;
         }
-
     </style>
 </head>
 
 <body>
 
-<h1>Boat Monitoring Dashboard</h1>
+    <h1>Boat Monitoring Dashboard</h1>
 
-<div id="info">
+    <div id="info">
 
-    <h3>Boat Status</h3>
+        <h3>Boat Status</h3>
 
-    <p><b>Status:</b>
-        <span id="status" class="online">
-            Online
-        </span>
-    </p>
+        <p><b>Status:</b>
+            <span id="status" class="online">
+                Online
+            </span>
+        </p>
 
-    <p><b>Boat ID:</b>
-        <span id="boat_id">-</span>
-    </p>
+        <p><b>Boat ID:</b>
+            <span id="boat_id">-</span>
+        </p>
 
-    <p><b>Temperature:</b>
-        <span id="temp">-</span> °C
-    </p>
+        <p><b>Temperature:</b>
+            <span id="temp">-</span> °C
+        </p>
 
-    <p><b>pH:</b>
-        <span id="ph">-</span>
-    </p>
+        <p><b>pH:</b>
+            <span id="ph">-</span>
+        </p>
 
-    <p><b>Turbidity:</b>
-        <span id="turbidity">-</span> NTU
-    </p>
+        <p><b>Turbidity:</b>
+            <span id="turbidity">-</span> NTU
+        </p>
 
-    <p><b>Last Update:</b>
-        <span id="last_update">-</span>
-    </p>
+        <p><b>Last Update:</b>
+            <span id="last_update">-</span>
+        </p>
+        <p><b>Average Temp:</b>
+            <span id="avg_temp">-</span> °C
+        </p>
 
-</div>
+        <p><b>Average pH:</b>
+            <span id="avg_ph">-</span>
+        </p>
 
-<div id="map"></div>
-<br>
+        <p><b>Average Turbidity:</b>
+            <span id="avg_turbidity">-</span> NTU
+        </p>
+        <p><b>Water Quality:</b>
+            <span id="water_status">-</span>
+        </p>
+    </div>
 
-<h2>Water Quality Trends</h2>
+    <div id="map"></div>
+    <br>
+    <div style="
+         background:white;
+         padding:10px;
+         margin-top:10px;
+         border-radius:10px;
+        box-shadow:0 2px 5px rgba(0,0,0,0.2);">
 
-<canvas id="tempChart"></canvas>
+        🔵 Current Position
 
-<br><br>
+        <br>
 
-<canvas id="phChart"></canvas>
+        🔴 Predicted Position
 
-<br><br>
+        <br>
 
-<canvas id="turbidityChart"></canvas>
+        🟦 Route History
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <h2>Water Quality Trends</h2>
 
-<script>
+    <div style="height:450px;">
+        <canvas id="tempChart"></canvas>
+    </div>
 
-const API_URL =
-"https://boat-system-api.onrender.com";
+    <br>
+
+    <div style="height:450px;">
+        <canvas id="phChart"></canvas>
+    </div>
+
+    <br>
+
+    <div style="height:450px;">
+        <canvas id="turbidityChart"></canvas>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+
+        const API_URL =
+            "https://boat-system-api.onrender.com";
 
 
-const map =
-L.map('map').setView([13.7563,100.5018],13);
+        const map =
+            L.map('map').setView([13.7563, 100.5018], 13);
 
-L.tileLayer(
-'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{
-    attribution:'© OpenStreetMap'
-}
-).addTo(map);
-
-let marker = null;
-let predictionMarker = null;
-let pathLine = null;
-let tempChart;
-let phChart;
-let turbidityChart;
-
-async function loadHistory(){
-
-    try{
-
-        const response =
-        await fetch(`${API_URL}/history`);
-
-        const data =
-        await response.json();
-
-        const labels =
-        data.map(x =>
-        new Date(x.log_time).toLocaleTimeString());
-        
-        const temps =
-        data.map(x => x.temp_c);
-
-        const phs =
-        data.map(x => x.ph_level);
-
-        const turbs =
-        data.map(x => x.turbidity_ntu);
-
-        if(tempChart){
-            tempChart.destroy();
-        }
-
-        if(phChart){
-            phChart.destroy();
-        }
-
-        if(turbidityChart){
-            turbidityChart.destroy();
-        }
-
-        tempChart =
-        new Chart(
-            document.getElementById("tempChart"),
+        L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             {
-                type:"line",
-                data:{
-                    labels:labels,
-                    datasets:[{
-                        label:"Temperature (°C)",
-                        data:temps
-                    }]
-                }
+                attribution: '© OpenStreetMap'
             }
-        );
+        ).addTo(map);
 
-        phChart =
-        new Chart(
-            document.getElementById("phChart"),
-            {
-                type:"line",
-                data:{
-                    labels:labels,
-                    datasets:[{
-                        label:"pH Level",
-                        data:phs
-                    }]
+        let marker = null;
+        let predictionMarker = null;
+        let predictionLine = null;
+        let pathLine = null;
+        const redIcon = new L.Icon({
+            iconUrl:
+                'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+
+            shadowUrl:
+                'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+        let tempChart;
+        let phChart;
+        let turbidityChart;
+
+
+        async function loadHistory() {
+
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/history`);
+
+                console.log("Status:", response.status);
+
+                const data =
+                    await response.json();
+
+                console.log("History Data:", data);
+
+                if (!Array.isArray(data)) {
+                    console.log("ERROR: History is not array");
+                    return;
                 }
-            }
-        );
 
-        turbidityChart =
-        new Chart(
-            document.getElementById("turbidityChart"),
-            {
-                type:"line",
-                data:{
-                    labels:labels,
-                    datasets:[{
-                        label:"Turbidity (NTU)",
-                        data:turbs
-                    }]
+                const labels =
+                    data.map(x => x.log_time);
+
+                const temps =
+                    data.map(x => x.temp_c);
+
+                const phs =
+                    data.map(x => x.ph_level);
+
+                const turbs =
+                    data.map(x => x.turbidity_ntu);
+                const avgTemp =
+                    (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(2);
+
+                const avgPh =
+                    (phs.reduce((a, b) => a + b, 0) / phs.length).toFixed(2);
+
+                const avgTurb =
+                    (turbs.reduce((a, b) => a + b, 0) / turbs.length).toFixed(2);
+
+                document.getElementById("avg_temp").innerText =
+                    avgTemp;
+
+                document.getElementById("avg_ph").innerText =
+                    avgPh;
+
+                document.getElementById("avg_turbidity").innerText =
+                    avgTurb;
+
+                if (tempChart) {
+                    tempChart.destroy();
                 }
+
+                if (phChart) {
+                    phChart.destroy();
+                }
+
+                if (turbidityChart) {
+                    turbidityChart.destroy();
+                }
+
+                console.log("Creating Temp Chart");
+
+                tempChart = new Chart(
+                    document.getElementById("tempChart"),
+                    {
+                        type: "line",
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: "Temperature (°C)",
+                                data: temps
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+
+                phChart =
+                    new Chart(
+                        document.getElementById("phChart"),
+                        {
+                            type: "line",
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: "pH Level",
+                                    data: phs
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false
+                            }
+                        }
+                    );
+
+                turbidityChart =
+                    new Chart(
+                        document.getElementById("turbidityChart"),
+                        {
+                            type: "line",
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: "Turbidity (NTU)",
+                                    data: turbs
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false
+                            }
+                        }
+                    );
+
+                console.log("Temp Chart:", tempChart);
+                console.log("PH Chart:", phChart);
+                console.log("Turbidity Chart:", turbidityChart);
+
             }
-        );
+            catch (error) {
 
-    }
-    catch(error){
+                console.log(error);
 
-        console.log(error);
-
-    }
-
-}
-// โหลดตำแหน่งล่าสุด
-async function loadBoat(){
-
-    try{
-
-        const response =
-        await fetch(`${API_URL}/latest`);
-
-        const data =
-        await response.json();
-
-        document.getElementById("boat_id")
-        .innerText =
-        data.boat_id;
-
-        document.getElementById("temp")
-        .innerText =
-        data.temp_c;
-
-        document.getElementById("ph")
-        .innerText =
-        data.ph_level;
-
-        document.getElementById("turbidity")
-        .innerText =
-        data.turbidity_ntu;
-
-        document.getElementById("last_update")
-        .innerText =
-        data.log_time;
-
-        const lat =
-        parseFloat(data.latitude);
-
-        const lng =
-        parseFloat(data.longitude);
-
-        if(!marker){
-
-            marker =
-            L.marker([lat,lng])
-            .addTo(map);
-
-            map.setView([lat,lng],15);
-
-        }else{
-
-            marker.setLatLng([lat,lng]);
+            }
 
         }
+        // โหลดตำแหน่งล่าสุด
+        async function loadBoat() {
 
-        marker.bindPopup(
-        `
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/latest`);
+
+                const data =
+                    await response.json();
+
+                document.getElementById("boat_id")
+                    .innerText =
+                    data.boat_id;
+
+                document.getElementById("temp")
+                    .innerText =
+                    data.temp_c;
+
+                document.getElementById("ph")
+                    .innerText =
+                    data.ph_level;
+
+                document.getElementById("turbidity")
+                    .innerText =
+                    data.turbidity_ntu;
+                let waterStatus = "Good";
+
+                if (data.ph_level < 6.5 || data.ph_level > 8.5) {
+                    waterStatus = "Warning";
+                }
+
+                if (data.turbidity_ntu > 20) {
+                    waterStatus = "Poor";
+                }
+
+                document.getElementById("water_status")
+                    .innerText = waterStatus;
+
+                document.getElementById("last_update")
+                    .innerText =
+                    data.log_time;
+
+                const lat =
+                    parseFloat(data.latitude);
+
+                const lng =
+                    parseFloat(data.longitude);
+
+                if (!marker) {
+
+                    marker =
+                        L.marker([lat, lng])
+                            .addTo(map);
+
+                    map.setView([lat, lng], 15);
+
+                } else {
+
+                    marker.setLatLng([lat, lng]);
+
+                }
+
+                marker.bindPopup(
+                    `
         <b>${data.boat_id}</b><br>
         Temp: ${data.temp_c} °C<br>
         pH: ${data.ph_level}<br>
         Turbidity: ${data.turbidity_ntu} NTU
         `);
 
-        document.getElementById("status")
-        .innerText =
-        "Online";
+                document.getElementById("status")
+                    .innerText =
+                    "Online";
 
-    }
-    catch(error){
-
-        console.log(error);
-
-        document.getElementById("status")
-        .innerText =
-        "Offline";
-    }
-}
-
-
-// โหลดเส้นทางเรือ
-async function loadPath(){
-
-    try{
-
-        const response =
-        await fetch(`${API_URL}/path`);
-
-        const data =
-        await response.json();
-
-        const coords = [];
-
-        data.forEach(point => {
-
-            coords.push([
-                parseFloat(point.latitude),
-                parseFloat(point.longitude)
-            ]);
-
-        });
-
-        if(pathLine){
-
-            map.removeLayer(pathLine);
-
-        }
-
-        pathLine =
-        L.polyline(
-            coords,
-            {
-                color:'blue',
-                weight:4
             }
-        ).addTo(map);
+            catch (error) {
 
-    }
-    catch(error){
+                console.log(error);
 
-        console.log(error);
-
-    }
-}
-
-
-// โหลดตำแหน่งคาดการณ์
-async function loadPrediction(){
-
-    try{
-
-        const response =
-        await fetch(`${API_URL}/predictions`);
-
-        const data =
-        await response.json();
-
-        if(data.length === 0) return;
-
-        const latest = data[0];
-
-        const lat =
-        parseFloat(latest.predicted_lat);
-
-        const lng =
-        parseFloat(latest.predicted_lng);
-
-        if(!predictionMarker){
-
-            predictionMarker =
-            L.marker([lat,lng])
-            .addTo(map);
-
-        }else{
-
-            predictionMarker.setLatLng([lat,lng]);
-
+                document.getElementById("status")
+                    .innerText =
+                    "Offline";
+            }
         }
 
-        predictionMarker.bindPopup(
-        `
-        <b>Predicted Position</b><br>
+
+        // โหลดเส้นทางเรือ
+        async function loadPath() {
+
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/path`);
+
+                const data =
+                    await response.json();
+
+                const coords = [];
+
+                data.forEach(point => {
+
+                    coords.push([
+                        parseFloat(point.latitude),
+                        parseFloat(point.longitude)
+                    ]);
+
+                });
+
+                if (pathLine) {
+
+                    map.removeLayer(pathLine);
+
+                }
+
+                pathLine =
+                    L.polyline(
+                        coords,
+                        {
+                            color: 'blue',
+                            weight: 4
+                        }
+                    ).addTo(map);
+
+            }
+            catch (error) {
+
+                console.log(error);
+
+            }
+        }
+
+
+        // โหลดตำแหน่งคาดการณ์
+        async function loadPrediction() {
+
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/predictions`);
+
+                const data =
+                    await response.json();
+
+                if (data.length === 0) return;
+
+                const latest = data[0];
+
+                const lat =
+                    parseFloat(latest.predicted_lat);
+
+                const lng =
+                    parseFloat(latest.predicted_lng);
+
+                if (!predictionMarker) {
+
+                    predictionMarker =
+                        L.marker(
+                            [lat, lng],
+                            {
+                                icon: redIcon
+                            }
+                        ).addTo(map);
+                    if (marker) {
+
+                        const currentLat = marker.getLatLng().lat;
+                        const currentLng = marker.getLatLng().lng;
+
+                        if (predictionLine) {
+                            map.removeLayer(predictionLine);
+                        }
+
+                        predictionLine = L.polyline(
+                            [
+                                [currentLat, currentLng],
+                                [lat, lng]
+                            ],
+                            {
+                                color: 'red',
+                                weight: 3,
+                                dashArray: '10,10'
+                            }
+                        ).addTo(map);
+                    }
+                    if (!predictionMarker) {
+
+
+                    } else {
+
+                        predictionMarker.setLatLng([lat, lng]);
+
+                    }
+
+                    if (marker) {
+
+                        const currentLat = marker.getLatLng().lat;
+                        const currentLng = marker.getLatLng().lng;
+
+                        if (predictionLine) {
+                            map.removeLayer(predictionLine);
+                        }
+
+                        predictionLine = L.polyline(
+                            [
+                                [currentLat, currentLng],
+                                [lat, lng]
+                            ],
+                            {
+                                color: 'red',
+                                weight: 3,
+                                dashArray: '10,10'
+                            }
+                        ).addTo(map);
+                    }
+                } else {
+
+                    predictionMarker.setLatLng([lat, lng]);
+
+                }
+
+                predictionMarker.bindPopup(
+                    `
+        <b>🔴 Predicted Position</b><br>
         Lat: ${lat}<br>
         Lng: ${lng}
         `);
 
-    }
-    catch(error){
+            }
+            catch (error) {
 
-        console.log(error);
+                console.log(error);
 
-    }
-}
+            }
+        }
 
 
-loadBoat();
-loadPath();
-loadPrediction();
-loadHistory();
+        loadBoat();
+        loadPath();
+        loadPrediction();
+        loadHistory();
 
-setInterval(loadBoat,5000);
-setInterval(loadPath,5000);
-setInterval(loadPrediction,5000);
-setInterval(loadHistory,30000);
-</script>
+        setInterval(loadBoat, 5000);
+        setInterval(loadPath, 5000);
+        setInterval(loadPrediction, 5000);
+        setInterval(loadHistory, 30000);
+    </script>
 </body>
+
 </html>
