@@ -193,6 +193,10 @@ def get_path():
 # ✅ ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
 @app.get("/latest")
 def get_latest():
+
+    conn = None
+    cursor = None
+
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -200,6 +204,7 @@ def get_latest():
         cursor.execute("""
             SELECT *
             FROM sensor_logs
+            ORDER BY log_id DESC
             LIMIT 1
         """)
 
@@ -211,11 +216,11 @@ def get_latest():
         return {"error": str(e)}
 
     finally:
-        try:
+        if cursor:
             cursor.close()
+
+        if conn:
             conn.close()
-        except:
-            pass
 
 @app.get("/dbtest")
 def dbtest():
