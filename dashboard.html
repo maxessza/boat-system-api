@@ -146,6 +146,8 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
@@ -168,6 +170,8 @@
         let predictionMarker = null;
         let predictionLine = null;
         let pathLine = null;
+        let heatLayer = null;
+
         const redIcon = new L.Icon({
             iconUrl:
                 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -399,7 +403,59 @@
                     "Offline";
             }
         }
+        // Heat Map Water Quality
+        async function loadHeatMap() {
 
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/logs`);
+
+                const data =
+                    await response.json();
+
+                const heatData = [];
+                console.log("Heat Data:", heatData);
+
+                data.forEach(point => {
+
+                    heatData.push([
+                        parseFloat(point.latitude),
+                        parseFloat(point.longitude),
+                        parseFloat(point.turbidity_ntu) / 30
+                    ]);
+
+                });
+
+                if (heatLayer) {
+                    map.removeLayer(heatLayer);
+                }
+                console.log("HeatMap Loaded");
+                console.log("Heat Data:", heatData);
+                heatLayer =
+                    L.heatLayer(
+                        heatData,
+                        {
+                            radius: 60,
+                            blur: 35,
+                            maxZoom: 17,
+                            gradient: {
+                                0.2: 'blue',
+                                0.4: 'lime',
+                                0.6: 'yellow',
+                                0.8: 'orange',
+                                1.0: 'red'
+                            }
+                        }
+                    ).addTo(map);
+
+            }
+            catch (error) {
+
+                console.log(error);
+
+            }
+        }
 
         // โหลดเส้นทางเรือ
         async function loadPath() {
@@ -477,62 +533,34 @@
                                 icon: redIcon
                             }
                         ).addTo(map);
-                    if (marker) {
 
-                        const currentLat = marker.getLatLng().lat;
-                        const currentLng = marker.getLatLng().lng;
-
-                        if (predictionLine) {
-                            map.removeLayer(predictionLine);
-                        }
-
-                        predictionLine = L.polyline(
-                            [
-                                [currentLat, currentLng],
-                                [lat, lng]
-                            ],
-                            {
-                                color: 'red',
-                                weight: 3,
-                                dashArray: '10,10'
-                            }
-                        ).addTo(map);
-                    }
-                    if (!predictionMarker) {
-
-
-                    } else {
-
-                        predictionMarker.setLatLng([lat, lng]);
-
-                    }
-
-                    if (marker) {
-
-                        const currentLat = marker.getLatLng().lat;
-                        const currentLng = marker.getLatLng().lng;
-
-                        if (predictionLine) {
-                            map.removeLayer(predictionLine);
-                        }
-
-                        predictionLine = L.polyline(
-                            [
-                                [currentLat, currentLng],
-                                [lat, lng]
-                            ],
-                            {
-                                color: 'red',
-                                weight: 3,
-                                dashArray: '10,10'
-                            }
-                        ).addTo(map);
-                    }
                 } else {
 
                     predictionMarker.setLatLng([lat, lng]);
 
                 }
+                if (marker) {
+
+                    const currentLat = marker.getLatLng().lat;
+                    const currentLng = marker.getLatLng().lng;
+
+                    if (predictionLine) {
+                        map.removeLayer(predictionLine);
+                    }
+
+                    predictionLine = L.polyline(
+                        [
+                            [currentLat, currentLng],
+                            [lat, lng]
+                        ],
+                        {
+                            color: 'red',
+                            weight: 3,
+                            dashArray: '10,10'
+                        }
+                    ).addTo(map);
+                }
+
 
                 predictionMarker.bindPopup(
                     `
@@ -554,11 +582,13 @@
         loadPath();
         loadPrediction();
         loadHistory();
+        loadHeatMap();
 
         setInterval(loadBoat, 5000);
         setInterval(loadPath, 5000);
         setInterval(loadPrediction, 5000);
         setInterval(loadHistory, 30000);
+        setInterval(loadHeatMap, 30000);
     </script>
 </body>
 
