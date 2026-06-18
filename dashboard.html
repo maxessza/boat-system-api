@@ -172,9 +172,9 @@
         let pathLine = null;
         let heatLayer = null;
 
-        const redIcon = new L.Icon({
+        const purpleIcon = new L.Icon({
             iconUrl:
-                'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
 
             shadowUrl:
                 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -419,35 +419,49 @@
 
                 data.forEach(point => {
 
+                    const lat = Number(point.latitude);
+                    const lng = Number(point.longitude);
+                    const intensity = Number(point.turbidity_ntu) / 35;
+
+                    console.log(lat, lng, intensity);
+
                     heatData.push([
-                        parseFloat(point.latitude),
-                        parseFloat(point.longitude),
-                        parseFloat(point.turbidity_ntu) / 30
+                        lat,
+                        lng,
+                        intensity
                     ]);
 
                 });
 
-                if (heatLayer) {
+                if (heatLayer && map.hasLayer(heatLayer)) {
                     map.removeLayer(heatLayer);
                 }
+
                 console.log("HeatMap Loaded");
                 console.log("Heat Data:", heatData);
-                heatLayer =
-                    L.heatLayer(
-                        heatData,
+                console.log("HeatData Final:", heatData);
+                console.log("Heat Layer:", heatLayer);
+                heatData.forEach(point => {
+
+                    L.circleMarker(
+                        [point[0], point[1]],
                         {
-                            radius: 60,
-                            blur: 35,
-                            maxZoom: 17,
-                            gradient: {
-                                0.2: 'blue',
-                                0.4: 'lime',
-                                0.6: 'yellow',
-                                0.8: 'orange',
-                                1.0: 'red'
-                            }
+                            radius: point[2] * 10,
+                            fillColor: "red",
+                            color: "darkred",
+                            weight: 1,
+                            fillOpacity: 0.7
                         }
                     ).addTo(map);
+
+                });
+
+                console.log("Layer Added");
+                console.log(map.hasLayer(heatLayer));
+
+                map.fitBounds(
+                    heatData.map(p => [p[0], p[1]])
+                );
 
             }
             catch (error) {
@@ -530,7 +544,7 @@
                         L.marker(
                             [lat, lng],
                             {
-                                icon: redIcon
+                                icon: purpleIcon
                             }
                         ).addTo(map);
 
@@ -554,7 +568,7 @@
                             [lat, lng]
                         ],
                         {
-                            color: 'red',
+                            color:'purple',
                             weight: 3,
                             dashArray: '10,10'
                         }
