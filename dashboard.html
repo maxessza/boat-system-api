@@ -9,6 +9,15 @@
         href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
     <style>
+        canvas{
+                width:100%;
+                max-width:1200px;
+                background:white;
+                padding:10px;
+                border-radius:10px;
+                box-shadow:0 2px 5px rgba(0,0,0,0.2);
+                
+           }
 
         body{
             font-family: Arial, sans-serif;
@@ -83,13 +92,29 @@
 </div>
 
 <div id="map"></div>
+<br>
+
+<h2>Water Quality Trends</h2>
+
+<canvas id="tempChart"></canvas>
+
+<br><br>
+
+<canvas id="phChart"></canvas>
+
+<br><br>
+
+<canvas id="turbidityChart"></canvas>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
 const API_URL =
 "https://boat-system-api.onrender.com";
+
 
 const map =
 L.map('map').setView([13.7563,100.5018],13);
@@ -104,7 +129,98 @@ L.tileLayer(
 let marker = null;
 let predictionMarker = null;
 let pathLine = null;
+let tempChart;
+let phChart;
+let turbidityChart;
 
+async function loadHistory(){
+
+    try{
+
+        const response =
+        await fetch(`${API_URL}/history`);
+
+        const data =
+        await response.json();
+
+        const labels =
+        data.map(x =>
+        new Date(x.log_time).toLocaleTimeString());
+        
+        const temps =
+        data.map(x => x.temp_c);
+
+        const phs =
+        data.map(x => x.ph_level);
+
+        const turbs =
+        data.map(x => x.turbidity_ntu);
+
+        if(tempChart){
+            tempChart.destroy();
+        }
+
+        if(phChart){
+            phChart.destroy();
+        }
+
+        if(turbidityChart){
+            turbidityChart.destroy();
+        }
+
+        tempChart =
+        new Chart(
+            document.getElementById("tempChart"),
+            {
+                type:"line",
+                data:{
+                    labels:labels,
+                    datasets:[{
+                        label:"Temperature (°C)",
+                        data:temps
+                    }]
+                }
+            }
+        );
+
+        phChart =
+        new Chart(
+            document.getElementById("phChart"),
+            {
+                type:"line",
+                data:{
+                    labels:labels,
+                    datasets:[{
+                        label:"pH Level",
+                        data:phs
+                    }]
+                }
+            }
+        );
+
+        turbidityChart =
+        new Chart(
+            document.getElementById("turbidityChart"),
+            {
+                type:"line",
+                data:{
+                    labels:labels,
+                    datasets:[{
+                        label:"Turbidity (NTU)",
+                        data:turbs
+                    }]
+                }
+            }
+        );
+
+    }
+    catch(error){
+
+        console.log(error);
+
+    }
+
+}
 // โหลดตำแหน่งล่าสุด
 async function loadBoat(){
 
@@ -278,11 +394,12 @@ async function loadPrediction(){
 loadBoat();
 loadPath();
 loadPrediction();
+loadHistory();
 
 setInterval(loadBoat,5000);
 setInterval(loadPath,5000);
 setInterval(loadPrediction,5000);
-
+setInterval(loadHistory,30000);
 </script>
 </body>
 </html>

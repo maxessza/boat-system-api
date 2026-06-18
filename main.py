@@ -18,12 +18,19 @@ app.add_middleware(
 
 # ✅ ฟังก์ชันเชื่อม MySQL Railway
 def get_connection():
+
+    host = os.getenv("MYSQLHOST", "127.0.0.1")
+    user = os.getenv("MYSQLUSER", "root")
+    password = os.getenv("MYSQLPASSWORD", "123456M@x")
+    database = os.getenv("MYSQLDATABASE", "boat_system")
+    port = int(os.getenv("MYSQLPORT", 3306))
+
     return pymysql.connect(
-        host=os.getenv("MYSQLHOST"),
-        user=os.getenv("MYSQLUSER"),
-        password=os.getenv("MYSQLPASSWORD"),
-        database=os.getenv("MYSQLDATABASE"),
-        port=int(os.getenv("MYSQLPORT")),
+        host=host,
+        user=user,
+        password=password,
+        database=database,
+        port=port,
         cursorclass=pymysql.cursors.DictCursor
     )
 
@@ -222,3 +229,28 @@ def dbtest():
 @app.get("/dashboard")
 def dashboard():
     return FileResponse("dashboard.html")
+    
+@app.get("/history")
+def get_history():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            log_time,
+            temp_c,
+            ph_level,
+            turbidity_ntu
+        FROM sensor_logs
+        ORDER BY log_id DESC
+        LIMIT 50
+    """)
+
+    data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return data
+    
