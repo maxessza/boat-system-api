@@ -204,7 +204,7 @@ def get_latest():
         cursor.execute("""
             SELECT *
             FROM sensor_logs
-            ORDER BY log_id DESC
+            ORDER BY id DESC
             LIMIT 1
         """)
 
@@ -248,7 +248,7 @@ def get_history():
             ph_level,
             turbidity_ntu
         FROM sensor_logs
-        ORDER BY log_id DESC
+        ORDER BY id DESC
         LIMIT 50
     """)
 
