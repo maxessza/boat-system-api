@@ -31,15 +31,6 @@
             color: #0f4c81;
         }
 
-        #info {
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            width: 350px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
         #map {
             height: 600px;
             border-radius: 10px;
@@ -53,6 +44,42 @@
             color: green;
             font-weight: bold;
         }
+
+        #downloadCSV {
+            width: 350px;
+
+            background: #0f4c81;
+            color: white;
+
+            border: none;
+            border-radius: 8px;
+
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        #downloadCSV:hover {
+            background: #1565a3;
+        }
+
+
+        .card {
+            background: white;
+            padding: 20px;
+
+            border-radius: 12px;
+
+            width: 350px;
+
+            margin-bottom: 20px;
+
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #0f4c81;
+        }
     </style>
 </head>
 
@@ -60,9 +87,44 @@
 
     <h1>Boat Monitoring Dashboard</h1>
 
-    <div id="info">
 
-        <h3>Boat Status</h3>
+    <div id="summaryCard" class="card">
+
+        <h3>📊 System Summary</h3>
+
+        <p>
+            <b>Boat ID:</b>
+            <span id="summary_boat">-</span>
+        </p>
+
+        <p>
+            <b>Total Records:</b>
+            <span id="summary_records">-</span>
+        </p>
+
+        <p>
+            <b>Status:</b>
+            <span id="summary_status">-</span>
+        </p>
+
+        <p>
+            <b>Water Quality:</b>
+            <span id="summary_quality">-</span>
+        </p>
+
+        <p>
+            <b>Prediction:</b>
+            <span id="summary_prediction">
+                Active
+            </span>
+        </p>
+
+    </div>
+
+    <div id="info" class="card">
+
+        <h3>🚤 Boat Status</h3>
+
 
         <p><b>Status:</b>
             <span id="status" class="online">
@@ -90,7 +152,7 @@
             <span id="last_update">-</span>
         </p>
         <p><b>Average Temp:</b>
-            <span id="avg_temp">-</span> °C
+            <span id="avg_temp">-</span>
         </p>
 
         <p><b>Average pH:</b>
@@ -103,7 +165,76 @@
         <p><b>Water Quality:</b>
             <span id="water_status">-</span>
         </p>
+
+
+
+        <br>
+
+        <button id="downloadCSV">
+            📥 Download CSV Report
+        </button>
+
     </div>
+
+    <div id="stats" class="card">
+
+        <h3>📈 Boat Statistics</h3>
+
+        <p>
+            <b>Average Temperature:</b>
+            <span id="stats_avg_temp">-</span>
+        </p>
+        <p>
+            <b>Maximum Temperature:</b>
+            <span id="max_temp">-</span>
+        </p>
+
+        <p>
+            <b>Minimum Temperature:</b>
+            <span id="min_temp">-</span>
+        </p>
+
+        <p>
+            <b>Average pH:</b>
+            <span id="stats_avg_ph">-</span>
+        </p>
+        <p>
+            <b>Maximum pH:</b>
+            <span id="max_ph">-</span>
+        </p>
+
+        <p>
+            <b>Minimum pH:</b>
+            <span id="min_ph">-</span>
+        </p>
+
+        <p>
+            <b>Average Turbidity:</b>
+            <span id="stats_avg_turbidity">-</span>
+        </p>
+        <p>
+            <b>Maximum Turbidity:</b>
+            <span id="max_turbidity">-</span>
+        </p>
+
+        <p>
+            <b>Minimum Turbidity:</b>
+            <span id="min_turbidity">-</span>
+        </p>
+
+        <p>
+            <b>Total Records:</b>
+            <span id="total_records">-</span>
+        </p>
+
+        <p>
+            <b>Water Quality:</b>
+            <span id="water_quality">-</span>
+        </p>
+
+    </div>
+
+
 
     <div id="map"></div>
     <br>
@@ -171,6 +302,7 @@
         let predictionLine = null;
         let pathLine = null;
         let heatLayer = null;
+        let heatMarkers = [];
 
         const purpleIcon = new L.Icon({
             iconUrl:
@@ -228,14 +360,56 @@
                 const avgTurb =
                     (turbs.reduce((a, b) => a + b, 0) / turbs.length).toFixed(2);
 
-                document.getElementById("avg_temp").innerText =
+                const maxTemp =
+                    Math.max(...temps);
+
+                const minTemp =
+                    Math.min(...temps);
+
+                const maxPh =
+                    Math.max(...phs);
+
+                const minPh =
+                    Math.min(...phs);
+
+                const maxTurb =
+                    Math.max(...turbs);
+
+                const minTurb =
+                    Math.min(...turbs);
+
+                document.getElementById("stats_avg_temp").innerText =
                     avgTemp;
 
-                document.getElementById("avg_ph").innerText =
+                document.getElementById("stats_avg_ph").innerText =
                     avgPh;
 
-                document.getElementById("avg_turbidity").innerText =
+                document.getElementById("stats_avg_turbidity").innerText =
                     avgTurb;
+
+                document.getElementById("max_temp")
+                    .innerText =
+                    maxTemp;
+
+                document.getElementById("min_temp")
+                    .innerText =
+                    minTemp;
+
+                document.getElementById("max_ph")
+                    .innerText =
+                    maxPh;
+
+                document.getElementById("min_ph")
+                    .innerText =
+                    minPh;
+
+                document.getElementById("max_turbidity")
+                    .innerText =
+                    maxTurb;
+
+                document.getElementById("min_turbidity")
+                    .innerText =
+                    minTurb;
 
                 if (tempChart) {
                     tempChart.destroy();
@@ -333,6 +507,11 @@
                     .innerText =
                     data.boat_id;
 
+                document.getElementById("summary_boat")
+                    .innerText =
+                    data.boat_id;
+
+
                 document.getElementById("temp")
                     .innerText =
                     data.temp_c;
@@ -402,6 +581,10 @@
                     .innerText =
                     "Offline";
             }
+
+            document.getElementById("summary_status")
+                .innerText =
+                "Online";
         }
         // Heat Map Water Quality
         async function loadHeatMap() {
@@ -441,27 +624,36 @@
                 console.log("Heat Data:", heatData);
                 console.log("HeatData Final:", heatData);
                 console.log("Heat Layer:", heatLayer);
+
+                heatMarkers.forEach(marker => {
+                    map.removeLayer(marker);
+                });
+
+                heatMarkers = [];
+
                 heatData.forEach(point => {
 
-                    L.circleMarker(
-                        [point[0], point[1]],
-                        {
-                            radius: point[2] * 10,
-                            fillColor: "red",
-                            color: "darkred",
-                            weight: 1,
-                            fillOpacity: 0.7
-                        }
-                    ).addTo(map);
+                    const marker =
+                        L.circleMarker(
+                            [point[0], point[1]],
+                            {
+                                radius: point[2] * 10,
+                                fillColor: "red",
+                                color: "darkred",
+                                weight: 1,
+                                fillOpacity: 0.7
+                            }
+                        ).addTo(map);
+
+                    heatMarkers.push(marker);
 
                 });
 
                 console.log("Layer Added");
-                console.log(map.hasLayer(heatLayer));
 
-                map.fitBounds(
-                    heatData.map(p => [p[0], p[1]])
-                );
+                // map.fitBounds(
+                //     heatData.map(p => [p[0], p[1]])
+                // );
 
             }
             catch (error) {
@@ -568,7 +760,7 @@
                             [lat, lng]
                         ],
                         {
-                            color:'purple',
+                            color: 'purple',
                             weight: 3,
                             dashArray: '10,10'
                         }
@@ -591,18 +783,227 @@
             }
         }
 
+        async function downloadCSV() {
+
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/history`);
+
+                const data =
+                    await response.json();
+
+                let csv =
+                    "Date,Temperature,pH,Turbidity\n";
+
+                data.forEach(row => {
+
+                    csv +=
+                        `${row.log_time},${row.temp_c},${row.ph_level},${row.turbidity_ntu}\n`;
+
+                });
+
+                const blob =
+                    new Blob(
+                        [csv],
+                        { type: 'text/csv' }
+                    );
+
+                const url =
+                    window.URL.createObjectURL(blob);
+
+                const a =
+                    document.createElement("a");
+
+                a.href = url;
+
+                a.download =
+                    "boat_report.csv";
+
+                a.click();
+
+                window.URL.revokeObjectURL(url);
+
+            }
+            catch (error) {
+
+                console.log(error);
+
+            }
+
+        }
+
+        document
+            .getElementById("downloadCSV")
+            .addEventListener(
+                "click",
+                downloadCSV
+            );
 
         loadBoat();
+
+        async function loadAnalytics() {
+
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/history`);
+
+                const data =
+                    await response.json();
+
+                if (data.length === 0) return;
+
+                let tempSum = 0;
+                let phSum = 0;
+                let turbSum = 0;
+
+                data.forEach(row => {
+
+                    tempSum += Number(row.temp_c);
+                    phSum += Number(row.ph_level);
+                    turbSum += Number(row.turbidity_ntu);
+
+                });
+
+                const temps =
+                    data.map(x => Number(x.temp_c));
+
+                const phs =
+                    data.map(x => Number(x.ph_level));
+
+                const turbs =
+                    data.map(x => Number(x.turbidity_ntu));
+
+                const avgTemp =
+                    (tempSum / data.length).toFixed(2);
+
+                const avgPh =
+                    (phSum / data.length).toFixed(2);
+
+                const avgTurb =
+                    (turbSum / data.length).toFixed(2);
+
+                const maxTemp =
+                    Math.max(...temps);
+
+                const minTemp =
+                    Math.min(...temps);
+
+                const maxPh =
+                    Math.max(...phs);
+
+                const minPh =
+                    Math.min(...phs);
+
+                const maxTurb =
+                    Math.max(...turbs);
+
+                const minTurb =
+                    Math.min(...turbs);
+
+                document.getElementById("avg_temp")
+                    .innerText =
+                    avgTemp;
+
+                document.getElementById("avg_ph")
+                    .innerText =
+                    avgPh;
+
+                document.getElementById("avg_turbidity")
+                    .innerText =
+                    avgTurb;
+                document.getElementById("max_temp")
+                    .innerText =
+                    maxTemp;
+
+                document.getElementById("min_temp")
+                    .innerText =
+                    minTemp;
+
+                document.getElementById("max_ph")
+                    .innerText =
+                    maxPh;
+
+                document.getElementById("min_ph")
+                    .innerText =
+                    minPh;
+
+                document.getElementById("max_turbidity")
+                    .innerText =
+                    maxTurb;
+
+                document.getElementById("min_turbidity")
+                    .innerText =
+                    minTurb;
+
+                document.getElementById("total_records")
+                    .innerText =
+                    data.length;
+                let status = "Good";
+                let color = "green";
+
+                if (avgTurb > 30) {
+
+                    status = "Poor";
+                    color = "red";
+
+                }
+                else if (avgTurb > 15) {
+
+                    status = "Moderate";
+                    color = "orange";
+
+                }
+
+                document.getElementById("summary_records")
+                    .innerText =
+                    data.length;
+
+                const waterQuality =
+                    document.getElementById("water_quality");
+
+                waterQuality.innerText =
+                    status;
+
+                waterQuality.style.color =
+                    color;
+
+                waterQuality.style.fontWeight =
+                    "bold";
+
+                document.getElementById("summary_quality")
+                    .innerText =
+                    status;
+
+                document.getElementById("summary_quality")
+                    .style.color =
+                    color;
+
+                document.getElementById("summary_quality")
+                    .style.fontWeight =
+                    "bold";
+
+            }
+            catch (error) {
+
+                console.log(error);
+
+            }
+
+        }
         loadPath();
         loadPrediction();
         loadHistory();
         loadHeatMap();
+        loadAnalytics();
 
         setInterval(loadBoat, 5000);
         setInterval(loadPath, 5000);
         setInterval(loadPrediction, 5000);
         setInterval(loadHistory, 30000);
         setInterval(loadHeatMap, 30000);
+        setInterval(loadAnalytics, 30000);
     </script>
 </body>
 
