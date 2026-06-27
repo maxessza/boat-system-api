@@ -8,11 +8,11 @@
             },
             "ssh": "Disabled",
             "previewLimit": 50,
-            "server": "localhost",
-            "port": 3306,
+            "server": "acela.proxy.rlwy.net",
+            "port": 57935,
             "driver": "MySQL",
-            "name": "ce-boat-db",
-            "database": "ce_boat_db",
+            "name": "Route",
+            "database": "railway",
             "username": "root"
         }
     ]

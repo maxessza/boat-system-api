@@ -19,11 +19,11 @@ app.add_middleware(
 # ✅ ฟังก์ชันเชื่อม MySQL Railway
 def get_connection():
 
-    host = os.getenv("MYSQLHOST", "127.0.0.1")
-    user = os.getenv("MYSQLUSER", "root")
-    password = os.getenv("MYSQLPASSWORD", "123456M@x")
-    database = os.getenv("MYSQLDATABASE", "boat_system")
-    port = int(os.getenv("MYSQLPORT", 3306))
+    host = "acela.proxy.rlwy.net"
+    user = "root"
+    password = "NEZvYeMWvkMNSKbxWXgSQzaxVWjYtfEz"
+    database = "railway"
+    port = 57935
 
     return pymysql.connect(
         host=host,
@@ -250,6 +250,29 @@ def get_history():
         FROM sensor_logs
         ORDER BY id DESC
         LIMIT 50
+    """)
+
+    data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return data
+
+
+@app.get("/route")
+def get_route():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            waypoint_order,
+            latitude,
+            longitude
+        FROM routes
+        ORDER BY waypoint_order
     """)
 
     data = cursor.fetchall()
