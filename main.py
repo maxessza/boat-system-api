@@ -7,6 +7,12 @@ import os
 
 app = FastAPI()
 
+#=========================
+# Mission State
+#=========================
+
+mission_running = False
+
 # ✅ CORS สำหรับ Dashboard
 app.add_middleware(
     CORSMiddleware,
@@ -282,3 +288,33 @@ def get_route():
 
     return data
     
+@app.post("/mission/start")
+def start_mission():
+
+    global mission_running
+
+    mission_running = True
+
+    return {
+        "status": "Mission Started"
+    }
+
+@app.post("/mission/stop")
+def stop_mission():
+
+    global mission_running
+
+    mission_running = False
+
+    return {
+        "status":"Mission Stopped"
+    }
+
+@app.get("/mission/status")
+def mission_status():
+
+    return {
+
+        "running": mission_running
+
+    }

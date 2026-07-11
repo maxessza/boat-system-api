@@ -1,0 +1,118 @@
+canvas {
+    width: 100% !important;
+    max-width: 1200px;
+    height: 400px !important;
+    display: block;
+    margin: 20px auto;
+
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f5f7fa;
+}
+
+h1 {
+    color: #0f4c81;
+}
+
+#map {
+    height: 600px;
+    border-radius: 10px;
+}
+
+p {
+    margin: 8px 0;
+}
+
+.online {
+    color: green;
+    font-weight: bold;
+}
+
+#downloadCSV {
+    width: 350px;
+
+    background: #0f4c81;
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    padding: 12px;
+    margin-bottom: 20px;
+}
+
+#downloadCSV:hover {
+    background: #1565a3;
+}
+
+
+.card {
+    background: white;
+    padding: 20px;
+
+    border-radius: 12px;
+
+    width: 350px;
+
+    margin-bottom: 20px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #0f4c81;
+}
+
+#missionCard {
+    width: 350px;
+
+    margin-bottom: 20px;
+}
+
+#missionCard button {
+    width: 100%;
+
+    padding: 12px;
+
+    margin-top: 10px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    background: #0f4c81;
+
+    color: white;
+
+    font-size: 15px;
+}
+
+#missionCard button:hover {
+    background: #1565a3;
+}
+
+#stopMission
+{
+    background:#d32f2f;
+}
+
+#stopMission:hover
+{
+    background:#b71c1c;
+}
+
+.topRow {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}

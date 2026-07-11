@@ -7,234 +7,216 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-    <style>
-        canvas {
-            width: 100% !important;
-            max-width: 1200px;
-            height: 400px !important;
-            display: block;
-            margin: 20px auto;
+    <link rel="stylesheet" href="assets/css/style.css">
 
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #f5f7fa;
-        }
-
-        h1 {
-            color: #0f4c81;
-        }
-
-        #map {
-            height: 600px;
-            border-radius: 10px;
-        }
-
-        p {
-            margin: 8px 0;
-        }
-
-        .online {
-            color: green;
-            font-weight: bold;
-        }
-
-        #downloadCSV {
-            width: 350px;
-
-            background: #0f4c81;
-            color: white;
-
-            border: none;
-            border-radius: 8px;
-
-            padding: 12px;
-            margin-bottom: 20px;
-        }
-
-        #downloadCSV:hover {
-            background: #1565a3;
-        }
-
-
-        .card {
-            background: white;
-            padding: 20px;
-
-            border-radius: 12px;
-
-            width: 350px;
-
-            margin-bottom: 20px;
-
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #0f4c81;
-        }
-    </style>
 </head>
 
 <body>
 
-    <h1>Boat Monitoring Dashboard</h1>
+    <h1>🚤 Smart Water Surface Boat Dashboard</h1>
+
+    <div class="topRow">
+
+        <div class="card" id="missionCard">
+
+            <h3>🎮 Mission Control</h3>
+
+            <p>
+                <b>Mission Status :</b>
+                <span id="missionStatus">
+                    Idle
+                </span>
+            </p>
 
 
-    <div id="summaryCard" class="card">
+            <p>
+                <b>Current Waypoint :</b>
+                <span id="currentWaypoint">
+                    0
+                </span>
+            </p>
 
-        <h3>📊 System Summary</h3>
+            <p>
+                <b>Heading :</b>
+                <span id="heading">
+                    -
+                </span>
+            </p>
 
-        <p>
-            <b>Boat ID:</b>
-            <span id="summary_boat">-</span>
-        </p>
+            <p>
+                <b>Flow Direction :</b>
+                <span id="flowDirection">
+                    -
+                </span>
+            </p>
 
-        <p>
-            <b>Total Records:</b>
-            <span id="summary_records">-</span>
-        </p>
+            <button id="startMission">
+                ▶ Start Mission
+            </button>
 
-        <p>
-            <b>Status:</b>
-            <span id="summary_status">-</span>
-        </p>
+            <button id="stopMission">
+                ⏹ Stop Mission
+            </button>
 
-        <p>
-            <b>Water Quality:</b>
-            <span id="summary_quality">-</span>
-        </p>
+            <button id="generateSweep">
+                🔄 Generate Sweep
+            </button>
 
-        <p>
-            <b>Prediction:</b>
-            <span id="summary_prediction">
-                Active
-            </span>
-        </p>
+            <button id="uploadRoute">
+                📤 Upload Route
+            </button>
+
+        </div>
+
+
+
+        <div id="summaryCard" class="card">
+
+            <h3>📊 System Summary</h3>
+
+            <p>
+                <b>Boat ID:</b>
+                <span id="summary_boat">-</span>
+            </p>
+
+            <p>
+                <b>Total Records:</b>
+                <span id="summary_records">-</span>
+            </p>
+
+            <p>
+                <b>Status:</b>
+                <span id="summary_status">-</span>
+            </p>
+
+            <p>
+                <b>Water Quality:</b>
+                <span id="summary_quality">-</span>
+            </p>
+
+            <p>
+                <b>Prediction:</b>
+                <span id="summary_prediction">
+                    Active
+                </span>
+            </p>
+
+        </div>
+
+        <div id="info" class="card">
+
+            <h3>🚤 Boat Status</h3>
+
+
+            <p><b>Status:</b>
+                <span id="status" class="online">
+                    Online
+                </span>
+            </p>
+
+            <p><b>Boat ID:</b>
+                <span id="boat_id">-</span>
+            </p>
+
+            <p><b>Temperature:</b>
+                <span id="temp">-</span> °C
+            </p>
+
+            <p><b>pH:</b>
+                <span id="ph">-</span>
+            </p>
+
+            <p><b>Turbidity:</b>
+                <span id="turbidity">-</span> NTU
+            </p>
+
+            <p><b>Last Update:</b>
+                <span id="last_update">-</span>
+            </p>
+            <p><b>Average Temp:</b>
+                <span id="avg_temp">-</span>
+            </p>
+
+            <p><b>Average pH:</b>
+                <span id="avg_ph">-</span>
+            </p>
+
+            <p><b>Average Turbidity:</b>
+                <span id="avg_turbidity">-</span> NTU
+            </p>
+            <p><b>Water Quality:</b>
+                <span id="water_status">-</span>
+            </p>
+
+
+
+            <br>
+
+            <button id="downloadCSV">
+                📥 Download CSV Report
+            </button>
+
+        </div>
+
+        <div id="stats" class="card">
+
+            <h3>📈 Boat Statistics</h3>
+
+            <p>
+                <b>Average Temperature:</b>
+                <span id="stats_avg_temp">-</span>
+            </p>
+            <p>
+                <b>Maximum Temperature:</b>
+                <span id="max_temp">-</span>
+            </p>
+
+            <p>
+                <b>Minimum Temperature:</b>
+                <span id="min_temp">-</span>
+            </p>
+
+            <p>
+                <b>Average pH:</b>
+                <span id="stats_avg_ph">-</span>
+            </p>
+            <p>
+                <b>Maximum pH:</b>
+                <span id="max_ph">-</span>
+            </p>
+
+            <p>
+                <b>Minimum pH:</b>
+                <span id="min_ph">-</span>
+            </p>
+
+            <p>
+                <b>Average Turbidity:</b>
+                <span id="stats_avg_turbidity">-</span>
+            </p>
+            <p>
+                <b>Maximum Turbidity:</b>
+                <span id="max_turbidity">-</span>
+            </p>
+
+            <p>
+                <b>Minimum Turbidity:</b>
+                <span id="min_turbidity">-</span>
+            </p>
+
+            <p>
+                <b>Total Records:</b>
+                <span id="total_records">-</span>
+            </p>
+
+            <p>
+                <b>Water Quality:</b>
+                <span id="water_quality">-</span>
+            </p>
+
+        </div>
 
     </div>
-
-    <div id="info" class="card">
-
-        <h3>🚤 Boat Status</h3>
-
-
-        <p><b>Status:</b>
-            <span id="status" class="online">
-                Online
-            </span>
-        </p>
-
-        <p><b>Boat ID:</b>
-            <span id="boat_id">-</span>
-        </p>
-
-        <p><b>Temperature:</b>
-            <span id="temp">-</span> °C
-        </p>
-
-        <p><b>pH:</b>
-            <span id="ph">-</span>
-        </p>
-
-        <p><b>Turbidity:</b>
-            <span id="turbidity">-</span> NTU
-        </p>
-
-        <p><b>Last Update:</b>
-            <span id="last_update">-</span>
-        </p>
-        <p><b>Average Temp:</b>
-            <span id="avg_temp">-</span>
-        </p>
-
-        <p><b>Average pH:</b>
-            <span id="avg_ph">-</span>
-        </p>
-
-        <p><b>Average Turbidity:</b>
-            <span id="avg_turbidity">-</span> NTU
-        </p>
-        <p><b>Water Quality:</b>
-            <span id="water_status">-</span>
-        </p>
-
-
-
-        <br>
-
-        <button id="downloadCSV">
-            📥 Download CSV Report
-        </button>
-
-    </div>
-
-    <div id="stats" class="card">
-
-        <h3>📈 Boat Statistics</h3>
-
-        <p>
-            <b>Average Temperature:</b>
-            <span id="stats_avg_temp">-</span>
-        </p>
-        <p>
-            <b>Maximum Temperature:</b>
-            <span id="max_temp">-</span>
-        </p>
-
-        <p>
-            <b>Minimum Temperature:</b>
-            <span id="min_temp">-</span>
-        </p>
-
-        <p>
-            <b>Average pH:</b>
-            <span id="stats_avg_ph">-</span>
-        </p>
-        <p>
-            <b>Maximum pH:</b>
-            <span id="max_ph">-</span>
-        </p>
-
-        <p>
-            <b>Minimum pH:</b>
-            <span id="min_ph">-</span>
-        </p>
-
-        <p>
-            <b>Average Turbidity:</b>
-            <span id="stats_avg_turbidity">-</span>
-        </p>
-        <p>
-            <b>Maximum Turbidity:</b>
-            <span id="max_turbidity">-</span>
-        </p>
-
-        <p>
-            <b>Minimum Turbidity:</b>
-            <span id="min_turbidity">-</span>
-        </p>
-
-        <p>
-            <b>Total Records:</b>
-            <span id="total_records">-</span>
-        </p>
-
-        <p>
-            <b>Water Quality:</b>
-            <span id="water_quality">-</span>
-        </p>
-
-    </div>
-
-
 
     <div id="map"></div>
     <br>
@@ -283,8 +265,15 @@
 
     <script>
 
-        const API_URL =
-            "https://boat-system-api.onrender.com";
+        const API_URL = "https://boat-system-api.onrender.com";
+
+        //==============================
+        // Mission State
+        //==============================
+
+        let missionRunning = false;
+
+        let missionStatus = "Idle";
 
 
         const map =
@@ -839,6 +828,43 @@
                 "click",
                 downloadCSV
             );
+
+        function updateMissionStatus(status) {
+            missionStatus = status;
+
+            document.getElementById("missionStatus").innerText =
+                status;
+        }
+
+        document
+            .getElementById("startMission")
+            .addEventListener(
+                "click",
+                startMission
+            );
+
+        function startMission() {
+            missionRunning = true;
+
+            updateMissionStatus("Running");
+
+            console.log("Mission Started");
+        }
+
+        document
+            .getElementById("stopMission")
+            .addEventListener(
+                "click",
+                stopMission
+            );
+
+        function stopMission() {
+            missionRunning = false;
+
+            updateMissionStatus("Stopped");
+
+            console.log("Mission Stopped");
+        }
 
         loadBoat();
 
