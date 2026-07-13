@@ -13,42 +13,51 @@
 
 <body>
 
-    <h1>🚤 Smart Water Surface Boat Dashboard</h1>
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1>
+                🚤 Smart Water Surface Boat Dashboard
+            </h1>
+
+            <p id="headerInfo">
+
+                Boat01 |
+                Mission : Idle |
+                Last Update : --
+
+            </p>
+
+        </div>
+
+        <div class="status-badge">
+
+            🟢 ONLINE
+
+        </div>
+
+    </div>
 
     <div class="topRow">
 
         <div class="card" id="missionCard">
 
-            <h3>🎮 Mission Control</h3>
+            <h3>🚤 Mission Control</h3>
 
-            <p>
-                <b>Mission Status :</b>
-                <span id="missionStatus">
-                    Idle
-                </span>
-            </p>
+            <p><b>Mission Status :</b> <span id="missionStatus">Idle</span></p>
 
+            <p><b>Route Type :</b> <span id="routeType">Manual</span></p>
 
-            <p>
-                <b>Current Waypoint :</b>
-                <span id="currentWaypoint">
-                    0
-                </span>
-            </p>
+            <p><b>Corner Selected :</b> <span id="cornerCount">0 / 4</span></p>
 
-            <p>
-                <b>Heading :</b>
-                <span id="heading">
-                    -
-                </span>
-            </p>
+            <p><b>Current Waypoint :</b> <span id="currentWaypoint">0</span></p>
 
-            <p>
-                <b>Flow Direction :</b>
-                <span id="flowDirection">
-                    -
-                </span>
-            </p>
+            <p><b>Heading :</b> <span id="heading">-</span></p>
+
+            <p><b>Flow Direction :</b> <span id="flowDirection">-</span></p>
+
+            <hr>
 
             <button id="startMission">
                 ▶ Start Mission
@@ -58,6 +67,22 @@
                 ⏹ Stop Mission
             </button>
 
+            <hr>
+
+            <div style="display:flex; gap:10px;">
+
+                <button id="manualMode">
+                    🖱 Manual
+                </button>
+
+                <button id="sweepMode">
+                    🔄 Sweep
+                </button>
+
+            </div>
+
+            <hr>
+
             <button id="generateSweep">
                 🔄 Generate Sweep
             </button>
@@ -66,13 +91,17 @@
                 📤 Upload Route
             </button>
 
+            <button id="clearRoute">
+                🗑 Clear Route
+            </button>
+
         </div>
 
 
 
         <div id="summaryCard" class="card">
 
-            <h3>📊 System Summary</h3>
+            <h3>📋 Mission Summary</h3>
 
             <p>
                 <b>Boat ID:</b>
@@ -80,13 +109,22 @@
             </p>
 
             <p>
-                <b>Total Records:</b>
-                <span id="summary_records">-</span>
+                <b>Mission Type:</b>
+                <span id="missionType">
+                    Manual
+                </span>
             </p>
 
             <p>
-                <b>Status:</b>
-                <span id="summary_status">-</span>
+                <b>Survey Status:</b>
+                <span id="surveyStatus">
+                    Not Ready
+                </span>
+            </p>
+
+            <p>
+                <b>Total Records:</b>
+                <span id="summary_records">-</span>
             </p>
 
             <p>
@@ -105,17 +143,13 @@
 
         <div id="info" class="card">
 
-            <h3>🚤 Boat Status</h3>
+            <h3>📡 Sensor Status</h3>
 
 
             <p><b>Status:</b>
                 <span id="status" class="online">
                     Online
                 </span>
-            </p>
-
-            <p><b>Boat ID:</b>
-                <span id="boat_id">-</span>
             </p>
 
             <p><b>Temperature:</b>
@@ -133,17 +167,7 @@
             <p><b>Last Update:</b>
                 <span id="last_update">-</span>
             </p>
-            <p><b>Average Temp:</b>
-                <span id="avg_temp">-</span>
-            </p>
 
-            <p><b>Average pH:</b>
-                <span id="avg_ph">-</span>
-            </p>
-
-            <p><b>Average Turbidity:</b>
-                <span id="avg_turbidity">-</span> NTU
-            </p>
             <p><b>Water Quality:</b>
                 <span id="water_status">-</span>
             </p>
@@ -160,7 +184,9 @@
 
         <div id="stats" class="card">
 
-            <h3>📈 Boat Statistics</h3>
+            <h3>📈 Analytics</h3>
+
+            <h4>🌡 Temperature</h4>
 
             <p>
                 <b>Average Temperature:</b>
@@ -176,6 +202,10 @@
                 <span id="min_temp">-</span>
             </p>
 
+            <hr>
+
+            <h4>🧪 pH</h4>
+
             <p>
                 <b>Average pH:</b>
                 <span id="stats_avg_ph">-</span>
@@ -189,6 +219,10 @@
                 <b>Minimum pH:</b>
                 <span id="min_ph">-</span>
             </p>
+
+            <hr>
+
+            <h4>💧 Turbidity</h4>
 
             <p>
                 <b>Average Turbidity:</b>
@@ -221,24 +255,25 @@
     <div id="map"></div>
     <br>
     <div style="
-         background:white;
-         padding:10px;
-         margin-top:10px;
-         border-radius:10px;
-        box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+    background:white;
+    padding:15px;
+    margin-top:15px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);">
 
-        🔵 Current Position
+        <h3>🗺 Map Legend</h3>
 
-        <br>
+        <p>🟢 Boat Position</p>
 
-        🔴 Predicted Position
+        <p>🔵 Waypoints</p>
 
-        <br>
+        <p>🔴 Survey Area</p>
 
-        🟦 Route History
+        <p>🟣 Predicted Position</p>
+
+        <p>🟦 Route History</p>
 
     </div>
-
     <h2>Water Quality Trends</h2>
 
     <div style="height:450px;">
@@ -265,7 +300,35 @@
 
     <script>
 
-        const API_URL = "https://boat-system-api.onrender.com";
+        const API_URL = "http://127.0.0.1:8000";
+
+        //==============================
+        // Manual Route
+        //==============================
+
+        let manualRoute = [];
+
+        //==============================
+        // Sweep Area
+        //==============================
+
+        let sweepCorners = [];
+
+        let sweepCornerMarkers = [];
+
+        let manualMarkers = [];
+
+        let manualPolyline = null;
+
+        //==============================
+        // Sweep Preview
+        //==============================
+
+        let sweepPreview = null;
+
+        let sweepBoundary = null;
+
+        let routeMode = "manual";
 
         //==============================
         // Mission State
@@ -285,6 +348,7 @@
                 attribution: '© OpenStreetMap'
             }
         ).addTo(map);
+        map.on("click", addManualWaypoint);
 
         let marker = null;
         let predictionMarker = null;
@@ -492,10 +556,6 @@
                 const data =
                     await response.json();
 
-                document.getElementById("boat_id")
-                    .innerText =
-                    data.boat_id;
-
                 document.getElementById("summary_boat")
                     .innerText =
                     data.boat_id;
@@ -570,10 +630,6 @@
                     .innerText =
                     "Offline";
             }
-
-            document.getElementById("summary_status")
-                .innerText =
-                "Online";
         }
         // Heat Map Water Quality
         async function loadHeatMap() {
@@ -695,6 +751,83 @@
                 console.log(error);
 
             }
+        }
+
+        //====================================
+        // Load Manual Route
+        //====================================
+
+        async function loadManualRoute() {
+
+            try {
+
+                const response =
+                    await fetch(`${API_URL}/route`);
+
+                const data =
+                    await response.json();
+
+                console.log("Route Data :", data);
+
+                if (data.length === 0) return;
+
+                manualRoute = [];
+
+                manualMarkers.forEach(m => map.removeLayer(m));
+
+                manualMarkers = [];
+
+                if (manualPolyline) {
+                    map.removeLayer(manualPolyline);
+                }
+
+                data.forEach(point => {
+
+                    // รองรับทั้ง Object และ Array
+                    const order = point.waypoint_order ?? point[0];
+                    const lat = Number(point.latitude ?? point[1]);
+                    const lng = Number(point.longitude ?? point[2]);
+
+                    manualRoute.push({
+                        lat: lat,
+                        lng: lng
+                    });
+
+                    const marker =
+                        L.marker([lat, lng])
+                            .addTo(map)
+                            .bindTooltip(
+                                String(order),
+                                {
+                                    permanent: true,
+                                    direction: "top",
+                                    offset: [0, -15]
+                                }
+                            );
+
+                    manualMarkers.push(marker);
+
+                });
+
+                manualPolyline =
+                    L.polyline(
+                        manualRoute.map(p => [p.lat, p.lng]),
+                        {
+                            color: "green",
+                            weight: 4
+                        }
+                    ).addTo(map);
+
+                console.log("Manual Route Loaded");
+
+            }
+
+            catch (error) {
+
+                console.log(error);
+
+            }
+
         }
 
 
@@ -843,12 +976,27 @@
                 startMission
             );
 
-        function startMission() {
-            missionRunning = true;
+        async function startMission() {
+            try {
+                const response =
+                    await fetch(`${API_URL}/mission/start`,
+                        {
+                            method: "POST"
+                        });
 
-            updateMissionStatus("Running");
+                const data =
+                    await response.json();
 
-            console.log("Mission Started");
+                missionRunning = true;
+
+                updateMissionStatus(data.status);
+
+                console.log(data);
+
+            }
+            catch (error) {
+                console.log(error);
+            }
         }
 
         document
@@ -858,13 +1006,65 @@
                 stopMission
             );
 
-        function stopMission() {
-            missionRunning = false;
+        document
+            .getElementById("generateSweep")
+            .addEventListener(
+                "click",
+                generateSweep
+            );
 
-            updateMissionStatus("Stopped");
+        document
+            .getElementById("manualMode")
+            .addEventListener(
+                "click",
+                setManualMode
+            );
 
-            console.log("Mission Stopped");
+        document
+            .getElementById("sweepMode")
+            .addEventListener(
+                "click",
+                setSweepMode
+            );
+
+        document
+            .getElementById("clearRoute")
+            .addEventListener(
+                "click",
+                clearRoute
+            );
+
+        document
+            .getElementById("uploadRoute")
+            .addEventListener(
+                "click",
+                uploadRoute
+            );
+
+        async function stopMission() {
+            try {
+                const response =
+                    await fetch(`${API_URL}/mission/stop`,
+                        {
+                            method: "POST"
+                        });
+
+                const data =
+                    await response.json();
+
+                missionRunning = false;
+
+                updateMissionStatus(data.status);
+
+                console.log(data);
+
+            }
+            catch (error) {
+                console.log(error);
+            }
         }
+
+        updateMissionStatus("Idle");
 
         loadBoat();
 
@@ -928,15 +1128,15 @@
                 const minTurb =
                     Math.min(...turbs);
 
-                document.getElementById("avg_temp")
+                document.getElementById("stats_avg_temp")
                     .innerText =
                     avgTemp;
 
-                document.getElementById("avg_ph")
+                document.getElementById("stats_avg_ph")
                     .innerText =
                     avgPh;
 
-                document.getElementById("avg_turbidity")
+                document.getElementById("stats_avg_turbidity")
                     .innerText =
                     avgTurb;
                 document.getElementById("max_temp")
@@ -1018,11 +1218,479 @@
             }
 
         }
+        async function generateSweep() {
+
+            if (routeMode !== "sweep") {
+
+                showPopup(
+                    "warning",
+                    "⚠ Warning",
+                    "Please switch to Sweep Mode first."
+                );
+
+                return;
+            }
+
+            if (sweepCorners.length !== 4) {
+
+                showPopup(
+                    "warning",
+                    "⚠ Warning",
+                    "Please select 4 corner points first."
+                );
+
+                return;
+            }
+
+            //==============================
+            // Calculate Survey Area
+            //==============================
+
+            const lats = sweepCorners.map(p => p.lat);
+            const lngs = sweepCorners.map(p => p.lng);
+
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+
+            //==============================
+            // Survey Margin (10%)
+            //==============================
+
+            const originalWidth = maxLng - minLng;
+            const originalHeight = maxLat - minLat;
+
+            const marginLng = originalWidth * 0.10;
+            const marginLat = originalHeight * 0.10;
+
+            const startLng = minLng + marginLng;
+            const startLat = minLat + marginLat;
+
+            const width = originalWidth - (marginLng * 2);
+            const height = originalHeight - (marginLat * 2);
+
+            try {
+
+                const response = await fetch(`${API_URL}/generate_sweep`, {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        start_lat: startLat,
+                        start_lng: startLng,
+
+                        width: width,
+                        height: height,
+
+                        spacing: 0.0002
+
+                    })
+
+                });
+
+                const data = await response.json();
+
+                console.log(data);
+
+                //==============================
+                // Clear Manual Route
+                //==============================
+
+                manualRoute = [];
+
+                manualMarkers.forEach(marker => {
+                    map.removeLayer(marker);
+                });
+
+                manualMarkers = [];
+
+                if (manualPolyline) {
+                    map.removeLayer(manualPolyline);
+                    manualPolyline = null;
+                }
+
+                //==============================
+                // Load Generated Sweep Route
+                //==============================
+
+                await loadManualRoute();
+
+                //==============================
+                // Remove Preview
+                //==============================
+
+                if (sweepBoundary) {
+                    map.removeLayer(sweepBoundary);
+                    sweepBoundary = null;
+                }
+
+                if (sweepPreview) {
+                    map.removeLayer(sweepPreview);
+                    sweepPreview = null;
+                }
+
+                sweepCornerMarkers.forEach(marker => {
+                    map.removeLayer(marker);
+                });
+
+                sweepCornerMarkers = [];
+                sweepCorners = [];
+
+
+                showPopup(
+                    "success",
+                    "✅ Success",
+                    "Sweep Route Generated Successfully."
+                );
+
+                setManualMode();
+
+            }
+            catch (error) {
+
+                console.log(error);
+
+            }
+
+        }
+
+        //=================================
+        // Add Manual Waypoint
+        //=================================
+
+        function addManualWaypoint(e) {
+            const lat = e.latlng.lat;
+
+            const lng = e.latlng.lng;
+
+            //========================
+            // Sweep Mode
+            //========================
+
+            if (routeMode === "sweep") {
+
+                if (sweepCorners.length >= 4) {
+                    showPopup(
+                        "warning",
+                        "⚠ Warning",
+                        "You already selected 4 corner points."
+                    );
+                    return;
+                }
+
+                sweepCorners.push({
+                    lat: lat,
+                    lng: lng
+                });
+
+                document.getElementById("cornerCount").innerText =
+                    `${sweepCorners.length} / 4`;
+
+
+
+                const marker =
+                    L.marker([lat, lng])
+                        .addTo(map)
+                        .bindTooltip(
+                            String(sweepCorners.length),
+                            {
+                                permanent: true,
+                                direction: "top"
+                            }
+                        );
+
+                sweepCornerMarkers.push(marker);
+
+                // วาดเส้นเชื่อมระหว่าง Corner
+
+                if (sweepBoundary) {
+
+                    map.removeLayer(sweepBoundary);
+
+                }
+
+                sweepBoundary =
+                    L.polyline(
+
+                        sweepCorners.map(point => [
+                            point.lat,
+                            point.lng
+                        ]),
+
+                        {
+                            color: "green",
+                            weight: 3,
+                            dashArray: "5,5"
+                        }
+
+                    ).addTo(map);
+
+                // ครบ 4 จุดแล้ว แสดงกรอบพื้นที่
+                if (sweepCorners.length === 4) {
+
+                    const lats = sweepCorners.map(p => p.lat);
+                    const lngs = sweepCorners.map(p => p.lng);
+
+                    const minLat = Math.min(...lats);
+                    const maxLat = Math.max(...lats);
+
+                    const minLng = Math.min(...lngs);
+                    const maxLng = Math.max(...lngs);
+
+                    if (sweepPreview) {
+                        map.removeLayer(sweepPreview);
+                    }
+
+                    sweepPreview = L.polygon(
+
+                        sweepCorners.map(point => [
+                            point.lat,
+                            point.lng
+                        ]),
+
+                        {
+                            color: "red",
+                            weight: 2,
+                            fillOpacity: 0.15
+                        }
+
+                    ).addTo(map);
+
+                }
+
+                console.log(sweepCorners);
+
+                document.getElementById("cornerCount").innerText =
+                    sweepCorners.length + " / 4";
+
+                if (sweepCorners.length === 4) {
+
+                    document.getElementById("surveyStatus").innerText = "Ready";
+
+                }
+
+                return;
+            }
+
+            manualRoute.push({
+                lat: lat,
+                lng: lng
+            });
+
+            const waypointMarker =
+                L.marker([lat, lng])
+                    .addTo(map)
+                    .bindTooltip(
+                        String(manualRoute.length),
+                        {
+                            permanent: true,
+                            direction: "top",
+                            offset: [0, -15]
+                        }
+                    );
+
+            manualMarkers.push(waypointMarker);
+
+            if (manualPolyline) {
+                map.removeLayer(manualPolyline);
+            }
+
+            manualPolyline =
+                L.polyline(
+                    manualRoute.map(p => [p.lat, p.lng]),
+                    {
+                        color: "green",
+                        weight: 4
+                    }
+                ).addTo(map);
+
+            console.log(manualRoute);
+        }
+
+        async function clearRoute() {
+
+            const confirmDelete =
+                confirm("Delete this route?");
+
+            if (!confirmDelete) {
+                return;
+            }
+
+            try {
+
+                await fetch(`${API_URL}/clear_route`, {
+                    method: "POST"
+                });
+
+                // ============================
+                // Manual Route
+                // ============================
+
+                manualRoute = [];
+
+                manualMarkers.forEach(marker => {
+                    map.removeLayer(marker);
+                });
+
+                manualMarkers = [];
+
+                if (manualPolyline) {
+                    map.removeLayer(manualPolyline);
+                    manualPolyline = null;
+                }
+
+                // ============================
+                // Sweep Route
+                // ============================
+
+                sweepCorners = [];
+
+                document.getElementById("cornerCount").innerText = "0 / 4";
+
+                sweepCornerMarkers.forEach(marker => {
+                    map.removeLayer(marker);
+                });
+
+                sweepCornerMarkers = [];
+
+                if (sweepPreview) {
+                    map.removeLayer(sweepPreview);
+                    sweepPreview = null;
+                }
+
+                // ============================
+                // Sweep Boundary
+                // ============================
+
+                if (sweepBoundary) {
+                    map.removeLayer(sweepBoundary);
+                    sweepBoundary = null;
+                }
+
+                console.log("Route Cleared");
+
+            }
+            catch (error) {
+
+                console.log(error);
+
+            }
+        }
+
+        async function uploadRoute() {
+            if (manualRoute.length === 0) {
+                showPopup(
+                    "warning",
+                    "⚠ Warning",
+                    "No route available."
+                );
+                return;
+            }
+
+            const points = manualRoute.map((point, index) =>
+            ({
+                waypoint_order: index + 1,
+                latitude: point.lat,
+                longitude: point.lng
+            }));
+
+            const body =
+            {
+                route_name: "Manual Route",
+                points: points
+            };
+
+            try {
+                const response =
+                    await fetch(`${API_URL}/save_route`,
+                        {
+                            method: "POST",
+
+                            headers:
+                            {
+                                "Content-Type": "application/json"
+                            },
+
+                            body: JSON.stringify(body)
+                        });
+
+                const data =
+                    await response.json();
+
+                console.log(data);
+
+                showPopup(
+                    "success",
+                    "✅ Success",
+                    "Route Uploaded Successfully."
+                );
+
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
+
+        //====================================
+        // Route Mode
+        //====================================
+
+        function setManualMode() {
+
+            routeMode = "manual";
+
+            document.getElementById("manualMode").style.background = "#4CAF50";
+            document.getElementById("sweepMode").style.background = "";
+
+            document.getElementById("routeType").innerText = "Manual";
+
+            document.getElementById("cornerCount").innerText = "0 / 4";
+
+            console.log("Manual Mode");
+
+            document.getElementById("routeType").innerText = "Manual";
+
+            document.getElementById("missionType").innerText = "Manual";
+
+            document.getElementById("surveyStatus").innerText = "Not Ready";
+
+        }
+
+        function setSweepMode() {
+
+            routeMode = "sweep";
+
+            document.getElementById("sweepMode").style.background = "#4CAF50";
+            document.getElementById("manualMode").style.background = "";
+
+            document.getElementById("routeType").innerText = "Sweep";
+
+            document.getElementById("cornerCount").innerText =
+                `${sweepCorners.length} / 4`;
+
+            console.log("Sweep Mode");
+
+            document.getElementById("routeType").innerText = "Sweep";
+
+            document.getElementById("missionType").innerText = "Sweep";
+
+            document.getElementById("surveyStatus").innerText = "Selecting Area";
+
+        }
+
         loadPath();
         loadPrediction();
         loadHistory();
         loadHeatMap();
         loadAnalytics();
+        loadManualRoute();
 
         setInterval(loadBoat, 5000);
         setInterval(loadPath, 5000);
@@ -1030,7 +1698,84 @@
         setInterval(loadHistory, 30000);
         setInterval(loadHeatMap, 30000);
         setInterval(loadAnalytics, 30000);
+        setInterval(loadManualRoute, 5000);
+
+        //=================================
+        // Popup
+        //=================================
+
+        function showPopup(type, title, message) {
+
+            const popup =
+                document.getElementById("popupOverlay");
+
+            const popupTitle =
+                document.getElementById("popupTitle");
+
+            const popupMessage =
+                document.getElementById("popupMessage");
+
+            popupTitle.innerText = title;
+
+            popupMessage.innerText = message;
+
+            popupTitle.style.color = "#2563eb";
+
+            if (type === "success") {
+
+                popupTitle.style.color = "#16a34a";
+
+            }
+
+            else if (type === "warning") {
+
+                popupTitle.style.color = "#f59e0b";
+
+            }
+
+            else if (type === "error") {
+
+                popupTitle.style.color = "#dc2626";
+
+            }
+
+            popup.style.display = "flex";
+
+        }
+
+        function closePopup() {
+
+            document.getElementById("popupOverlay").style.display =
+                "none";
+
+        }
+
+
     </script>
+    <!-- =========================
+     Popup Message
+    =========================== -->
+
+    <div id="popupOverlay" class="popup-overlay">
+
+        <div class="popup-box">
+
+            <h2 id="popupTitle">
+                Message
+            </h2>
+
+            <p id="popupMessage">
+                ...
+            </p>
+
+            <button onclick="closePopup()">
+                OK
+            </button>
+
+        </div>
+
+    </div>
+
 </body>
 
 </html>

@@ -2,11 +2,17 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
 import pymysql
 import os
 
 app = FastAPI()
 
+app.mount(
+    "/assets",
+    StaticFiles(directory="assets"),
+    name="assets"
+)
 #=========================
 # Mission State
 #=========================
@@ -48,6 +54,32 @@ class SensorData(BaseModel):
     temp_c: float
     ph_level: float
     turbidity_ntu: float
+
+#====================================
+# Manual Route Models
+#====================================
+
+class RoutePoint(BaseModel):
+    waypoint_order: int
+    latitude: float
+    longitude: float
+
+
+class RouteData(BaseModel):
+    route_name: str
+    points: list[RoutePoint]
+
+class SweepArea(BaseModel):
+
+    start_lat: float
+
+    start_lng: float
+
+    width: float
+
+    height: float
+
+    spacing: float
 
 # ✅ เช็ค API
 @app.get("/")
@@ -270,7 +302,8 @@ def get_history():
 def get_route():
 
     conn = get_connection()
-    cursor = conn.cursor()
+
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     cursor.execute("""
         SELECT
@@ -288,33 +321,277 @@ def get_route():
 
     return data
     
+
+#====================================
+# Start Mission
+#====================================
+
 @app.post("/mission/start")
-def start_mission():
+def startMission():
 
     global mission_running
 
     mission_running = True
 
     return {
-        "status": "Mission Started"
+        "success": True,
+        "status": "Running"
     }
 
+#====================================
+# Stop Mission
+#====================================
+
 @app.post("/mission/stop")
-def stop_mission():
+def stopMission():
 
     global mission_running
 
     mission_running = False
 
     return {
-        "status":"Mission Stopped"
+        "success": True,
+        "status": "Stopped"
     }
 
+#====================================
+# Mission Status
+#====================================
+
 @app.get("/mission/status")
-def mission_status():
+def missionStatus():
 
     return {
 
         "running": mission_running
 
+    }
+
+
+@app.post("/generate_sweep")
+def generateSweep(area: SweepArea):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM routes")
+
+    route = []
+
+    lat = area.start_lat
+
+    direction = 1
+
+    order = 1
+
+    while lat <= area.start_lat + area.height:
+
+        if direction == 1:
+
+            route.append({
+                "order": order,
+                "latitude": lat,
+                "longitude": area.start_lng
+            })
+
+            cursor.execute("""
+            INSERT INTO routes
+            (
+              route_name,
+              waypoint_order,
+              latitude,
+              longitude
+            )
+            VALUES
+            (
+              %s,
+              %s,
+              %s,
+              %s
+            )
+            """,
+            (
+              "Sweep Mission",   
+              order,
+              lat,
+              area.start_lng
+            ))
+
+            order += 1
+
+            route.append({
+                "order": order,
+                "latitude": lat,
+                "longitude": area.start_lng + area.width
+            })
+
+            cursor.execute("""
+            INSERT INTO routes
+            (
+             route_name,
+             waypoint_order,
+             latitude,
+             longitude
+            )
+             VALUES
+            (
+             %s,
+             %s,
+             %s,
+             %s
+            )
+            """,
+            (
+              "Sweep Mission",   
+              order,
+              lat,
+              area.start_lng + area.width
+            ))
+
+            order += 1
+
+        else:
+
+            route.append({
+                "order": order,
+                "latitude": lat,
+                "longitude": area.start_lng + area.width
+            })
+
+            cursor.execute("""
+            INSERT INTO routes
+            (   
+                route_name,
+                waypoint_order,
+                latitude,
+                longitude
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            """,
+            (
+                "Sweep Mission", 
+                order,
+                lat,
+                area.start_lng + area.width
+            ))
+
+            order += 1
+
+            route.append({
+                "order": order,
+                "latitude": lat,
+                "longitude": area.start_lng
+            })
+
+            cursor.execute("""
+            INSERT INTO routes
+            (
+                route_name,
+                waypoint_order,
+                latitude,
+                longitude
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            """,
+            (
+                "Sweep Mission", 
+                order,
+                lat,
+                area.start_lng
+            ))
+
+            order += 1
+
+        direction *= -1
+
+        lat += area.spacing
+
+    conn.commit()
+
+    cursor.close()
+
+    conn.close()
+
+    return route  
+
+#====================================
+# Save Manual Route
+#====================================
+
+@app.post("/save_route")
+def save_route(route: RouteData):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # ลบ Route เดิม
+    cursor.execute("DELETE FROM routes")
+
+    # เพิ่ม Route ใหม่
+    for point in route.points:
+
+        cursor.execute("""
+        INSERT INTO routes
+        (
+            route_name,
+            waypoint_order,
+            latitude,
+            longitude
+        )
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            %s
+        )
+        """,
+        (
+            route.route_name,
+            point.waypoint_order,
+            point.latitude,
+            point.longitude
+        ))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return {
+        "status": "Route Saved",
+        "total_points": len(route.points)
+    }
+
+#====================================
+# Clear Route
+#====================================
+
+@app.post("/clear_route")
+def clear_route():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM routes")
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return {
+        "status":"Route Cleared"
     }
