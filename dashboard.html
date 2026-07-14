@@ -7,807 +7,1692 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="assets/css/style.css">
 
 </head>
 
 <body>
+    <div class="sidebar">
 
-    <div class="dashboard-header">
+        <div class="sidebar-top">
 
-        <div>
+            <div class="logo">
 
-            <h1>
-                🚤 Smart Water Surface Boat Dashboard
-            </h1>
+                <div class="logo-icon">🚤</div>
 
-            <p id="headerInfo">
+                <h2>Boat Monitor</h2>
 
-                Boat01 |
-                Mission : Idle |
-                Last Update : --
+            </div>
 
-            </p>
+            <ul>
+
+                <li class="menu-item active" onclick="showPage('missionPage',this)">
+                    🚩 Mission
+                </li>
+
+                <li class="menu-item" onclick="showPage('dashboardPage',this)">
+                    📊 Dashboard
+                </li>
+
+                <li class="menu-item" onclick="showPage('analyticsPage',this)">
+                    📈 Analytics
+                </li>
+
+                <li class="menu-item" onclick="showPage('historyPage',this)">
+                    📜 History
+                </li>
+
+            </ul>
 
         </div>
 
-        <div class="status-badge">
+        <div class="boat-card">
 
-            🟢 ONLINE
+            <div class="boat-name">
+                🚤 Boat01
+            </div>
+
+            <div class="boat-status">
+                🟢 Online
+            </div>
 
         </div>
 
     </div>
 
-    <div class="topRow">
+    <div class="main">
 
-        <div class="card" id="missionCard">
+        <div class="dashboard-header">
 
-            <h3>🚤 Mission Control</h3>
+            <div>
 
-            <p><b>Mission Status :</b> <span id="missionStatus">Idle</span></p>
+                <h1>🚤 Smart Water Surface Boat</h1>
 
-            <p><b>Route Type :</b> <span id="routeType">Manual</span></p>
+                <p id="headerInfo">
+                    Boat :
+                    <span id="summary_boat">Boat01</span>
 
-            <p><b>Corner Selected :</b> <span id="cornerCount">0 / 4</span></p>
+                    |
 
-            <p><b>Current Waypoint :</b> <span id="currentWaypoint">0</span></p>
+                    Status :
+                    <span id="status" class="online">Online</span>
 
-            <p><b>Heading :</b> <span id="heading">-</span></p>
+                    |
 
-            <p><b>Flow Direction :</b> <span id="flowDirection">-</span></p>
+                    Last Update :
+                    <span id="last_update">--</span>
+                </p>
 
-            <hr>
+            </div>
 
-            <button id="startMission">
-                ▶ Start Mission
-            </button>
+            <div class="status-badge">
 
-            <button id="stopMission">
-                ⏹ Stop Mission
-            </button>
+                🟢 ONLINE
 
-            <hr>
+            </div>
 
-            <div style="display:flex; gap:10px;">
+        </div>
 
-                <button id="manualMode">
-                    🖱 Manual
-                </button>
+        <div id="missionPage">
 
-                <button id="sweepMode">
-                    🔄 Sweep
+            <div id="map"></div>
+
+            <div class="topRow">
+
+                <div class="card" id="missionCard">
+
+                    <h3>🚤 Mission Control</h3>
+
+                    <div class="mission-grid">
+
+                        <div class="mission-item status-box">
+                            <span>Mission Status</span>
+                            <div class="badge badge-green">
+                                <span id="missionStatus">Idle</span>
+                            </div>
+                        </div>
+
+                        <div class="mission-item route-box">
+                            <span>Route Type</span>
+                            <div class="badge badge-blue">
+                                <span id="routeType">Manual</span>
+                            </div>
+                        </div>
+
+                        <div class="mission-item corner-box">
+                            <span>Corner Selected</span>
+                            <div class="badge badge-orange">
+                                <span id="cornerCount">0 / 4</span>
+                            </div>
+                        </div>
+
+                        <div class="mission-item waypoint-box">
+                            <span>Current Waypoint</span>
+                            <div class="badge badge-purple">
+                                <span id="currentWaypoint">0</span>
+                            </div>
+                        </div>
+
+                        <div class="mission-item heading-box">
+                            <span>Heading</span>
+                            <div class="badge badge-cyan">
+                                <span id="heading">-</span>
+                            </div>
+                        </div>
+
+                        <div class="mission-item flow-box">
+                            <span>Flow Direction</span>
+                            <div class="badge badge-teal">
+                                <span id="flowDirection">-</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="mission-buttons">
+
+                        <button id="manualMode">
+                            🖱 Manual
+                        </button>
+
+                        <button id="sweepMode">
+                            🔄 Sweep
+                        </button>
+
+                        <button id="generateSweep">
+                            🔄 Generate Sweep
+                        </button>
+
+                        <button id="uploadRoute">
+                            📤 Upload Route
+                        </button>
+
+                        <button id="startMission">
+                            ▶ Start Mission
+                        </button>
+
+                        <button id="stopMission">
+                            ⏹ Stop Mission
+                        </button>
+
+                        <button id="clearRoute" class="full-width">
+                            🗑 Clear Route
+                        </button>
+
+                    </div>
+
+                </div> <!-- ปิด missionCard -->
+
+            </div> <!-- ปิด topRow -->
+
+            <div class="sensor-summary">
+
+                <div class="sensor-box temp-card">
+
+                    <div class="icon">🌡</div>
+
+                    <div class="title">Temperature</div>
+
+                    <div class="value">
+                        <span id="temp_top">--</span> °C
+                    </div>
+
+                </div>
+
+                <div class="sensor-box ph-card">
+
+                    <div class="icon">💧</div>
+
+                    <div class="title">pH</div>
+
+                    <div class="value">
+                        <span id="ph_top">--</span>
+                    </div>
+
+                </div>
+
+                <div class="sensor-box turbidity-card">
+
+                    <div class="icon">🌊</div>
+
+                    <div class="title">Turbidity</div>
+
+                    <div class="value">
+                        <span id="turbidity_top">--</span> NTU
+                    </div>
+
+                </div>
+
+                <div class="sensor-box quality-card">
+
+                    <div class="icon">🟢</div>
+
+                    <div class="title">Water Quality</div>
+
+                    <div class="value">
+                        <span id="water_top">--</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="legend-card">
+
+                <h3>🗺 Map Legend</h3>
+
+                <div class="legend-grid">
+
+                    <div class="legend-item">
+                        🟢 Boat Position
+                    </div>
+
+                    <div class="legend-item">
+                        🔵 Waypoints
+                    </div>
+
+                    <div class="legend-item">
+                        🔴 Survey Area
+                    </div>
+
+                    <div class="legend-item">
+                        🟣 Predicted Position
+                    </div>
+
+                    <div class="legend-item">
+                        🟦 Route History
+                    </div>
+
+                </div>
+
+            </div>
+
+            <br>
+
+        </div> <!-- ปิด missionPage -->
+
+        <div id="dashboardPage" style="display:none;">
+
+            <div id="summaryCard" class="card">
+
+                <h3>📋 Mission Summary</h3>
+
+                <p>
+                    <b>Boat ID:</b>
+                    <span id="summary_boat_card">-</span>
+                </p>
+
+                <p>
+                    <b>Mission Type:</b>
+                    <span id="missionType">
+                        Manual
+                    </span>
+                </p>
+
+                <p>
+                    <b>Survey Status:</b>
+                    <span id="surveyStatus">
+                        Not Ready
+                    </span>
+                </p>
+
+                <p>
+                    <b>Total Records:</b>
+                    <span id="summary_records">-</span>
+                </p>
+
+                <p>
+                    <b>Water Quality:</b>
+                    <span id="summary_quality">-</span>
+                </p>
+
+                <p>
+                    <b>Prediction:</b>
+                    <span id="summary_prediction">
+                        Active
+                    </span>
+                </p>
+
+            </div>
+
+
+            <div id="info" class="card">
+
+                <h3>📡 Sensor Status</h3>
+
+
+                <p><b>Status:</b>
+                    <span id="sensor_status" class="online">
+                        Online
+                    </span>
+                </p>
+
+                <p><b>Temperature:</b>
+                    <span id="temp">-</span> °C
+                </p>
+
+                <p><b>pH:</b>
+                    <span id="ph">-</span>
+                </p>
+
+                <p><b>Turbidity:</b>
+                    <span id="turbidity">-</span> NTU
+                </p>
+
+                <p><b>Last Update:</b>
+                    <span id="sensor_last_update">-</span>
+                </p>
+
+                <p><b>Water Quality:</b>
+                    <span id="water_status">-</span>
+                </p>
+
+
+
+                <br>
+
+                <button id="downloadCSV">
+                    📥 Download CSV Report
                 </button>
 
             </div>
 
-            <hr>
+            <div id="stats" class="card">
 
-            <button id="generateSweep">
-                🔄 Generate Sweep
-            </button>
+                <h3>📈 Analytics</h3>
 
-            <button id="uploadRoute">
-                📤 Upload Route
-            </button>
+                <h4>🌡 Temperature</h4>
 
-            <button id="clearRoute">
-                🗑 Clear Route
-            </button>
+                <p>
+                    <b>Average Temperature:</b>
+                    <span id="stats_avg_temp">-</span>
+                </p>
+                <p>
+                    <b>Maximum Temperature:</b>
+                    <span id="max_temp">-</span>
+                </p>
 
-        </div>
+                <p>
+                    <b>Minimum Temperature:</b>
+                    <span id="min_temp">-</span>
+                </p>
 
+                <hr>
 
+                <h4>🧪 pH</h4>
 
-        <div id="summaryCard" class="card">
+                <p>
+                    <b>Average pH:</b>
+                    <span id="stats_avg_ph">-</span>
+                </p>
+                <p>
+                    <b>Maximum pH:</b>
+                    <span id="max_ph">-</span>
+                </p>
 
-            <h3>📋 Mission Summary</h3>
+                <p>
+                    <b>Minimum pH:</b>
+                    <span id="min_ph">-</span>
+                </p>
 
-            <p>
-                <b>Boat ID:</b>
-                <span id="summary_boat">-</span>
-            </p>
+                <hr>
 
-            <p>
-                <b>Mission Type:</b>
-                <span id="missionType">
-                    Manual
-                </span>
-            </p>
+                <h4>💧 Turbidity</h4>
 
-            <p>
-                <b>Survey Status:</b>
-                <span id="surveyStatus">
-                    Not Ready
-                </span>
-            </p>
+                <p>
+                    <b>Average Turbidity:</b>
+                    <span id="stats_avg_turbidity">-</span>
+                </p>
+                <p>
+                    <b>Maximum Turbidity:</b>
+                    <span id="max_turbidity">-</span>
+                </p>
 
-            <p>
-                <b>Total Records:</b>
-                <span id="summary_records">-</span>
-            </p>
+                <p>
+                    <b>Minimum Turbidity:</b>
+                    <span id="min_turbidity">-</span>
+                </p>
 
-            <p>
-                <b>Water Quality:</b>
-                <span id="summary_quality">-</span>
-            </p>
+                <p>
+                    <b>Total Records:</b>
+                    <span id="total_records">-</span>
+                </p>
 
-            <p>
-                <b>Prediction:</b>
-                <span id="summary_prediction">
-                    Active
-                </span>
-            </p>
+                <p>
+                    <b>Water Quality:</b>
+                    <span id="water_quality">-</span>
+                </p>
 
-        </div>
+            </div>
 
-        <div id="info" class="card">
+        </div> <!-- ปิด dashboardPage -->
 
-            <h3>📡 Sensor Status</h3>
+        <br>
 
+        <div id="analyticsPage" style="display:none;">
 
-            <p><b>Status:</b>
-                <span id="status" class="online">
-                    Online
-                </span>
-            </p>
+            <h2>Water Quality Trends</h2>
 
-            <p><b>Temperature:</b>
-                <span id="temp">-</span> °C
-            </p>
-
-            <p><b>pH:</b>
-                <span id="ph">-</span>
-            </p>
-
-            <p><b>Turbidity:</b>
-                <span id="turbidity">-</span> NTU
-            </p>
-
-            <p><b>Last Update:</b>
-                <span id="last_update">-</span>
-            </p>
-
-            <p><b>Water Quality:</b>
-                <span id="water_status">-</span>
-            </p>
-
-
+            <div style="height:450px;">
+                <canvas id="tempChart"></canvas>
+            </div>
 
             <br>
 
-            <button id="downloadCSV">
-                📥 Download CSV Report
-            </button>
+            <div style="height:450px;">
+                <canvas id="phChart"></canvas>
+            </div>
+
+            <br>
+
+            <div style="height:450px;">
+                <canvas id="turbidityChart"></canvas>
+            </div>
+
+        </div> <!-- ปิด analyticsPage -->
+
+        <div id="historyPage" style="display:none;">
+
+            <div class="card">
+
+                <h3>📜 Mission History</h3>
+
+                <p>Coming Soon...</p>
+
+            </div>
 
         </div>
 
-        <div id="stats" class="card">
 
-            <h3>📈 Analytics</h3>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-            <h4>🌡 Temperature</h4>
+        <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
-            <p>
-                <b>Average Temperature:</b>
-                <span id="stats_avg_temp">-</span>
-            </p>
-            <p>
-                <b>Maximum Temperature:</b>
-                <span id="max_temp">-</span>
-            </p>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-            <p>
-                <b>Minimum Temperature:</b>
-                <span id="min_temp">-</span>
-            </p>
+        <script>
 
-            <hr>
+            const API_URL = "http://127.0.0.1:8000";
 
-            <h4>🧪 pH</h4>
+            //==============================
+            // Manual Route
+            //==============================
 
-            <p>
-                <b>Average pH:</b>
-                <span id="stats_avg_ph">-</span>
-            </p>
-            <p>
-                <b>Maximum pH:</b>
-                <span id="max_ph">-</span>
-            </p>
+            let manualRoute = [];
 
-            <p>
-                <b>Minimum pH:</b>
-                <span id="min_ph">-</span>
-            </p>
+            //==============================
+            // Sweep Area
+            //==============================
 
-            <hr>
+            let sweepCorners = [];
 
-            <h4>💧 Turbidity</h4>
+            let sweepCornerMarkers = [];
 
-            <p>
-                <b>Average Turbidity:</b>
-                <span id="stats_avg_turbidity">-</span>
-            </p>
-            <p>
-                <b>Maximum Turbidity:</b>
-                <span id="max_turbidity">-</span>
-            </p>
+            let manualMarkers = [];
 
-            <p>
-                <b>Minimum Turbidity:</b>
-                <span id="min_turbidity">-</span>
-            </p>
+            let manualPolyline = null;
 
-            <p>
-                <b>Total Records:</b>
-                <span id="total_records">-</span>
-            </p>
+            //==============================
+            // Sweep Preview
+            //==============================
 
-            <p>
-                <b>Water Quality:</b>
-                <span id="water_quality">-</span>
-            </p>
+            let sweepPreview = null;
 
-        </div>
+            let sweepBoundary = null;
 
-    </div>
+            let routeMode = "manual";
 
-    <div id="map"></div>
-    <br>
-    <div style="
-    background:white;
-    padding:15px;
-    margin-top:15px;
-    border-radius:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+            //==============================
+            // Mission State
+            //==============================
 
-        <h3>🗺 Map Legend</h3>
+            let missionRunning = false;
 
-        <p>🟢 Boat Position</p>
-
-        <p>🔵 Waypoints</p>
-
-        <p>🔴 Survey Area</p>
-
-        <p>🟣 Predicted Position</p>
-
-        <p>🟦 Route History</p>
-
-    </div>
-    <h2>Water Quality Trends</h2>
-
-    <div style="height:450px;">
-        <canvas id="tempChart"></canvas>
-    </div>
-
-    <br>
-
-    <div style="height:450px;">
-        <canvas id="phChart"></canvas>
-    </div>
-
-    <br>
-
-    <div style="height:450px;">
-        <canvas id="turbidityChart"></canvas>
-    </div>
-
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script>
-
-        const API_URL = "http://127.0.0.1:8000";
-
-        //==============================
-        // Manual Route
-        //==============================
-
-        let manualRoute = [];
-
-        //==============================
-        // Sweep Area
-        //==============================
-
-        let sweepCorners = [];
-
-        let sweepCornerMarkers = [];
-
-        let manualMarkers = [];
-
-        let manualPolyline = null;
-
-        //==============================
-        // Sweep Preview
-        //==============================
-
-        let sweepPreview = null;
-
-        let sweepBoundary = null;
-
-        let routeMode = "manual";
-
-        //==============================
-        // Mission State
-        //==============================
-
-        let missionRunning = false;
-
-        let missionStatus = "Idle";
+            let missionStatus = "Idle";
 
 
-        const map =
-            L.map('map').setView([13.7563, 100.5018], 13);
+            const map =
+                L.map('map').setView([13.7563, 100.5018], 13);
 
-        L.tileLayer(
-            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            {
-                attribution: '© OpenStreetMap'
-            }
-        ).addTo(map);
-        map.on("click", addManualWaypoint);
-
-        let marker = null;
-        let predictionMarker = null;
-        let predictionLine = null;
-        let pathLine = null;
-        let heatLayer = null;
-        let heatMarkers = [];
-
-        const purpleIcon = new L.Icon({
-            iconUrl:
-                'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
-
-            shadowUrl:
-                'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-        let tempChart;
-        let phChart;
-        let turbidityChart;
-
-
-        async function loadHistory() {
-
-            try {
-
-                const response =
-                    await fetch(`${API_URL}/history`);
-
-                console.log("Status:", response.status);
-
-                const data =
-                    await response.json();
-
-                console.log("History Data:", data);
-
-                if (!Array.isArray(data)) {
-                    console.log("ERROR: History is not array");
-                    return;
+            L.tileLayer(
+                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {
+                    attribution: '© OpenStreetMap'
                 }
+            ).addTo(map);
+            map.on("click", addManualWaypoint);
 
-                const labels =
-                    data.map(x => x.log_time);
+            let marker = null;
+            let predictionMarker = null;
+            let predictionLine = null;
+            let pathLine = null;
+            let heatLayer = null;
+            let heatMarkers = [];
 
-                const temps =
-                    data.map(x => x.temp_c);
+            const purpleIcon = new L.Icon({
+                iconUrl:
+                    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
 
-                const phs =
-                    data.map(x => x.ph_level);
+                shadowUrl:
+                    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 
-                const turbs =
-                    data.map(x => x.turbidity_ntu);
-                const avgTemp =
-                    (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(2);
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+            let tempChart;
+            let phChart;
+            let turbidityChart;
 
-                const avgPh =
-                    (phs.reduce((a, b) => a + b, 0) / phs.length).toFixed(2);
 
-                const avgTurb =
-                    (turbs.reduce((a, b) => a + b, 0) / turbs.length).toFixed(2);
+            async function loadHistory() {
 
-                const maxTemp =
-                    Math.max(...temps);
+                try {
 
-                const minTemp =
-                    Math.min(...temps);
+                    const response =
+                        await fetch(`${API_URL}/history`);
 
-                const maxPh =
-                    Math.max(...phs);
+                    console.log("Status:", response.status);
 
-                const minPh =
-                    Math.min(...phs);
+                    const data =
+                        await response.json();
 
-                const maxTurb =
-                    Math.max(...turbs);
+                    console.log("History Data:", data);
 
-                const minTurb =
-                    Math.min(...turbs);
+                    if (!Array.isArray(data)) {
+                        console.log("ERROR: History is not array");
+                        return;
+                    }
 
-                document.getElementById("stats_avg_temp").innerText =
-                    avgTemp;
+                    const labels =
+                        data.map(x => x.log_time);
 
-                document.getElementById("stats_avg_ph").innerText =
-                    avgPh;
+                    const temps =
+                        data.map(x => x.temp_c);
 
-                document.getElementById("stats_avg_turbidity").innerText =
-                    avgTurb;
+                    const phs =
+                        data.map(x => x.ph_level);
 
-                document.getElementById("max_temp")
-                    .innerText =
-                    maxTemp;
+                    const turbs =
+                        data.map(x => x.turbidity_ntu);
+                    const avgTemp =
+                        (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(2);
 
-                document.getElementById("min_temp")
-                    .innerText =
-                    minTemp;
+                    const avgPh =
+                        (phs.reduce((a, b) => a + b, 0) / phs.length).toFixed(2);
 
-                document.getElementById("max_ph")
-                    .innerText =
-                    maxPh;
+                    const avgTurb =
+                        (turbs.reduce((a, b) => a + b, 0) / turbs.length).toFixed(2);
 
-                document.getElementById("min_ph")
-                    .innerText =
-                    minPh;
+                    const maxTemp =
+                        Math.max(...temps);
 
-                document.getElementById("max_turbidity")
-                    .innerText =
-                    maxTurb;
+                    const minTemp =
+                        Math.min(...temps);
 
-                document.getElementById("min_turbidity")
-                    .innerText =
-                    minTurb;
+                    const maxPh =
+                        Math.max(...phs);
 
-                if (tempChart) {
-                    tempChart.destroy();
-                }
+                    const minPh =
+                        Math.min(...phs);
 
-                if (phChart) {
-                    phChart.destroy();
-                }
+                    const maxTurb =
+                        Math.max(...turbs);
 
-                if (turbidityChart) {
-                    turbidityChart.destroy();
-                }
+                    const minTurb =
+                        Math.min(...turbs);
 
-                console.log("Creating Temp Chart");
+                    document.getElementById("stats_avg_temp").innerText =
+                        avgTemp;
 
-                tempChart = new Chart(
-                    document.getElementById("tempChart"),
-                    {
-                        type: "line",
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: "Temperature (°C)",
-                                data: temps
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false
-                        }
-                    });
+                    document.getElementById("stats_avg_ph").innerText =
+                        avgPh;
 
-                phChart =
-                    new Chart(
-                        document.getElementById("phChart"),
+                    document.getElementById("stats_avg_turbidity").innerText =
+                        avgTurb;
+
+                    document.getElementById("max_temp")
+                        .innerText =
+                        maxTemp;
+
+                    document.getElementById("min_temp")
+                        .innerText =
+                        minTemp;
+
+                    document.getElementById("max_ph")
+                        .innerText =
+                        maxPh;
+
+                    document.getElementById("min_ph")
+                        .innerText =
+                        minPh;
+
+                    document.getElementById("max_turbidity")
+                        .innerText =
+                        maxTurb;
+
+                    document.getElementById("min_turbidity")
+                        .innerText =
+                        minTurb;
+
+                    if (tempChart) {
+                        tempChart.destroy();
+                    }
+
+                    if (phChart) {
+                        phChart.destroy();
+                    }
+
+                    if (turbidityChart) {
+                        turbidityChart.destroy();
+                    }
+
+                    console.log("Creating Temp Chart");
+
+                    tempChart = new Chart(
+                        document.getElementById("tempChart"),
                         {
                             type: "line",
                             data: {
                                 labels: labels,
                                 datasets: [{
-                                    label: "pH Level",
-                                    data: phs
+                                    label: "Temperature (°C)",
+                                    data: temps
                                 }]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false
                             }
-                        }
-                    );
+                        });
 
-                turbidityChart =
-                    new Chart(
-                        document.getElementById("turbidityChart"),
-                        {
-                            type: "line",
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    label: "Turbidity (NTU)",
-                                    data: turbs
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false
+                    phChart =
+                        new Chart(
+                            document.getElementById("phChart"),
+                            {
+                                type: "line",
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: "pH Level",
+                                        data: phs
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false
+                                }
                             }
-                        }
-                    );
+                        );
 
-                console.log("Temp Chart:", tempChart);
-                console.log("PH Chart:", phChart);
-                console.log("Turbidity Chart:", turbidityChart);
+                    turbidityChart =
+                        new Chart(
+                            document.getElementById("turbidityChart"),
+                            {
+                                type: "line",
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: "Turbidity (NTU)",
+                                        data: turbs
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false
+                                }
+                            }
+                        );
+
+                    console.log("Temp Chart:", tempChart);
+                    console.log("PH Chart:", phChart);
+                    console.log("Turbidity Chart:", turbidityChart);
+
+                }
+                catch (error) {
+
+                    console.log(error);
+
+                }
 
             }
-            catch (error) {
+            // โหลดตำแหน่งล่าสุด
+            async function loadBoat() {
 
-                console.log(error);
+                try {
 
-            }
+                    const response =
+                        await fetch(`${API_URL}/latest`);
 
-        }
-        // โหลดตำแหน่งล่าสุด
-        async function loadBoat() {
+                    const data =
+                        await response.json();
 
-            try {
+                    document.getElementById("summary_boat").innerHTML =
+                        data.boat_id;
 
-                const response =
-                    await fetch(`${API_URL}/latest`);
-
-                const data =
-                    await response.json();
-
-                document.getElementById("summary_boat")
-                    .innerText =
-                    data.boat_id;
+                    document.getElementById("summary_boat_card").innerHTML =
+                        data.boat_id;
 
 
-                document.getElementById("temp")
-                    .innerText =
-                    data.temp_c;
+                    document.getElementById("temp").innerText =
+                        data.temp_c;
 
-                document.getElementById("ph")
-                    .innerText =
-                    data.ph_level;
+                    document.getElementById("temp_top").innerText =
+                        data.temp_c;
 
-                document.getElementById("turbidity")
-                    .innerText =
-                    data.turbidity_ntu;
-                let waterStatus = "Good";
+                    document.getElementById("ph").innerText =
+                        data.ph_level;
 
-                if (data.ph_level < 6.5 || data.ph_level > 8.5) {
-                    waterStatus = "Warning";
-                }
+                    document.getElementById("ph_top").innerText =
+                        data.ph_level;
 
-                if (data.turbidity_ntu > 20) {
-                    waterStatus = "Poor";
-                }
+                    document.getElementById("turbidity").innerText =
+                        data.turbidity_ntu;
+                    let waterStatus = "Good";
 
-                document.getElementById("water_status")
-                    .innerText = waterStatus;
+                    if (data.ph_level < 6.5 || data.ph_level > 8.5) {
+                        waterStatus = "Warning";
+                    }
 
-                document.getElementById("last_update")
-                    .innerText =
-                    data.log_time;
+                    if (data.turbidity_ntu > 20) {
+                        waterStatus = "Poor";
+                    }
 
-                const lat =
-                    parseFloat(data.latitude);
+                    document.getElementById("turbidity_top").innerText =
+                        data.turbidity_ntu;
 
-                const lng =
-                    parseFloat(data.longitude);
+                    document.getElementById("water_status").innerText =
+                        waterStatus;
 
-                if (!marker) {
+                    document.getElementById("water_top").innerText =
+                        waterStatus;
 
-                    marker =
-                        L.marker([lat, lng])
-                            .addTo(map);
+                    document.getElementById("last_update").innerText =
+                        data.log_time;
 
-                    map.setView([lat, lng], 15);
+                    document.getElementById("sensor_last_update").innerHTML =
+                        data.last_update;
 
-                } else {
+                    const lat =
+                        parseFloat(data.latitude);
 
-                    marker.setLatLng([lat, lng]);
+                    const lng =
+                        parseFloat(data.longitude);
 
-                }
+                    if (!marker) {
 
-                marker.bindPopup(
-                    `
+                        marker =
+                            L.marker([lat, lng])
+                                .addTo(map);
+
+                        map.setView([lat, lng], 15);
+
+                    } else {
+
+                        marker.setLatLng([lat, lng]);
+
+                    }
+
+                    marker.bindPopup(
+                        `
         <b>${data.boat_id}</b><br>
         Temp: ${data.temp_c} °C<br>
         pH: ${data.ph_level}<br>
         Turbidity: ${data.turbidity_ntu} NTU
         `);
 
-                document.getElementById("status")
-                    .innerText =
-                    "Online";
+                    document.getElementById("status").innerText =
+                        "Online";
 
-            }
-            catch (error) {
+                    document.getElementById("sensor_status").innerHTML =
+                        data.status;
 
-                console.log(error);
 
-                document.getElementById("status")
-                    .innerText =
-                    "Offline";
-            }
-        }
-        // Heat Map Water Quality
-        async function loadHeatMap() {
 
-            try {
-
-                const response =
-                    await fetch(`${API_URL}/logs`);
-
-                const data =
-                    await response.json();
-
-                const heatData = [];
-                console.log("Heat Data:", heatData);
-
-                data.forEach(point => {
-
-                    const lat = Number(point.latitude);
-                    const lng = Number(point.longitude);
-                    const intensity = Number(point.turbidity_ntu) / 35;
-
-                    console.log(lat, lng, intensity);
-
-                    heatData.push([
-                        lat,
-                        lng,
-                        intensity
-                    ]);
-
-                });
-
-                if (heatLayer && map.hasLayer(heatLayer)) {
-                    map.removeLayer(heatLayer);
                 }
+                catch (error) {
 
-                console.log("HeatMap Loaded");
-                console.log("Heat Data:", heatData);
-                console.log("HeatData Final:", heatData);
-                console.log("Heat Layer:", heatLayer);
+                    console.log(error);
 
-                heatMarkers.forEach(marker => {
-                    map.removeLayer(marker);
-                });
+                    document.getElementById("status").innerText =
+                        "Offline";
+                }
+            }
+            // Heat Map Water Quality
+            async function loadHeatMap() {
 
-                heatMarkers = [];
+                try {
 
-                heatData.forEach(point => {
+                    const response =
+                        await fetch(`${API_URL}/logs`);
 
-                    const marker =
-                        L.circleMarker(
-                            [point[0], point[1]],
+                    const data =
+                        await response.json();
+
+                    const heatData = [];
+                    console.log("Heat Data:", heatData);
+
+                    data.forEach(point => {
+
+                        const lat = Number(point.latitude);
+                        const lng = Number(point.longitude);
+                        const intensity = Number(point.turbidity_ntu) / 35;
+
+                        console.log(lat, lng, intensity);
+
+                        heatData.push([
+                            lat,
+                            lng,
+                            intensity
+                        ]);
+
+                    });
+
+                    if (heatLayer && map.hasLayer(heatLayer)) {
+                        map.removeLayer(heatLayer);
+                    }
+
+                    console.log("HeatMap Loaded");
+                    console.log("Heat Data:", heatData);
+                    console.log("HeatData Final:", heatData);
+                    console.log("Heat Layer:", heatLayer);
+
+                    heatMarkers.forEach(marker => {
+                        map.removeLayer(marker);
+                    });
+
+                    heatMarkers = [];
+
+                    heatData.forEach(point => {
+
+                        const marker =
+                            L.circleMarker(
+                                [point[0], point[1]],
+                                {
+                                    radius: point[2] * 10,
+                                    fillColor: "red",
+                                    color: "darkred",
+                                    weight: 1,
+                                    fillOpacity: 0.7
+                                }
+                            ).addTo(map);
+
+                        heatMarkers.push(marker);
+
+                    });
+
+                    console.log("Layer Added");
+
+                    // map.fitBounds(
+                    //     heatData.map(p => [p[0], p[1]])
+                    // );
+
+                }
+                catch (error) {
+
+                    console.log(error);
+
+                }
+            }
+
+            // โหลดเส้นทางเรือ
+            async function loadPath() {
+
+                try {
+
+                    const response =
+                        await fetch(`${API_URL}/path`);
+
+                    const data =
+                        await response.json();
+
+                    const coords = [];
+
+                    data.forEach(point => {
+
+                        coords.push([
+                            parseFloat(point.latitude),
+                            parseFloat(point.longitude)
+                        ]);
+
+                    });
+
+                    if (pathLine) {
+
+                        map.removeLayer(pathLine);
+
+                    }
+
+                    pathLine =
+                        L.polyline(
+                            coords,
                             {
-                                radius: point[2] * 10,
-                                fillColor: "red",
-                                color: "darkred",
-                                weight: 1,
-                                fillOpacity: 0.7
+                                color: 'blue',
+                                weight: 4
                             }
                         ).addTo(map);
 
-                    heatMarkers.push(marker);
+                }
+                catch (error) {
 
-                });
+                    console.log(error);
 
-                console.log("Layer Added");
-
-                // map.fitBounds(
-                //     heatData.map(p => [p[0], p[1]])
-                // );
-
+                }
             }
-            catch (error) {
 
-                console.log(error);
+            //====================================
+            // Load Manual Route
+            //====================================
 
-            }
-        }
+            async function loadManualRoute() {
 
-        // โหลดเส้นทางเรือ
-        async function loadPath() {
+                try {
 
-            try {
+                    const response =
+                        await fetch(`${API_URL}/route`);
 
-                const response =
-                    await fetch(`${API_URL}/path`);
+                    const data =
+                        await response.json();
 
-                const data =
-                    await response.json();
+                    console.log("Route Data :", data);
 
-                const coords = [];
+                    if (data.length === 0) return;
 
-                data.forEach(point => {
+                    manualRoute = [];
 
-                    coords.push([
-                        parseFloat(point.latitude),
-                        parseFloat(point.longitude)
-                    ]);
+                    manualMarkers.forEach(m => map.removeLayer(m));
 
-                });
+                    manualMarkers = [];
 
-                if (pathLine) {
+                    if (manualPolyline) {
+                        map.removeLayer(manualPolyline);
+                    }
 
-                    map.removeLayer(pathLine);
+                    data.forEach(point => {
+
+                        // รองรับทั้ง Object และ Array
+                        const order = point.waypoint_order ?? point[0];
+                        const lat = Number(point.latitude ?? point[1]);
+                        const lng = Number(point.longitude ?? point[2]);
+
+                        manualRoute.push({
+                            lat: lat,
+                            lng: lng
+                        });
+
+                        const marker =
+                            L.marker([lat, lng])
+                                .addTo(map)
+                                .bindTooltip(
+                                    String(order),
+                                    {
+                                        permanent: true,
+                                        direction: "top",
+                                        offset: [0, -15]
+                                    }
+                                );
+
+                        manualMarkers.push(marker);
+
+                    });
+
+                    manualPolyline =
+                        L.polyline(
+                            manualRoute.map(p => [p.lat, p.lng]),
+                            {
+                                color: "green",
+                                weight: 4
+                            }
+                        ).addTo(map);
+
+                    console.log("Manual Route Loaded");
 
                 }
 
-                pathLine =
-                    L.polyline(
-                        coords,
-                        {
-                            color: 'blue',
-                            weight: 4
+                catch (error) {
+
+                    console.log(error);
+
+                }
+
+            }
+
+
+            // โหลดตำแหน่งคาดการณ์
+            async function loadPrediction() {
+
+                try {
+
+                    const response =
+                        await fetch(`${API_URL}/predictions`);
+
+                    const data =
+                        await response.json();
+
+                    if (data.length === 0) return;
+
+                    const latest = data[0];
+
+                    const lat =
+                        parseFloat(latest.predicted_lat);
+
+                    const lng =
+                        parseFloat(latest.predicted_lng);
+
+                    if (!predictionMarker) {
+
+                        predictionMarker =
+                            L.marker(
+                                [lat, lng],
+                                {
+                                    icon: purpleIcon
+                                }
+                            ).addTo(map);
+
+                    } else {
+
+                        predictionMarker.setLatLng([lat, lng]);
+
+                    }
+                    if (marker) {
+
+                        const currentLat = marker.getLatLng().lat;
+                        const currentLng = marker.getLatLng().lng;
+
+                        if (predictionLine) {
+                            map.removeLayer(predictionLine);
                         }
-                    ).addTo(map);
 
+                        predictionLine = L.polyline(
+                            [
+                                [currentLat, currentLng],
+                                [lat, lng]
+                            ],
+                            {
+                                color: 'purple',
+                                weight: 3,
+                                dashArray: '10,10'
+                            }
+                        ).addTo(map);
+                    }
+
+
+                    predictionMarker.bindPopup(
+                        `
+        <b>🔴 Predicted Position</b><br>
+        Lat: ${lat}<br>
+        Lng: ${lng}
+        `);
+
+                }
+                catch (error) {
+
+                    console.log(error);
+
+                }
             }
-            catch (error) {
 
-                console.log(error);
+            async function downloadCSV() {
 
-            }
-        }
+                try {
 
-        //====================================
-        // Load Manual Route
-        //====================================
+                    const response =
+                        await fetch(`${API_URL}/history`);
 
-        async function loadManualRoute() {
+                    const data =
+                        await response.json();
 
-            try {
+                    let csv =
+                        "Date,Temperature,pH,Turbidity\n";
 
-                const response =
-                    await fetch(`${API_URL}/route`);
+                    data.forEach(row => {
 
-                const data =
-                    await response.json();
+                        csv +=
+                            `${row.log_time},${row.temp_c},${row.ph_level},${row.turbidity_ntu}\n`;
 
-                console.log("Route Data :", data);
+                    });
 
-                if (data.length === 0) return;
+                    const blob =
+                        new Blob(
+                            [csv],
+                            { type: 'text/csv' }
+                        );
 
-                manualRoute = [];
+                    const url =
+                        window.URL.createObjectURL(blob);
 
-                manualMarkers.forEach(m => map.removeLayer(m));
+                    const a =
+                        document.createElement("a");
 
-                manualMarkers = [];
+                    a.href = url;
 
-                if (manualPolyline) {
-                    map.removeLayer(manualPolyline);
+                    a.download =
+                        "boat_report.csv";
+
+                    a.click();
+
+                    window.URL.revokeObjectURL(url);
+
+                }
+                catch (error) {
+
+                    console.log(error);
+
                 }
 
-                data.forEach(point => {
+            }
 
-                    // รองรับทั้ง Object และ Array
-                    const order = point.waypoint_order ?? point[0];
-                    const lat = Number(point.latitude ?? point[1]);
-                    const lng = Number(point.longitude ?? point[2]);
+            document
+                .getElementById("downloadCSV")
+                .addEventListener(
+                    "click",
+                    downloadCSV
+                );
 
-                    manualRoute.push({
+            function updateMissionStatus(status) {
+                missionStatus = status;
+
+                document.getElementById("missionStatus").innerText =
+                    status;
+            }
+
+            document
+                .getElementById("startMission")
+                .addEventListener(
+                    "click",
+                    startMission
+                );
+
+            async function startMission() {
+                try {
+                    const response =
+                        await fetch(`${API_URL}/mission/start`,
+                            {
+                                method: "POST"
+                            });
+
+                    const data =
+                        await response.json();
+
+                    missionRunning = true;
+
+                    updateMissionStatus(data.status);
+
+                    console.log(data);
+
+                }
+                catch (error) {
+                    console.log(error);
+                }
+            }
+
+            document
+                .getElementById("stopMission")
+                .addEventListener(
+                    "click",
+                    stopMission
+                );
+
+            document
+                .getElementById("generateSweep")
+                .addEventListener(
+                    "click",
+                    generateSweep
+                );
+
+            document
+                .getElementById("manualMode")
+                .addEventListener(
+                    "click",
+                    setManualMode
+                );
+
+            document
+                .getElementById("sweepMode")
+                .addEventListener(
+                    "click",
+                    setSweepMode
+                );
+
+            document
+                .getElementById("clearRoute")
+                .addEventListener(
+                    "click",
+                    clearRoute
+                );
+
+            document
+                .getElementById("uploadRoute")
+                .addEventListener(
+                    "click",
+                    uploadRoute
+                );
+
+            async function stopMission() {
+                try {
+                    const response =
+                        await fetch(`${API_URL}/mission/stop`,
+                            {
+                                method: "POST"
+                            });
+
+                    const data =
+                        await response.json();
+
+                    missionRunning = false;
+
+                    updateMissionStatus(data.status);
+
+                    console.log(data);
+
+                }
+                catch (error) {
+                    console.log(error);
+                }
+            }
+
+            updateMissionStatus("Idle");
+
+            loadBoat();
+
+            async function loadAnalytics() {
+
+                try {
+
+                    const response =
+                        await fetch(`${API_URL}/history`);
+
+                    const data =
+                        await response.json();
+
+                    if (data.length === 0) return;
+
+                    let tempSum = 0;
+                    let phSum = 0;
+                    let turbSum = 0;
+
+                    data.forEach(row => {
+
+                        tempSum += Number(row.temp_c);
+                        phSum += Number(row.ph_level);
+                        turbSum += Number(row.turbidity_ntu);
+
+                    });
+
+                    const temps =
+                        data.map(x => Number(x.temp_c));
+
+                    const phs =
+                        data.map(x => Number(x.ph_level));
+
+                    const turbs =
+                        data.map(x => Number(x.turbidity_ntu));
+
+                    const avgTemp =
+                        (tempSum / data.length).toFixed(2);
+
+                    const avgPh =
+                        (phSum / data.length).toFixed(2);
+
+                    const avgTurb =
+                        (turbSum / data.length).toFixed(2);
+
+                    const maxTemp =
+                        Math.max(...temps);
+
+                    const minTemp =
+                        Math.min(...temps);
+
+                    const maxPh =
+                        Math.max(...phs);
+
+                    const minPh =
+                        Math.min(...phs);
+
+                    const maxTurb =
+                        Math.max(...turbs);
+
+                    const minTurb =
+                        Math.min(...turbs);
+
+                    document.getElementById("stats_avg_temp")
+                        .innerText =
+                        avgTemp;
+
+                    document.getElementById("stats_avg_ph")
+                        .innerText =
+                        avgPh;
+
+                    document.getElementById("stats_avg_turbidity")
+                        .innerText =
+                        avgTurb;
+                    document.getElementById("max_temp")
+                        .innerText =
+                        maxTemp;
+
+                    document.getElementById("min_temp")
+                        .innerText =
+                        minTemp;
+
+                    document.getElementById("max_ph")
+                        .innerText =
+                        maxPh;
+
+                    document.getElementById("min_ph")
+                        .innerText =
+                        minPh;
+
+                    document.getElementById("max_turbidity")
+                        .innerText =
+                        maxTurb;
+
+                    document.getElementById("min_turbidity")
+                        .innerText =
+                        minTurb;
+
+                    document.getElementById("total_records")
+                        .innerText =
+                        data.length;
+                    let status = "Good";
+                    let color = "green";
+
+                    if (avgTurb > 30) {
+
+                        status = "Poor";
+                        color = "red";
+
+                    }
+                    else if (avgTurb > 15) {
+
+                        status = "Moderate";
+                        color = "orange";
+
+                    }
+
+                    document.getElementById("summary_records")
+                        .innerText =
+                        data.length;
+
+                    const waterQuality =
+                        document.getElementById("water_quality");
+
+                    waterQuality.innerText =
+                        status;
+
+                    waterQuality.style.color =
+                        color;
+
+                    waterQuality.style.fontWeight =
+                        "bold";
+
+                    document.getElementById("summary_quality")
+                        .innerText =
+                        status;
+
+                    document.getElementById("summary_quality")
+                        .style.color =
+                        color;
+
+                    document.getElementById("summary_quality")
+                        .style.fontWeight =
+                        "bold";
+
+                }
+                catch (error) {
+
+                    console.log(error);
+
+                }
+
+            }
+            async function generateSweep() {
+
+                if (routeMode !== "sweep") {
+
+                    showPopup(
+                        "warning",
+                        "⚠ Warning",
+                        "Please switch to Sweep Mode first."
+                    );
+
+                    return;
+                }
+
+                if (sweepCorners.length !== 4) {
+
+                    showPopup(
+                        "warning",
+                        "⚠ Warning",
+                        "Please select 4 corner points first."
+                    );
+
+                    return;
+                }
+
+                //==============================
+                // Calculate Survey Area
+                //==============================
+
+                const lats = sweepCorners.map(p => p.lat);
+                const lngs = sweepCorners.map(p => p.lng);
+
+                const minLat = Math.min(...lats);
+                const maxLat = Math.max(...lats);
+
+                const minLng = Math.min(...lngs);
+                const maxLng = Math.max(...lngs);
+
+                //==============================
+                // Survey Margin (10%)
+                //==============================
+
+                const originalWidth = maxLng - minLng;
+                const originalHeight = maxLat - minLat;
+
+                const marginLng = originalWidth * 0.10;
+                const marginLat = originalHeight * 0.10;
+
+                const startLng = minLng + marginLng;
+                const startLat = minLat + marginLat;
+
+                const width = originalWidth - (marginLng * 2);
+                const height = originalHeight - (marginLat * 2);
+
+                const spacing = Math.max(height / 12, 0.00002);
+
+                try {
+
+                    const response = await fetch(`${API_URL}/generate_sweep`, {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            start_lat: startLat,
+                            start_lng: startLng,
+
+                            width: width,
+                            height: height,
+
+                            spacing: spacing
+
+                        })
+
+                    });
+
+                    const data = await response.json();
+
+                    console.log(data);
+
+                    //==============================
+                    // Clear Manual Route
+                    //==============================
+
+                    manualRoute = [];
+
+                    manualMarkers.forEach(marker => {
+                        map.removeLayer(marker);
+                    });
+
+                    manualMarkers = [];
+
+                    if (manualPolyline) {
+                        map.removeLayer(manualPolyline);
+                        manualPolyline = null;
+                    }
+
+                    //==============================
+                    // Load Generated Sweep Route
+                    //==============================
+
+                    await loadManualRoute();
+
+                    //==============================
+                    // Remove Preview
+                    //==============================
+
+                    if (sweepBoundary) {
+                        map.removeLayer(sweepBoundary);
+                        sweepBoundary = null;
+                    }
+
+                    if (sweepPreview) {
+                        map.removeLayer(sweepPreview);
+                        sweepPreview = null;
+                    }
+
+                    sweepCornerMarkers.forEach(marker => {
+                        map.removeLayer(marker);
+                    });
+
+                    sweepCornerMarkers = [];
+                    sweepCorners = [];
+
+
+                    showPopup(
+                        "success",
+                        "✅ Success",
+                        "Sweep Route Generated Successfully."
+                    );
+
+                    setManualMode();
+
+                }
+                catch (error) {
+
+                    console.log(error);
+
+                }
+
+            }
+
+            //=================================
+            // Add Manual Waypoint
+            //=================================
+
+            function addManualWaypoint(e) {
+                const lat = e.latlng.lat;
+
+                const lng = e.latlng.lng;
+
+                //========================
+                // Sweep Mode
+                //========================
+
+                if (routeMode === "sweep") {
+
+                    if (sweepCorners.length >= 4) {
+                        showPopup(
+                            "warning",
+                            "⚠ Warning",
+                            "You already selected 4 corner points."
+                        );
+                        return;
+                    }
+
+                    sweepCorners.push({
                         lat: lat,
                         lng: lng
                     });
+
+                    document.getElementById("cornerCount").innerText =
+                        `${sweepCorners.length} / 4`;
+
+
 
                     const marker =
                         L.marker([lat, lng])
                             .addTo(map)
                             .bindTooltip(
-                                String(order),
+                                String(sweepCorners.length),
                                 {
                                     permanent: true,
-                                    direction: "top",
-                                    offset: [0, -15]
+                                    direction: "top"
                                 }
                             );
 
-                    manualMarkers.push(marker);
+                    sweepCornerMarkers.push(marker);
 
+                    // วาดเส้นเชื่อมระหว่าง Corner
+
+                    if (sweepBoundary) {
+
+                        map.removeLayer(sweepBoundary);
+
+                    }
+
+                    sweepBoundary =
+                        L.polyline(
+
+                            sweepCorners.map(point => [
+                                point.lat,
+                                point.lng
+                            ]),
+
+                            {
+                                color: "green",
+                                weight: 3,
+                                dashArray: "5,5"
+                            }
+
+                        ).addTo(map);
+
+                    // ครบ 4 จุดแล้ว แสดงกรอบพื้นที่
+                    if (sweepCorners.length === 4) {
+
+                        const lats = sweepCorners.map(p => p.lat);
+                        const lngs = sweepCorners.map(p => p.lng);
+
+                        const minLat = Math.min(...lats);
+                        const maxLat = Math.max(...lats);
+
+                        const minLng = Math.min(...lngs);
+                        const maxLng = Math.max(...lngs);
+
+                        if (sweepPreview) {
+                            map.removeLayer(sweepPreview);
+                        }
+
+                        sweepPreview = L.polygon(
+
+                            sweepCorners.map(point => [
+                                point.lat,
+                                point.lng
+                            ]),
+
+                            {
+                                color: "red",
+                                weight: 2,
+                                fillOpacity: 0.15
+                            }
+
+                        ).addTo(map);
+
+                    }
+
+                    console.log(sweepCorners);
+
+                    document.getElementById("cornerCount").innerText =
+                        sweepCorners.length + " / 4";
+
+                    if (sweepCorners.length === 4) {
+
+                        document.getElementById("surveyStatus").innerText = "Ready";
+
+                    }
+
+                    return;
+                }
+
+                manualRoute.push({
+                    lat: lat,
+                    lng: lng
                 });
+
+                const waypointMarker =
+                    L.marker([lat, lng])
+                        .addTo(map)
+                        .bindTooltip(
+                            String(manualRoute.length),
+                            {
+                                permanent: true,
+                                direction: "top",
+                                offset: [0, -15]
+                            }
+                        );
+
+                manualMarkers.push(waypointMarker);
+
+                if (manualPolyline) {
+                    map.removeLayer(manualPolyline);
+                }
 
                 manualPolyline =
                     L.polyline(
@@ -818,965 +1703,303 @@
                         }
                     ).addTo(map);
 
-                console.log("Manual Route Loaded");
-
+                console.log(manualRoute);
             }
 
-            catch (error) {
+            async function clearRoute() {
 
-                console.log(error);
+                const confirmDelete =
+                    confirm("Delete this route?");
 
-            }
-
-        }
-
-
-        // โหลดตำแหน่งคาดการณ์
-        async function loadPrediction() {
-
-            try {
-
-                const response =
-                    await fetch(`${API_URL}/predictions`);
-
-                const data =
-                    await response.json();
-
-                if (data.length === 0) return;
-
-                const latest = data[0];
-
-                const lat =
-                    parseFloat(latest.predicted_lat);
-
-                const lng =
-                    parseFloat(latest.predicted_lng);
-
-                if (!predictionMarker) {
-
-                    predictionMarker =
-                        L.marker(
-                            [lat, lng],
-                            {
-                                icon: purpleIcon
-                            }
-                        ).addTo(map);
-
-                } else {
-
-                    predictionMarker.setLatLng([lat, lng]);
-
+                if (!confirmDelete) {
+                    return;
                 }
-                if (marker) {
 
-                    const currentLat = marker.getLatLng().lat;
-                    const currentLng = marker.getLatLng().lng;
+                try {
 
-                    if (predictionLine) {
-                        map.removeLayer(predictionLine);
+                    await fetch(`${API_URL}/clear_route`, {
+                        method: "POST"
+                    });
+
+                    // ============================
+                    // Manual Route
+                    // ============================
+
+                    manualRoute = [];
+
+                    manualMarkers.forEach(marker => {
+                        map.removeLayer(marker);
+                    });
+
+                    manualMarkers = [];
+
+                    if (manualPolyline) {
+                        map.removeLayer(manualPolyline);
+                        manualPolyline = null;
                     }
 
-                    predictionLine = L.polyline(
-                        [
-                            [currentLat, currentLng],
-                            [lat, lng]
-                        ],
-                        {
-                            color: 'purple',
-                            weight: 3,
-                            dashArray: '10,10'
-                        }
-                    ).addTo(map);
-                }
+                    // ============================
+                    // Sweep Route
+                    // ============================
 
+                    sweepCorners = [];
 
-                predictionMarker.bindPopup(
-                    `
-        <b>🔴 Predicted Position</b><br>
-        Lat: ${lat}<br>
-        Lng: ${lng}
-        `);
+                    document.getElementById("cornerCount").innerText = "0 / 4";
 
-            }
-            catch (error) {
+                    sweepCornerMarkers.forEach(marker => {
+                        map.removeLayer(marker);
+                    });
 
-                console.log(error);
+                    sweepCornerMarkers = [];
 
-            }
-        }
+                    if (sweepPreview) {
+                        map.removeLayer(sweepPreview);
+                        sweepPreview = null;
+                    }
 
-        async function downloadCSV() {
+                    // ============================
+                    // Sweep Boundary
+                    // ============================
 
-            try {
+                    if (sweepBoundary) {
+                        map.removeLayer(sweepBoundary);
+                        sweepBoundary = null;
+                    }
 
-                const response =
-                    await fetch(`${API_URL}/history`);
-
-                const data =
-                    await response.json();
-
-                let csv =
-                    "Date,Temperature,pH,Turbidity\n";
-
-                data.forEach(row => {
-
-                    csv +=
-                        `${row.log_time},${row.temp_c},${row.ph_level},${row.turbidity_ntu}\n`;
-
-                });
-
-                const blob =
-                    new Blob(
-                        [csv],
-                        { type: 'text/csv' }
-                    );
-
-                const url =
-                    window.URL.createObjectURL(blob);
-
-                const a =
-                    document.createElement("a");
-
-                a.href = url;
-
-                a.download =
-                    "boat_report.csv";
-
-                a.click();
-
-                window.URL.revokeObjectURL(url);
-
-            }
-            catch (error) {
-
-                console.log(error);
-
-            }
-
-        }
-
-        document
-            .getElementById("downloadCSV")
-            .addEventListener(
-                "click",
-                downloadCSV
-            );
-
-        function updateMissionStatus(status) {
-            missionStatus = status;
-
-            document.getElementById("missionStatus").innerText =
-                status;
-        }
-
-        document
-            .getElementById("startMission")
-            .addEventListener(
-                "click",
-                startMission
-            );
-
-        async function startMission() {
-            try {
-                const response =
-                    await fetch(`${API_URL}/mission/start`,
-                        {
-                            method: "POST"
-                        });
-
-                const data =
-                    await response.json();
-
-                missionRunning = true;
-
-                updateMissionStatus(data.status);
-
-                console.log(data);
-
-            }
-            catch (error) {
-                console.log(error);
-            }
-        }
-
-        document
-            .getElementById("stopMission")
-            .addEventListener(
-                "click",
-                stopMission
-            );
-
-        document
-            .getElementById("generateSweep")
-            .addEventListener(
-                "click",
-                generateSweep
-            );
-
-        document
-            .getElementById("manualMode")
-            .addEventListener(
-                "click",
-                setManualMode
-            );
-
-        document
-            .getElementById("sweepMode")
-            .addEventListener(
-                "click",
-                setSweepMode
-            );
-
-        document
-            .getElementById("clearRoute")
-            .addEventListener(
-                "click",
-                clearRoute
-            );
-
-        document
-            .getElementById("uploadRoute")
-            .addEventListener(
-                "click",
-                uploadRoute
-            );
-
-        async function stopMission() {
-            try {
-                const response =
-                    await fetch(`${API_URL}/mission/stop`,
-                        {
-                            method: "POST"
-                        });
-
-                const data =
-                    await response.json();
-
-                missionRunning = false;
-
-                updateMissionStatus(data.status);
-
-                console.log(data);
-
-            }
-            catch (error) {
-                console.log(error);
-            }
-        }
-
-        updateMissionStatus("Idle");
-
-        loadBoat();
-
-        async function loadAnalytics() {
-
-            try {
-
-                const response =
-                    await fetch(`${API_URL}/history`);
-
-                const data =
-                    await response.json();
-
-                if (data.length === 0) return;
-
-                let tempSum = 0;
-                let phSum = 0;
-                let turbSum = 0;
-
-                data.forEach(row => {
-
-                    tempSum += Number(row.temp_c);
-                    phSum += Number(row.ph_level);
-                    turbSum += Number(row.turbidity_ntu);
-
-                });
-
-                const temps =
-                    data.map(x => Number(x.temp_c));
-
-                const phs =
-                    data.map(x => Number(x.ph_level));
-
-                const turbs =
-                    data.map(x => Number(x.turbidity_ntu));
-
-                const avgTemp =
-                    (tempSum / data.length).toFixed(2);
-
-                const avgPh =
-                    (phSum / data.length).toFixed(2);
-
-                const avgTurb =
-                    (turbSum / data.length).toFixed(2);
-
-                const maxTemp =
-                    Math.max(...temps);
-
-                const minTemp =
-                    Math.min(...temps);
-
-                const maxPh =
-                    Math.max(...phs);
-
-                const minPh =
-                    Math.min(...phs);
-
-                const maxTurb =
-                    Math.max(...turbs);
-
-                const minTurb =
-                    Math.min(...turbs);
-
-                document.getElementById("stats_avg_temp")
-                    .innerText =
-                    avgTemp;
-
-                document.getElementById("stats_avg_ph")
-                    .innerText =
-                    avgPh;
-
-                document.getElementById("stats_avg_turbidity")
-                    .innerText =
-                    avgTurb;
-                document.getElementById("max_temp")
-                    .innerText =
-                    maxTemp;
-
-                document.getElementById("min_temp")
-                    .innerText =
-                    minTemp;
-
-                document.getElementById("max_ph")
-                    .innerText =
-                    maxPh;
-
-                document.getElementById("min_ph")
-                    .innerText =
-                    minPh;
-
-                document.getElementById("max_turbidity")
-                    .innerText =
-                    maxTurb;
-
-                document.getElementById("min_turbidity")
-                    .innerText =
-                    minTurb;
-
-                document.getElementById("total_records")
-                    .innerText =
-                    data.length;
-                let status = "Good";
-                let color = "green";
-
-                if (avgTurb > 30) {
-
-                    status = "Poor";
-                    color = "red";
+                    console.log("Route Cleared");
 
                 }
-                else if (avgTurb > 15) {
+                catch (error) {
 
-                    status = "Moderate";
-                    color = "orange";
+                    console.log(error);
 
                 }
-
-                document.getElementById("summary_records")
-                    .innerText =
-                    data.length;
-
-                const waterQuality =
-                    document.getElementById("water_quality");
-
-                waterQuality.innerText =
-                    status;
-
-                waterQuality.style.color =
-                    color;
-
-                waterQuality.style.fontWeight =
-                    "bold";
-
-                document.getElementById("summary_quality")
-                    .innerText =
-                    status;
-
-                document.getElementById("summary_quality")
-                    .style.color =
-                    color;
-
-                document.getElementById("summary_quality")
-                    .style.fontWeight =
-                    "bold";
-
-            }
-            catch (error) {
-
-                console.log(error);
-
             }
 
-        }
-        async function generateSweep() {
-
-            if (routeMode !== "sweep") {
-
-                showPopup(
-                    "warning",
-                    "⚠ Warning",
-                    "Please switch to Sweep Mode first."
-                );
-
-                return;
-            }
-
-            if (sweepCorners.length !== 4) {
-
-                showPopup(
-                    "warning",
-                    "⚠ Warning",
-                    "Please select 4 corner points first."
-                );
-
-                return;
-            }
-
-            //==============================
-            // Calculate Survey Area
-            //==============================
-
-            const lats = sweepCorners.map(p => p.lat);
-            const lngs = sweepCorners.map(p => p.lng);
-
-            const minLat = Math.min(...lats);
-            const maxLat = Math.max(...lats);
-
-            const minLng = Math.min(...lngs);
-            const maxLng = Math.max(...lngs);
-
-            //==============================
-            // Survey Margin (10%)
-            //==============================
-
-            const originalWidth = maxLng - minLng;
-            const originalHeight = maxLat - minLat;
-
-            const marginLng = originalWidth * 0.10;
-            const marginLat = originalHeight * 0.10;
-
-            const startLng = minLng + marginLng;
-            const startLat = minLat + marginLat;
-
-            const width = originalWidth - (marginLng * 2);
-            const height = originalHeight - (marginLat * 2);
-
-            const spacing = Math.max(height / 12, 0.00002);
-
-            try {
-
-                const response = await fetch(`${API_URL}/generate_sweep`, {
-
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        start_lat: startLat,
-                        start_lng: startLng,
-
-                        width: width,
-                        height: height,
-
-                        spacing: spacing
-
-                    })
-
-                });
-
-                const data = await response.json();
-
-                console.log(data);
-
-                //==============================
-                // Clear Manual Route
-                //==============================
-
-                manualRoute = [];
-
-                manualMarkers.forEach(marker => {
-                    map.removeLayer(marker);
-                });
-
-                manualMarkers = [];
-
-                if (manualPolyline) {
-                    map.removeLayer(manualPolyline);
-                    manualPolyline = null;
-                }
-
-                //==============================
-                // Load Generated Sweep Route
-                //==============================
-
-                await loadManualRoute();
-
-                //==============================
-                // Remove Preview
-                //==============================
-
-                if (sweepBoundary) {
-                    map.removeLayer(sweepBoundary);
-                    sweepBoundary = null;
-                }
-
-                if (sweepPreview) {
-                    map.removeLayer(sweepPreview);
-                    sweepPreview = null;
-                }
-
-                sweepCornerMarkers.forEach(marker => {
-                    map.removeLayer(marker);
-                });
-
-                sweepCornerMarkers = [];
-                sweepCorners = [];
-
-
-                showPopup(
-                    "success",
-                    "✅ Success",
-                    "Sweep Route Generated Successfully."
-                );
-
-                setManualMode();
-
-            }
-            catch (error) {
-
-                console.log(error);
-
-            }
-
-        }
-
-        //=================================
-        // Add Manual Waypoint
-        //=================================
-
-        function addManualWaypoint(e) {
-            const lat = e.latlng.lat;
-
-            const lng = e.latlng.lng;
-
-            //========================
-            // Sweep Mode
-            //========================
-
-            if (routeMode === "sweep") {
-
-                if (sweepCorners.length >= 4) {
+            async function uploadRoute() {
+                if (manualRoute.length === 0) {
                     showPopup(
                         "warning",
                         "⚠ Warning",
-                        "You already selected 4 corner points."
+                        "No route available."
                     );
                     return;
                 }
 
-                sweepCorners.push({
-                    lat: lat,
-                    lng: lng
-                });
+                const points = manualRoute.map((point, index) =>
+                ({
+                    waypoint_order: index + 1,
+                    latitude: point.lat,
+                    longitude: point.lng
+                }));
+
+                const body =
+                {
+                    route_name: "Manual Route",
+                    points: points
+                };
+
+                try {
+                    const response =
+                        await fetch(`${API_URL}/save_route`,
+                            {
+                                method: "POST",
+
+                                headers:
+                                {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(body)
+                            });
+
+                    const data =
+                        await response.json();
+
+                    console.log(data);
+
+                    showPopup(
+                        "success",
+                        "✅ Success",
+                        "Route Uploaded Successfully."
+                    );
+
+                }
+                catch (error) {
+                    console.log(error);
+                }
+            }
+
+            //====================================
+            // Route Mode
+            //====================================
+
+            function setManualMode() {
+
+                routeMode = "manual";
+
+                document.getElementById("manualMode").style.background = "#4CAF50";
+                document.getElementById("sweepMode").style.background = "";
+
+                document.getElementById("routeType").innerText = "Manual";
+
+                document.getElementById("cornerCount").innerText = "0 / 4";
+
+                console.log("Manual Mode");
+
+                document.getElementById("routeType").innerText = "Manual";
+
+                document.getElementById("missionType").innerText = "Manual";
+
+                document.getElementById("surveyStatus").innerText = "Not Ready";
+
+            }
+
+            function setSweepMode() {
+
+                routeMode = "sweep";
+
+                document.getElementById("sweepMode").style.background = "#4CAF50";
+                document.getElementById("manualMode").style.background = "";
+
+                document.getElementById("routeType").innerText = "Sweep";
 
                 document.getElementById("cornerCount").innerText =
                     `${sweepCorners.length} / 4`;
 
+                console.log("Sweep Mode");
 
+                document.getElementById("routeType").innerText = "Sweep";
 
-                const marker =
-                    L.marker([lat, lng])
-                        .addTo(map)
-                        .bindTooltip(
-                            String(sweepCorners.length),
-                            {
-                                permanent: true,
-                                direction: "top"
-                            }
-                        );
+                document.getElementById("missionType").innerText = "Sweep";
 
-                sweepCornerMarkers.push(marker);
+                document.getElementById("surveyStatus").innerText = "Selecting Area";
 
-                // วาดเส้นเชื่อมระหว่าง Corner
+            }
 
-                if (sweepBoundary) {
+            loadPath();
+            loadPrediction();
+            loadHistory();
+            loadHeatMap();
+            loadAnalytics();
+            loadManualRoute();
 
-                    map.removeLayer(sweepBoundary);
+            setInterval(loadBoat, 5000);
+            setInterval(loadPath, 5000);
+            setInterval(loadPrediction, 5000);
+            setInterval(loadHistory, 30000);
+            setInterval(loadHeatMap, 30000);
+            setInterval(loadAnalytics, 30000);
+            setInterval(loadManualRoute, 5000);
+
+            //=================================
+            // Popup
+            //=================================
+
+            function showPopup(type, title, message) {
+
+                const popup =
+                    document.getElementById("popupOverlay");
+
+                const popupTitle =
+                    document.getElementById("popupTitle");
+
+                const popupMessage =
+                    document.getElementById("popupMessage");
+
+                popupTitle.innerText = title;
+
+                popupMessage.innerText = message;
+
+                popupTitle.style.color = "#2563eb";
+
+                if (type === "success") {
+
+                    popupTitle.style.color = "#16a34a";
 
                 }
 
-                sweepBoundary =
-                    L.polyline(
+                else if (type === "warning") {
 
-                        sweepCorners.map(point => [
-                            point.lat,
-                            point.lng
-                        ]),
-
-                        {
-                            color: "green",
-                            weight: 3,
-                            dashArray: "5,5"
-                        }
-
-                    ).addTo(map);
-
-                // ครบ 4 จุดแล้ว แสดงกรอบพื้นที่
-                if (sweepCorners.length === 4) {
-
-                    const lats = sweepCorners.map(p => p.lat);
-                    const lngs = sweepCorners.map(p => p.lng);
-
-                    const minLat = Math.min(...lats);
-                    const maxLat = Math.max(...lats);
-
-                    const minLng = Math.min(...lngs);
-                    const maxLng = Math.max(...lngs);
-
-                    if (sweepPreview) {
-                        map.removeLayer(sweepPreview);
-                    }
-
-                    sweepPreview = L.polygon(
-
-                        sweepCorners.map(point => [
-                            point.lat,
-                            point.lng
-                        ]),
-
-                        {
-                            color: "red",
-                            weight: 2,
-                            fillOpacity: 0.15
-                        }
-
-                    ).addTo(map);
+                    popupTitle.style.color = "#f59e0b";
 
                 }
 
-                console.log(sweepCorners);
+                else if (type === "error") {
 
-                document.getElementById("cornerCount").innerText =
-                    sweepCorners.length + " / 4";
-
-                if (sweepCorners.length === 4) {
-
-                    document.getElementById("surveyStatus").innerText = "Ready";
+                    popupTitle.style.color = "#dc2626";
 
                 }
 
-                return;
-            }
-
-            manualRoute.push({
-                lat: lat,
-                lng: lng
-            });
-
-            const waypointMarker =
-                L.marker([lat, lng])
-                    .addTo(map)
-                    .bindTooltip(
-                        String(manualRoute.length),
-                        {
-                            permanent: true,
-                            direction: "top",
-                            offset: [0, -15]
-                        }
-                    );
-
-            manualMarkers.push(waypointMarker);
-
-            if (manualPolyline) {
-                map.removeLayer(manualPolyline);
-            }
-
-            manualPolyline =
-                L.polyline(
-                    manualRoute.map(p => [p.lat, p.lng]),
-                    {
-                        color: "green",
-                        weight: 4
-                    }
-                ).addTo(map);
-
-            console.log(manualRoute);
-        }
-
-        async function clearRoute() {
-
-            const confirmDelete =
-                confirm("Delete this route?");
-
-            if (!confirmDelete) {
-                return;
-            }
-
-            try {
-
-                await fetch(`${API_URL}/clear_route`, {
-                    method: "POST"
-                });
-
-                // ============================
-                // Manual Route
-                // ============================
-
-                manualRoute = [];
-
-                manualMarkers.forEach(marker => {
-                    map.removeLayer(marker);
-                });
-
-                manualMarkers = [];
-
-                if (manualPolyline) {
-                    map.removeLayer(manualPolyline);
-                    manualPolyline = null;
-                }
-
-                // ============================
-                // Sweep Route
-                // ============================
-
-                sweepCorners = [];
-
-                document.getElementById("cornerCount").innerText = "0 / 4";
-
-                sweepCornerMarkers.forEach(marker => {
-                    map.removeLayer(marker);
-                });
-
-                sweepCornerMarkers = [];
-
-                if (sweepPreview) {
-                    map.removeLayer(sweepPreview);
-                    sweepPreview = null;
-                }
-
-                // ============================
-                // Sweep Boundary
-                // ============================
-
-                if (sweepBoundary) {
-                    map.removeLayer(sweepBoundary);
-                    sweepBoundary = null;
-                }
-
-                console.log("Route Cleared");
+                popup.style.display = "flex";
 
             }
-            catch (error) {
 
-                console.log(error);
+            function closePopup() {
 
-            }
-        }
-
-        async function uploadRoute() {
-            if (manualRoute.length === 0) {
-                showPopup(
-                    "warning",
-                    "⚠ Warning",
-                    "No route available."
-                );
-                return;
-            }
-
-            const points = manualRoute.map((point, index) =>
-            ({
-                waypoint_order: index + 1,
-                latitude: point.lat,
-                longitude: point.lng
-            }));
-
-            const body =
-            {
-                route_name: "Manual Route",
-                points: points
-            };
-
-            try {
-                const response =
-                    await fetch(`${API_URL}/save_route`,
-                        {
-                            method: "POST",
-
-                            headers:
-                            {
-                                "Content-Type": "application/json"
-                            },
-
-                            body: JSON.stringify(body)
-                        });
-
-                const data =
-                    await response.json();
-
-                console.log(data);
-
-                showPopup(
-                    "success",
-                    "✅ Success",
-                    "Route Uploaded Successfully."
-                );
-
-            }
-            catch (error) {
-                console.log(error);
-            }
-        }
-
-        //====================================
-        // Route Mode
-        //====================================
-
-        function setManualMode() {
-
-            routeMode = "manual";
-
-            document.getElementById("manualMode").style.background = "#4CAF50";
-            document.getElementById("sweepMode").style.background = "";
-
-            document.getElementById("routeType").innerText = "Manual";
-
-            document.getElementById("cornerCount").innerText = "0 / 4";
-
-            console.log("Manual Mode");
-
-            document.getElementById("routeType").innerText = "Manual";
-
-            document.getElementById("missionType").innerText = "Manual";
-
-            document.getElementById("surveyStatus").innerText = "Not Ready";
-
-        }
-
-        function setSweepMode() {
-
-            routeMode = "sweep";
-
-            document.getElementById("sweepMode").style.background = "#4CAF50";
-            document.getElementById("manualMode").style.background = "";
-
-            document.getElementById("routeType").innerText = "Sweep";
-
-            document.getElementById("cornerCount").innerText =
-                `${sweepCorners.length} / 4`;
-
-            console.log("Sweep Mode");
-
-            document.getElementById("routeType").innerText = "Sweep";
-
-            document.getElementById("missionType").innerText = "Sweep";
-
-            document.getElementById("surveyStatus").innerText = "Selecting Area";
-
-        }
-
-        loadPath();
-        loadPrediction();
-        loadHistory();
-        loadHeatMap();
-        loadAnalytics();
-        loadManualRoute();
-
-        setInterval(loadBoat, 5000);
-        setInterval(loadPath, 5000);
-        setInterval(loadPrediction, 5000);
-        setInterval(loadHistory, 30000);
-        setInterval(loadHeatMap, 30000);
-        setInterval(loadAnalytics, 30000);
-        setInterval(loadManualRoute, 5000);
-
-        //=================================
-        // Popup
-        //=================================
-
-        function showPopup(type, title, message) {
-
-            const popup =
-                document.getElementById("popupOverlay");
-
-            const popupTitle =
-                document.getElementById("popupTitle");
-
-            const popupMessage =
-                document.getElementById("popupMessage");
-
-            popupTitle.innerText = title;
-
-            popupMessage.innerText = message;
-
-            popupTitle.style.color = "#2563eb";
-
-            if (type === "success") {
-
-                popupTitle.style.color = "#16a34a";
+                document.getElementById("popupOverlay").style.display =
+                    "none";
 
             }
 
-            else if (type === "warning") {
 
-                popupTitle.style.color = "#f59e0b";
-
-            }
-
-            else if (type === "error") {
-
-                popupTitle.style.color = "#dc2626";
-
-            }
-
-            popup.style.display = "flex";
-
-        }
-
-        function closePopup() {
-
-            document.getElementById("popupOverlay").style.display =
-                "none";
-
-        }
-
-
-    </script>
-    <!-- =========================
+        </script>
+        <!-- =========================
      Popup Message
     =========================== -->
 
-    <div id="popupOverlay" class="popup-overlay">
+        <div id="popupOverlay" class="popup-overlay">
 
-        <div class="popup-box">
+            <div class="popup-box">
 
-            <h2 id="popupTitle">
-                Message
-            </h2>
+                <h2 id="popupTitle">
+                    Message
+                </h2>
 
-            <p id="popupMessage">
-                ...
-            </p>
+                <p id="popupMessage">
+                    ...
+                </p>
 
-            <button onclick="closePopup()">
-                OK
-            </button>
+                <button onclick="closePopup()">
+                    OK
+                </button>
+
+            </div>
 
         </div>
 
-    </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    </div> <!-- ปิด main -->
+
+    <script>
+
+        function showPage(page, menu) {
+
+            document.getElementById("missionPage").style.display = "none";
+            document.getElementById("dashboardPage").style.display = "none";
+            document.getElementById("analyticsPage").style.display = "none";
+            document.getElementById("historyPage").style.display = "none";
+
+            document.getElementById(page).style.display = "block";
+
+            document.querySelectorAll(".menu-item").forEach(item => {
+
+                item.classList.remove("active");
+
+            });
+
+            if (menu) {
+
+                menu.classList.add("active");
+
+            }
+
+        }
+
+        showPage("missionPage", document.querySelector(".menu-item"));
+
+    </script>
 
 </body>
 

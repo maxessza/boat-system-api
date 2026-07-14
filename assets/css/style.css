@@ -12,9 +12,15 @@ canvas {
 }
 
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f5f7fa;
+
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    margin: 0;
+
+    padding: 20px;
+
+    background: #eef3f8;
+
 }
 
 h1 {
@@ -22,8 +28,19 @@ h1 {
 }
 
 #map {
-    height: 600px;
-    border-radius: 10px;
+
+    width: 100%;
+
+    height: 320px;
+
+    border-radius: 15px;
+
+    overflow: hidden;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .12);
+
+    margin-bottom: 25px;
+
 }
 
 p {
@@ -36,7 +53,7 @@ p {
 }
 
 #downloadCSV {
-    width: 350px;
+    width: 100%;
 
     background: #0f4c81;
     color: white;
@@ -54,16 +71,31 @@ p {
 
 
 .card {
-    background: white;
-    padding: 20px;
 
-    border-radius: 12px;
+    background: #ffffff;
 
-    width: 350px;
+    border-radius: 18px;
+
+    padding: 22px;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
+
+    transition: .3s;
+
+    width: 100%;
 
     margin-bottom: 20px;
 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: none;
+
+}
+
+.card:hover {
+
+    transform: translateY(-5px);
+
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .12);
+
 }
 
 .card h3 {
@@ -71,30 +103,26 @@ p {
     color: #0f4c81;
 }
 
-#missionCard {
-    width: 350px;
+.card h3 {
+
+    border-bottom: 2px solid #eef3f8;
+
+    padding-bottom: 10px;
 
     margin-bottom: 20px;
+
 }
 
-#missionCard button {
-    width: 100%;
+.card p {
+    margin: 10px 0;
+}
 
-    padding: 12px;
+#missionCard {
 
-    margin-top: 10px;
+    padding: 18px;
 
-    border: none;
+    border-radius: 18px;
 
-    border-radius: 8px;
-
-    cursor: pointer;
-
-    background: #0f4c81;
-
-    color: white;
-
-    font-size: 15px;
 }
 
 #missionCard button:hover {
@@ -107,12 +135,6 @@ p {
 
 #stopMission:hover {
     background: #b71c1c;
-}
-
-.topRow {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
 }
 
 /*=================================
@@ -178,5 +200,688 @@ Popup
 .popup-box button {
 
     width: 120px;
+
+}
+
+/*=========================
+HEADER
+=========================*/
+
+.dashboard-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    background: white;
+
+    padding: 28px 35px;
+
+    border-radius: 15px;
+
+    margin-bottom: 20px;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .15);
+
+}
+
+.dashboard-header h1 {
+
+    margin: 0;
+
+    color: #0f4c81;
+
+}
+
+.dashboard-header p {
+
+    margin-top: 8px;
+
+    color: #666;
+
+}
+
+.status-badge {
+
+    background: #16a34a;
+
+    color: white;
+
+    font-weight: bold;
+
+    padding: 10px 18px;
+
+    border-radius: 25px;
+
+    font-size: 18px;
+
+}
+
+/*=========================
+Map Legend
+=========================*/
+
+.legend-card {
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 20px;
+
+    margin-top: 20px;
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+
+}
+
+.legend-grid {
+
+    display: flex;
+
+    justify-content: space-around;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 20px;
+
+    margin-top: 15px;
+
+}
+
+.legend-item {
+
+    background: none;
+
+    padding: 0;
+
+    font-weight: 600;
+
+}
+
+button {
+
+    border: none;
+
+    border-radius: 12px;
+
+    transition: .25s;
+
+    font-weight: 600;
+
+}
+
+button:hover {
+
+    transform: scale(1.03);
+
+}
+
+/*==============================
+SIDEBAR
+==============================*/
+.sidebar {
+
+    position: fixed;
+
+    left: 0;
+
+    top: 0;
+
+    width: 230px;
+
+    height: 100vh;
+
+    background: #0B2447;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    padding: 25px 18px;
+
+    box-sizing: border-box;
+
+}
+
+.logo {
+
+    text-align: center;
+
+    margin-bottom: 35px;
+
+}
+
+.logo-icon {
+
+    font-size: 48px;
+
+}
+
+.logo h2 {
+
+    font-size: 18px;
+
+    color: white;
+
+    margin-top: 8px;
+
+}
+
+.sidebar ul {
+
+    list-style: none;
+
+    padding: 0;
+
+}
+
+.sidebar ul {
+
+    list-style: none;
+
+    padding: 0;
+
+    margin: 0;
+
+}
+
+.sidebar li {
+
+    color: white;
+
+    padding: 16px;
+
+    border-radius: 12px;
+
+    margin-bottom: 12px;
+
+    cursor: pointer;
+
+    transition: .25s;
+
+    font-size: 17px;
+
+}
+
+.sidebar li:hover {
+
+    background: #1d4ed8;
+
+}
+
+.sidebar li.active {
+
+    background: #2563eb;
+
+}
+
+.main {
+
+    margin-left: 240px;
+
+    padding: 20px;
+
+}
+
+.sidebar-top {
+
+    display: flex;
+
+    flex-direction: column;
+
+}
+
+/*==============================
+TOP SENSOR BAR
+==============================*/
+
+.sensor-summary {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 20px;
+
+    margin-top: 25px;
+
+}
+
+/*=========================
+Sensor Summary
+=========================*/
+
+.sensor-box {
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 35px 20px;
+
+    text-align: center;
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+
+}
+
+.sensor-box .icon {
+
+    font-size: 36px;
+
+}
+
+.sensor-box .title {
+
+    margin-top: 10px;
+
+    color: #666;
+
+    font-size: 15px;
+
+}
+
+.sensor-box .value {
+
+    margin-top: 10px;
+
+    font-size: 28px;
+
+    font-weight: bold;
+
+    color: #0B2447;
+
+}
+
+/*=========================
+Mission Grid
+=========================*/
+
+.mission-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(6, 1fr);
+
+    gap: 18px;
+
+    margin-top: 20px;
+
+    margin-bottom: 20px;
+
+}
+
+.mission-item {
+
+    background: #fff;
+
+    border-radius: 14px;
+
+    padding: 15px 10px;
+
+    text-align: center;
+
+    min-height: 90px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .08);
+
+}
+
+.mission-item span {
+
+    font-size: 12px;
+
+    color: #64748b;
+
+    font-weight: 600;
+
+    text-transform: none;
+
+    letter-spacing: 0;
+
+}
+
+.mission-item h4 {
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    margin-top: 8px;
+
+    margin-bottom: 0;
+
+    color: #0f172a;
+
+}
+
+.status-box {
+
+    border-top: 3px solid #22c55e;
+}
+
+.route-box {
+
+    border-top: 3px solid #2563eb;
+}
+
+.corner-box {
+
+    border-top: 3px solid #f59e0b;
+}
+
+.waypoint-box {
+
+    border-top: 3px solid #8b5cf6;
+}
+
+.heading-box {
+
+    border-top: 3px solid #38bdf8;
+}
+
+.flow-box {
+
+    border-top: 3px solid #14b8a6;
+}
+
+/*=========================
+Mission Buttons
+=========================*/
+
+.mission-buttons {
+
+    display: grid;
+
+    grid-template-columns: repeat(6, 1fr);
+
+    gap: 8px;
+
+    margin-top: 16px;
+
+}
+
+.mission-buttons button {
+
+    height: 42px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .15);
+
+}
+
+.mission-buttons button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 6px 15px rgba(0, 0, 0, .18);
+
+}
+
+.full-width {
+
+    grid-column: 1 / span 6;
+
+    height: 55px;
+
+}
+
+.temp-card {
+
+    border-top: 6px solid #ef4444;
+
+}
+
+.ph-card {
+
+    border-top: 6px solid #22c55e;
+
+}
+
+.turbidity-card {
+
+    border-top: 6px solid #3b82f6;
+
+}
+
+.quality-card {
+
+    border-top: 6px solid #f59e0b;
+
+}
+
+.sidebar ul li {
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    transition: .25s;
+
+}
+
+.sidebar ul li:hover {
+
+    background: #1d4ed8;
+
+    color: white;
+
+}
+
+.sidebar ul li.active {
+
+    background: #2563eb;
+
+    color: white;
+
+}
+
+#startMission {
+
+    background: #22c55e;
+
+    color: white;
+
+}
+
+#startMission:hover {
+
+    background: #16a34a;
+
+}
+
+#stopMission {
+
+    background: #ef4444;
+
+    color: white;
+
+}
+
+#stopMission:hover {
+
+    background: #dc2626;
+
+}
+
+
+#manualMode,
+#sweepMode,
+#generateSweep {
+
+    background: #2563eb;
+
+    color: white;
+
+}
+
+
+#uploadRoute {
+
+    background: #8b5cf6;
+
+    color: white;
+
+}
+
+#uploadRoute:hover {
+
+    background: #7c3aed;
+
+}
+
+#clearRoute {
+
+    background: #334155;
+
+    color: white;
+
+}
+
+#clearRoute:hover {
+
+    background: #1e293b;
+
+}
+
+
+
+#manualMode:hover,
+#sweepMode:hover,
+#generateSweep:hover {
+
+    background: #1d4ed8;
+
+}
+
+.badge {
+
+    display: inline-block;
+
+    padding: 8px 18px;
+
+    margin-top: 10px;
+
+    border-radius: 12px;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+}
+
+.badge-green {
+
+    background: #dcfce7;
+
+    color: #16a34a;
+
+}
+
+.badge-blue {
+
+    background: #dbeafe;
+
+    color: #2563eb;
+
+}
+
+.badge-orange {
+
+    background: #fef3c7;
+
+    color: #d97706;
+
+}
+
+.badge-purple {
+
+    background: #ede9fe;
+
+    color: #7c3aed;
+
+}
+
+.badge-cyan {
+
+    background: #cffafe;
+
+    color: #0891b2;
+
+}
+
+.badge-teal {
+
+    background: #ccfbf1;
+
+    color: #0f766e;
+
+}
+
+.boat-card {
+
+    background: #102C57;
+
+    border: 1px solid rgba(255, 255, 255, .12);
+
+    border-radius: 15px;
+
+    padding: 18px;
+
+}
+
+.boat-name {
+
+    color: white;
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+}
+
+.boat-status {
+
+    margin-top: 10px;
+
+    color: #22c55e;
+
+    font-weight: 700;
+
+}
+
+.menu-item {
+
+    cursor: pointer;
+
+    transition: .25s;
+
+}
+
+.menu-item.active {
+
+    background: #2563eb;
+
+    color: white;
 
 }
