@@ -1271,6 +1271,8 @@
             const width = originalWidth - (marginLng * 2);
             const height = originalHeight - (marginLat * 2);
 
+            const spacing = Math.max(height / 12, 0.00002);
+
             try {
 
                 const response = await fetch(`${API_URL}/generate_sweep`, {
@@ -1289,7 +1291,7 @@
                         width: width,
                         height: height,
 
-                        spacing: 0.0002
+                        spacing: spacing
 
                     })
 
