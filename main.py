@@ -274,28 +274,30 @@ def dashboard():
     return FileResponse("dashboard.html")
     
 @app.get("/history")
-def get_history():
+def history():
 
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT
+            boat_id,
             log_time,
+            latitude,
+            longitude,
             temp_c,
             ph_level,
             turbidity_ntu
         FROM sensor_logs
-        ORDER BY id DESC
-        LIMIT 50
+        ORDER BY log_time DESC
     """)
 
-    data = cursor.fetchall()
+    rows = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
-    return data
+    return rows
 
 
 @app.get("/route")

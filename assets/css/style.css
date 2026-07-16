@@ -1,14 +1,17 @@
 canvas {
+
     width: 100% !important;
-    max-width: 1200px;
-    height: 400px !important;
-    display: block;
-    margin: 20px auto;
+
+    height: 350px !important;
+
+    margin: 0;
 
     background: white;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+    border: none;
+
+    box-shadow: none;
+
 }
 
 body {
@@ -203,6 +206,94 @@ Popup
 
 }
 
+.popup-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, .45);
+
+    display: none;
+
+    justify-content: center;
+
+    align-items: center;
+
+    z-index: 9999;
+
+}
+
+.popup-box {
+
+    width: 420px;
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 30px;
+
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .25);
+
+    text-align: center;
+
+}
+
+.popup-box h2 {
+
+    margin-top: 0;
+
+    color: #0f4c81;
+
+}
+
+.popup-box p {
+
+    color: #666;
+
+    margin: 20px 0;
+
+}
+
+.popup-buttons {
+
+    display: flex;
+
+    gap: 15px;
+
+}
+
+.popup-buttons button {
+
+    flex: 1;
+
+    padding: 12px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+.cancel-btn {
+
+    background: #6b7280;
+
+}
+
+.confirm-btn {
+
+    background: #dc2626;
+
+}
+
 /*=========================
 HEADER
 =========================*/
@@ -256,6 +347,24 @@ HEADER
     border-radius: 25px;
 
     font-size: 18px;
+
+}
+
+.header-info {
+
+    display: flex;
+
+    gap: 18px;
+
+    margin-top: 10px;
+
+    font-size: 15px;
+
+}
+
+.header-info span {
+
+    font-weight: 600;
 
 }
 
@@ -602,18 +711,15 @@ Mission Grid
 Mission Buttons
 =========================*/
 
-.mission-buttons {
+.mission-buttons{
 
-    display: grid;
+    display:grid;
 
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns:repeat(6,1fr);
 
-    gap: 8px;
-
-    margin-top: 16px;
+    gap:12px;
 
 }
-
 .mission-buttons button {
 
     height: 42px;
@@ -883,5 +989,318 @@ Mission Buttons
     background: #2563eb;
 
     color: white;
+
+}
+
+/*=========================
+Dashboard Page
+=========================*/
+
+.dashboard-cards {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 20px;
+
+    margin: 20px 0;
+
+}
+
+.dash-card {
+
+    background: white;
+
+    border-radius: 15px;
+
+    padding: 20px;
+
+    text-align: center;
+
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+
+}
+
+.dash-card span {
+
+    color: #64748b;
+
+    font-size: 14px;
+
+}
+
+.dash-card h3 {
+
+    margin-top: 10px;
+
+    font-size: 28px;
+
+    color: #0B2447;
+
+}
+
+/*=========================
+Analytics Page
+=========================*/
+
+.analytics-summary {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+    gap: 20px;
+
+    margin: 25px 0;
+
+}
+
+.analytics-summary .dash-card {
+
+    background: #fff;
+
+    border-radius: 18px;
+
+    padding: 25px;
+
+    text-align: center;
+
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .08);
+
+}
+
+.analytics-summary span {
+
+    color: #64748b;
+
+    font-size: 14px;
+
+}
+
+.analytics-summary h3 {
+
+    margin-top: 10px;
+
+    font-size: 30px;
+
+    color: #0B2447;
+
+}
+
+#analyticsPage .card {
+
+    margin-bottom: 25px;
+
+}
+
+/*=========================
+Analytics Summary
+=========================*/
+
+.analytics-summary {
+
+    display: grid;
+
+    grid-template-columns: repeat(5, 1fr);
+
+    gap: 20px;
+
+    margin: 20px 0;
+
+}
+
+.dash-card {
+
+    background: #fff;
+
+    border-radius: 16px;
+
+    padding: 20px;
+
+    text-align: center;
+
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .08);
+
+    transition: .25s;
+
+}
+
+.dash-card:hover {
+
+    transform: translateY(-4px);
+
+}
+
+.dash-card span {
+
+    font-size: 14px;
+
+    color: #666;
+
+}
+
+.dash-card h3 {
+
+    margin-top: 12px;
+
+    font-size: 28px;
+
+    font-weight: 700;
+
+    color: #0B2447;
+
+}
+
+
+/*=====================
+History
+======================*/
+
+.history-toolbar {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+
+}
+
+.history-toolbar input {
+
+    width: 300px;
+
+    padding: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid #ddd;
+
+}
+
+.history-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+}
+
+.history-table th {
+
+    background: #0f2d56;
+
+    color: white;
+
+    padding: 14px;
+
+    text-align: center;
+
+}
+
+.history-table td {
+
+    padding: 14px;
+
+    text-align: center;
+
+    vertical-align: middle;
+
+    border-bottom: 1px solid #edf2f7;
+
+}
+
+.history-table tbody tr:hover {
+
+    background: #f8fbff;
+
+}
+
+.boat-tag {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    background: #dbeafe;
+
+    color: #2563eb;
+
+    padding: 6px 14px;
+
+    border-radius: 20px;
+
+    font-weight: 600;
+
+}
+
+.good-badge {
+
+    display: inline-block;
+
+    min-width: 70px;
+
+    text-align: center;
+
+    background: #dcfce7;
+
+    color: #16a34a;
+
+    padding: 6px 12px;
+
+    border-radius: 30px;
+
+    font-weight: bold;
+
+}
+
+.bad-badge {
+
+    display: inline-block;
+
+    min-width: 70px;
+
+    text-align: center;
+
+    background: #fee2e2;
+
+    color: #dc2626;
+
+    padding: 6px 12px;
+
+    border-radius: 30px;
+
+    font-weight: bold;
+
+}
+
+#clearRoute{
+
+    grid-column:1 / 7;
+
+    width:100%;
+
+    height:50px;
+
+    margin-top:8px;
+
+    background:#6b7280;
+
+    color:white;
+
+    font-weight:600;
+
+    border-radius:12px;
+
+}
+
+#clearRoute:hover{
+
+    background:#4b5563;
 
 }
