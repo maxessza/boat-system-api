@@ -13,11 +13,20 @@ app.mount(
     StaticFiles(directory="assets"),
     name="assets"
 )
+
 #=========================
 # Mission State
 #=========================
 
 mission_running = False
+
+mission_mode = "MANUAL"
+
+boat_state = "Idle"
+
+current_waypoint = 0
+
+total_waypoints = 0
 
 # ✅ CORS สำหรับ Dashboard
 app.add_middleware(
@@ -72,14 +81,14 @@ class RouteData(BaseModel):
 class SweepArea(BaseModel):
 
     start_lat: float
-
     start_lng: float
-
     width: float
-
     height: float
-
     spacing: float
+
+
+class MissionRequest(BaseModel):
+    mode: str
 
 # ✅ เช็ค API
 @app.get("/")
@@ -329,17 +338,21 @@ def get_route():
 #====================================
 
 @app.post("/mission/start")
-def startMission():
+def startMission(request: MissionRequest):
 
     global mission_running
+    global mission_mode
+    global boat_state
 
     mission_running = True
+    boat_state = "Navigating"
+    mission_mode = request.mode.upper()
 
     return {
         "success": True,
-        "status": "Running"
+        "status": "Running",
+        "mode": mission_mode
     }
-
 #====================================
 # Stop Mission
 #====================================
@@ -348,14 +361,17 @@ def startMission():
 def stopMission():
 
     global mission_running
+    global mission_mode
+    global boat_state
 
     mission_running = False
+    boat_state = "Idle"
 
     return {
         "success": True,
-        "status": "Stopped"
+        "status": "Stopped",
+        "mode": mission_mode
     }
-
 #====================================
 # Mission Status
 #====================================
@@ -363,10 +379,49 @@ def stopMission():
 @app.get("/mission/status")
 def missionStatus():
 
+   return{
+
+    "running":mission_running,
+    "mode":mission_mode,
+    "boat_state":boat_state
+
+   }
+
+
+
+#====================================
+# Mission Progress
+#====================================
+
+@app.get("/mission/progress")
+def missionProgress():
+
     return {
 
-        "running": mission_running
+        "current_waypoint": current_waypoint,
 
+        "total_waypoints": total_waypoints
+
+    }    
+
+    
+#====================================
+# ESP32 Mission API
+#====================================
+
+@app.get("/mission")
+def getMission():
+
+    if mission_running:
+
+        return {
+            "command": "START",
+            "mode": mission_mode
+        }
+
+    return {
+        "command": "STOP",
+        "mode": mission_mode
     }
 
 
@@ -552,6 +607,10 @@ def generateSweep(area: SweepArea):
 
 @app.post("/save_route")
 def save_route(route: RouteData):
+
+    global total_waypoints
+
+    total_waypoints = len(route.points)
 
     conn = get_connection()
     cursor = conn.cursor()
