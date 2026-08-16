@@ -706,88 +706,261 @@
 
         <div id="monitorPage" style="display:none;">
 
-            <div class="mission-header">
+            <div class="monitor-main-grid">
 
-                <div>
+                <!-- ================================= -->
+                <!-- LEFT COLUMN -->
+                <!-- ================================= -->
 
-                    <h2>🚤 Mission Monitor</h2>
+                <div class="monitor-main-left">
 
-                    <p>Real-time Autonomous Boat Monitoring System</p>
 
-                </div>
+                    <!-- =============================== -->
+                    <!-- MAP -->
+                    <!-- =============================== -->
 
-                <div class="mission-live">
+                    <div class="monitor-map">
 
-                    <div class="live-dot"></div>
-
-                    LIVE
-
-                </div>
-
-            </div>
-            <div class="monitor-layout">
-
-                <div class="monitor-map">
-
-                    <div class="card">
-
-                        <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        margin-bottom:15px;
-                        ">
-
-                            <h3 style="margin:0;">🗺 Live Mission Map</h3>
+                        <div class="card">
 
                             <div style="
-                            background:#f8fafc;
-                            padding:8px 15px;
-                            border-radius:10px;
-                            font-size:14px;
-                            ">
-                                🌊 Turbidity Heatmap
+                             display:flex;
+                             justify-content:space-between;
+                             align-items:center;
+                             margin-bottom:15px;
+                             ">
+
+                                <h3 style="margin:0;">
+                                    🗺 Live Mission Map
+                                </h3>
+
+                                <div style="
+                                 background:#f8fafc;
+                                 padding:8px 15px;
+                                 border-radius:10px;
+                                 font-size:14px;
+                                 ">
+                                    🌊 Turbidity Heatmap
+                                </div>
+
+                            </div>
+
+
+                            <div class="heatmap-legend">
+
+                                <div class="legend-title">
+                                    Water Turbidity Heatmap (NTU)
+                                </div>
+
+                                <div class="legend-color"></div>
+
+                                <div class="legend-number">
+
+                                    <span>0</span>
+                                    <span>10</span>
+                                    <span>20</span>
+                                    <span>30</span>
+                                    <span>40+</span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- IMPORTANT -->
+                            <!-- ห้ามเปลี่ยน id นี้ -->
+
+                            <div id="monitorMap"></div>
+
+
+                            <div style="
+                             display:flex;
+                             justify-content:center;
+                             gap:25px;
+                             margin-top:15px;
+                             font-size:14px;
+                             font-weight:600;
+                             ">
+
+                                <span>
+                                    🟢 Completed
+                                </span>
+
+                                <span>
+                                    🔵 Current
+                                </span>
+
+                                <span>
+                                    ⚪ Upcoming
+                                </span>
+
+                                <span>
+                                    🚤 Boat
+                                </span>
+
                             </div>
 
                         </div>
 
-                        <div class="heatmap-legend">
+                    </div>
 
-                            <div class="legend-title">
 
-                                Water Turbidity Heatmap (NTU)
+                    <!-- ================================= -->
+                    <!-- SENSOR / FLOW / HEATMAP SUMMARY -->
+                    <!-- ================================= -->
+
+                    <div class="monitor-summary-grid">
+
+
+                        <!-- SENSOR -->
+
+                        <div class="card monitor-sensor-card">
+
+                            <h3>📡 SENSOR DATA</h3>
+
+                            <div class="monitor-sensor-item">
+
+                                <div class="monitor-sensor-icon">
+                                    🌡️
+                                </div>
+
+                                <div class="monitor-sensor-info">
+
+                                    <span>
+                                        Temperature
+                                    </span>
+
+                                    <b>
+                                        <span id="monitorTemp">--</span>
+                                        °C
+                                    </b>
+
+                                </div>
 
                             </div>
 
-                            <div class="legend-color"></div>
 
-                            <div class="legend-number">
+                            <div class="monitor-sensor-item">
 
-                                <span>0</span>
+                                <div class="monitor-sensor-icon">
+                                    💧
+                                </div>
 
-                                <span>10</span>
+                                <div class="monitor-sensor-info">
 
-                                <span>20</span>
+                                    <span>
+                                        pH Level
+                                    </span>
 
-                                <span>30</span>
+                                    <b id="monitorPH">
+                                        --
+                                    </b>
 
-                                <span>40+</span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="monitor-sensor-item">
+
+                                <div class="monitor-sensor-icon">
+                                    🌊
+                                </div>
+
+                                <div class="monitor-sensor-info">
+
+                                    <span>
+                                        Turbidity
+                                    </span>
+
+                                    <b>
+                                        <span id="monitorNTU">--</span>
+                                        NTU
+                                    </b>
+
+                                </div>
 
                             </div>
 
                         </div>
 
-                        <div id="monitorMap"></div>
 
-                        <div style="
+                        <!-- WATER FLOW -->
 
-                        display:flex;
-                        justify-content:center;
-                        gap:25px;
-                        margin-top:15px;
-                        font-size:14px;
-                        font-weight:600;
-                        ">
+                        <div class="card">
+
+                            <h3>🌊 WATER FLOW (CURRENT)</h3>
+
+                            <p>
+                                ↗️ Direction :
+                                <b id="monitorFlowDirection">--</b>
+                            </p>
+
+                            <p>
+                                🌊 Speed :
+                                <b id="monitorFlowSpeed">--</b>
+                                m/s
+                            </p>
+
+                            <p>
+                                🎯 Vector :
+                                <b id="monitorFlowVector">--</b>
+                            </p>
+
+                        </div>
+
+
+                        <!-- HEATMAP SUMMARY -->
+
+                        <div class="card">
+
+                            <h3>🌊 HEATMAP SUMMARY</h3>
+
+                            <p>
+                                Maximum NTU :
+                                <b id="monitorMaxNTU">
+                                    --
+                                </b>
+                            </p>
+
+                            <p>
+                                Average NTU :
+                                <b id="monitorAvgNTU">
+                                    --
+                                </b>
+                            </p>
+
+                            <p>
+                                Sample Points :
+                                <b id="monitorSamples">
+                                    0
+                                </b>
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- ================================= -->
+                    <!-- ROUTE & WAYPOINTS -->
+                    <!-- ================================= -->
+
+                    <div class="card monitor-route-panel">
+
+                        <h3>
+                            🗺 ROUTE & WAYPOINTS
+                        </h3>
+
+                        <div id="monitorRouteWaypoints" class="monitor-route-waypoints">
+
+                            <!-- JavaScript จะใส่ Waypoint ตรงนี้ -->
+
+                        </div>
+
+                        <div class="route-legend">
+
                             <span>
                                 🟢 Completed
                             </span>
@@ -800,92 +973,172 @@
                                 ⚪ Upcoming
                             </span>
 
-                            <span>
-                                🚤 Boat
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- ================================= -->
+                <!-- RIGHT COLUMN -->
+                <!-- ================================= -->
+
+                <div class="monitor-right-column">
+
+
+                    <!-- =============================== -->
+                    <!-- BOAT STATUS -->
+                    <!-- =============================== -->
+
+                    <div class="card boat-status-card">
+
+                        <h3>
+                            🚤 BOAT STATUS
+                        </h3>
+
+
+                        <!-- ========================= -->
+                        <!-- STATUS -->
+                        <!-- ========================= -->
+
+                        <div class="boat-status-item">
+
+                            <span class="boat-status-label">
+                                STATUS
+                            </span>
+
+                            <span id="monitorStatus" class="boat-status-value status-idle">
+                                IDLE
                             </span>
 
                         </div>
 
-                    </div>
 
-                </div>
+                        <!-- ========================= -->
+                        <!-- MISSION MODE -->
+                        <!-- ========================= -->
 
-                <div class="monitor-side">
+                        <div class="boat-status-item">
 
-                    <div class="card">
+                            <span class="boat-status-label">
+                                MISSION MODE
+                            </span>
 
-                        <h3>🚤 BOAT STATUS</h3>
-
-                        <p>Mission :
                             <b id="monitorMission">
                                 MANUAL
                             </b>
-                        </p>
-
-                        <p>Status :
-                            <b id="monitorStatus">
-                                Idle
-                            </b>
-                        </p>
-
-                        <p>Waypoint :
-                            <b id="monitorWaypoint">
-                                0 / 0
-                            </b>
-                        </p>
-
-                    </div>
-
-                    <div class="card">
-
-                        <h3>🧭 COMPASS</h3>
-
-                        <div id="compass">
-
 
                         </div>
 
-                        <h2 id="headingMonitor">
 
-                            0°
+                        <!-- ========================= -->
+                        <!-- COMPASS -->
+                        <!-- ========================= -->
 
-                        </h2>
+                        <div class="boat-compass-section">
+
+                            <div class="boat-status-label">
+                                COMPASS
+                            </div>
+
+
+                            <div class="compass-wrapper">
+
+                                <div id="compass" class="monitor-compass">
+
+                                    <div class="compass-n">
+                                        N
+                                    </div>
+
+                                    <div class="compass-e">
+                                        E
+                                    </div>
+
+                                    <div class="compass-s">
+                                        S
+                                    </div>
+
+                                    <div class="compass-w">
+                                        W
+                                    </div>
+
+                                    <div class="compass-arrow">
+                                        ▲
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div id="headingMonitor" class="heading-value">
+                                0°
+                            </div>
+
+                        </div>
 
                     </div>
 
+                    <!-- =============================== -->
+                    <!-- CURRENT POSITION -->
+                    <!-- =============================== -->
+
                     <div class="card">
 
-                        <h3>📡 Sensor</h3>
+                        <h3>
+                            📍 CURRENT POSITION
+                        </h3>
 
-                        <p>🌡
-                            <span id="monitorTemp">--</span>
-                            °C
+                        <p>
+                            Latitude :
+                            <b id="monitorLat">
+                                --
+                            </b>
                         </p>
 
-                        <p>💧
-                            <span id="monitorPH">--</span>
+                        <p>
+                            Longitude :
+                            <b id="monitorLng">
+                                --
+                            </b>
                         </p>
 
-                        <p>🌊
-                            <span id="monitorNTU">--</span>
-                            NTU
+                        <p>
+                            Heading :
+                            <b id="monitorHeading">
+                                0°
+                            </b>
                         </p>
 
                     </div>
 
+
+                    <!-- =============================== -->
+                    <!-- MISSION PROGRESS -->
+                    <!-- =============================== -->
+
                     <div class="card">
 
-                        <h3>🚩 Mission Progress</h3>
+                        <h3>
+                            🚩 MISSION PROGRESS
+                        </h3>
 
                         <p>
                             Current Waypoint :
-                            <b id="monitorCurrentWP">0</b>
+                            <b id="monitorCurrentWP">
+                                0
+                            </b>
                         </p>
 
                         <p>
                             Total Waypoints :
-                            <b id="monitorTotalWP">0</b>
+                            <b id="monitorTotalWP">
+                                0
+                            </b>
                         </p>
+
 
                         <div class="progress">
 
@@ -894,86 +1147,34 @@
 
                         </div>
 
+
                         <p id="monitorProgressText">
                             0%
                         </p>
 
                     </div>
 
-                    <div class="card">
 
-                        <h3>🌊 Heatmap Summary</h3>
-
-                        <p>
-
-                            Maximum NTU :
-
-                            <b id="monitorMaxNTU">
-
-                                --
-
-                            </b>
-
-                        </p>
-
-                        <p>
-
-                            Average NTU :
-
-                            <b id="monitorAvgNTU">
-
-                                --
-
-                            </b>
-
-                        </p>
-
-                        <p>
-
-                            Sample Points :
-
-                            <b id="monitorSamples">
-
-                                0
-
-                            </b>
-
-                        </p>
-
-                    </div>
+                    <!-- =============================== -->
+                    <!-- ALERTS -->
+                    <!-- =============================== -->
 
                     <div class="card">
 
-                        <h3>📍 CURRENT POSITION</h3>
+                        <h3>
+                            🚨 ALERTS
+                        </h3>
 
-                        <p>
-                            Latitude :
-                            <b id="monitorLat">--</b>
-                        </p>
+                        <div id="monitorAlert">
 
-                        <p>
-                            Longitude :
-                            <b id="monitorLng">--</b>
-                        </p>
+                            <p>
+                                No Alert
+                            </p>
 
-                        <p>
-                            Heading :
-                            <b id="monitorHeading">0°</b>
-                        </p>
+                        </div>
 
                     </div>
 
-                    <div class="card">
-
-                        <h3>🚨 ALERT</h3>
-
-                        <p id="monitorAlert">
-
-                            No Alert
-
-                        </p>
-
-                    </div>
 
                 </div>
 
@@ -1068,56 +1269,118 @@
 
                 try {
 
+                    console.log("===== LOAD HISTORY =====");
+
                     const response =
                         await fetch(`${API_URL}/history`);
 
-                    console.log("Status:", response.status);
+                    console.log("History Status:", response.status);
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `HTTP Error: ${response.status}`
+                        );
+
+                    }
 
                     const data =
                         await response.json();
 
-                    if (!Array.isArray(data) || data.length === 0) {
+                    console.log("History Data:", data);
 
-                        console.log("No History Data");
-
-                        return;
-
-                    }
+                    // =========================
+                    // CHECK DATA
+                    // =========================
 
                     if (!Array.isArray(data)) {
-                        console.log("ERROR: History is not array");
-                        return;
-                    }
 
-                    const labels =
-                        data.map(x =>
-                            new Date(x.log_time).toLocaleString(
-                                "th-TH",
-                                {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "2-digit",
-
-                                }
-                            )
+                        console.error(
+                            "History data is not array:",
+                            data
                         );
 
+                        return;
+
+                    }
+
+                    if (data.length === 0) {
+
+                        console.log(
+                            "No History Data"
+                        );
+
+                        return;
+
+                    }
+
+                    // =========================
+                    // CONVERT DATA TO NUMBER
+                    // =========================
+
                     const temps =
-                        data.map(x => x.temp_c);
+                        data.map(x => Number(x.temp_c))
+                            .filter(Number.isFinite);
 
                     const phs =
-                        data.map(x => x.ph_level);
+                        data.map(x => Number(x.ph_level))
+                            .filter(Number.isFinite);
 
                     const turbs =
-                        data.map(x => x.turbidity_ntu);
+                        data.map(x => Number(x.turbidity_ntu))
+                            .filter(Number.isFinite);
+
+                    console.log("Temperature:", temps);
+                    console.log("pH:", phs);
+                    console.log("Turbidity:", turbs);
+
+                    // =========================
+                    // CHECK SENSOR DATA
+                    // =========================
+
+                    if (
+                        temps.length === 0 ||
+                        phs.length === 0 ||
+                        turbs.length === 0
+                    ) {
+
+                        console.error(
+                            "No valid sensor data"
+                        );
+
+                        console.table(data);
+
+                        return;
+
+                    }
+
+                    // =========================
+                    // STATISTICS
+                    // =========================
+
                     const avgTemp =
-                        (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(2);
+                        (
+                            temps.reduce(
+                                (a, b) => a + b,
+                                0
+                            ) / temps.length
+                        ).toFixed(2);
 
                     const avgPh =
-                        (phs.reduce((a, b) => a + b, 0) / phs.length).toFixed(2);
+                        (
+                            phs.reduce(
+                                (a, b) => a + b,
+                                0
+                            ) / phs.length
+                        ).toFixed(2);
 
                     const avgTurb =
-                        (turbs.reduce((a, b) => a + b, 0) / turbs.length).toFixed(2);
+                        (
+                            turbs.reduce(
+                                (a, b) => a + b,
+                                0
+                            ) / turbs.length
+                        ).toFixed(2);
 
                     const maxTemp =
                         Math.max(...temps);
@@ -1137,162 +1400,251 @@
                     const minTurb =
                         Math.min(...turbs);
 
-                    //=====================
-                    // Dashboard
-                    //=====================
+                    // =========================
+                    // DASHBOARD
+                    // =========================
 
-                    document.getElementById("summary_records").innerText =
+                    const summaryRecords =
+                        document.getElementById(
+                            "summary_records"
+                        );
+
+                    if (summaryRecords) {
+
+                        summaryRecords.innerText =
+                            data.length;
+
+                    }
+
+                    // =========================
+                    // ANALYTICS SUMMARY
+                    // =========================
+
+                    document.getElementById(
+                        "total_records"
+                    ).innerText =
                         data.length;
 
-                    //=====================
-                    // Analytics
-                    //=====================
-
-                    document.getElementById("total_records").innerText =
-                        data.length;
-
-                    document.getElementById("stats_avg_temp").innerText =
+                    document.getElementById(
+                        "stats_avg_temp"
+                    ).innerText =
                         avgTemp + " °C";
 
-                    document.getElementById("stats_avg_ph").innerText =
+                    document.getElementById(
+                        "stats_avg_ph"
+                    ).innerText =
                         avgPh;
 
-                    document.getElementById("stats_avg_turbidity").innerText =
+                    document.getElementById(
+                        "stats_avg_turbidity"
+                    ).innerText =
                         avgTurb + " NTU";
 
-                    document.getElementById("max_temp").innerText =
-                        maxTemp + " °C";
+                    // =========================
+                    // MAX / MIN
+                    // =========================
 
-                    document.getElementById("min_temp").innerText =
-                        minTemp + " °C";
+                    document.getElementById(
+                        "max_temp"
+                    ).innerText =
+                        maxTemp.toFixed(2) + " °C";
 
-                    document.getElementById("max_ph").innerText =
-                        maxPh;
+                    document.getElementById(
+                        "min_temp"
+                    ).innerText =
+                        minTemp.toFixed(2) + " °C";
 
-                    document.getElementById("min_ph").innerText =
-                        minPh;
+                    document.getElementById(
+                        "max_ph"
+                    ).innerText =
+                        maxPh.toFixed(2);
 
-                    document.getElementById("max_turbidity").innerText =
-                        maxTurb + " NTU";
+                    document.getElementById(
+                        "min_ph"
+                    ).innerText =
+                        minPh.toFixed(2);
 
-                    document.getElementById("min_turbidity").innerText =
-                        minTurb + " NTU";
+                    document.getElementById(
+                        "max_turbidity"
+                    ).innerText =
+                        maxTurb.toFixed(2) + " NTU";
 
-                    //==========================
-                    // Monitor Summary
-                    //==========================
+                    document.getElementById(
+                        "min_turbidity"
+                    ).innerText =
+                        minTurb.toFixed(2) + " NTU";
 
-                    document.getElementById("monitorMaxNTU").innerText =
+                    // =========================
+                    // MONITOR SUMMARY
+                    // =========================
+
+                    document.getElementById(
+                        "monitorMaxNTU"
+                    ).innerText =
                         maxTurb.toFixed(1);
 
-                    document.getElementById("monitorAvgNTU").innerText =
+                    document.getElementById(
+                        "monitorAvgNTU"
+                    ).innerText =
                         avgTurb;
 
-                    document.getElementById("monitorSamples").innerText =
+                    document.getElementById(
+                        "monitorSamples"
+                    ).innerText =
                         data.length;
 
+                    // =========================
+                    // CHART LABELS
+                    // =========================
+
+                    const labels =
+                        data.map(x => {
+
+                            const date =
+                                new Date(x.log_time);
+
+                            if (
+                                isNaN(date.getTime())
+                            ) {
+
+                                return x.log_time;
+
+                            }
+
+                            return date.toLocaleString(
+                                "th-TH",
+                                {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                }
+                            );
+
+                        });
+
+                    // =========================
+                    // DESTROY OLD CHART
+                    // =========================
+
                     if (tempChart) {
+
                         tempChart.destroy();
+
+                        tempChart = null;
+
                     }
 
                     if (phChart) {
+
                         phChart.destroy();
+
+                        phChart = null;
+
                     }
 
                     if (turbidityChart) {
+
                         turbidityChart.destroy();
+
+                        turbidityChart = null;
+
                     }
 
-                    console.log("Creating Temp Chart");
+                    // =========================
+                    // TEMPERATURE CHART
+                    // =========================
 
-                    const tempCtx =
-                        document.getElementById("tempChart").getContext("2d");
+                    const tempCanvas =
+                        document.getElementById(
+                            "tempChart"
+                        );
 
-                    const tempGradient =
-                        tempCtx.createLinearGradient(0, 0, 0, 350);
+                    if (tempCanvas) {
 
-                    tempGradient.addColorStop(
-                        0,
-                        "rgba(249,115,22,0.35)"
-                    );
+                        const tempCtx =
+                            tempCanvas.getContext("2d");
 
-                    tempGradient.addColorStop(
-                        1,
-                        "rgba(249,115,22,0)"
-                    );
+                        const tempGradient =
+                            tempCtx.createLinearGradient(
+                                0,
+                                0,
+                                0,
+                                350
+                            );
 
-                    tempChart =
-                        new Chart(
-                            tempCtx,
-                            {
-                                type: "line",
+                        tempGradient.addColorStop(
+                            0,
+                            "rgba(249,115,22,0.35)"
+                        );
 
-                                data: {
+                        tempGradient.addColorStop(
+                            1,
+                            "rgba(249,115,22,0)"
+                        );
 
-                                    labels: labels,
+                        tempChart =
+                            new Chart(
+                                tempCtx,
+                                {
 
-                                    datasets: [{
+                                    type: "line",
 
-                                        label: "Temperature",
+                                    data: {
 
-                                        data: temps,
+                                        labels: labels,
 
-                                        borderColor: "#f97316",
+                                        datasets: [{
 
-                                        backgroundColor: tempGradient,
+                                            label:
+                                                "Temperature",
 
-                                        fill: true,
+                                            data:
+                                                data.map(
+                                                    x =>
+                                                        Number(
+                                                            x.temp_c
+                                                        )
+                                                ),
 
-                                        borderWidth: 3,
+                                            borderColor:
+                                                "#f97316",
 
-                                        tension: 0.35,
+                                            backgroundColor:
+                                                tempGradient,
 
-                                        pointRadius: 2,
+                                            fill: true,
 
-                                        pointHoverRadius: 6
+                                            borderWidth: 3,
 
-                                    }]
-                                },
+                                            tension: 0.35,
 
-                                options: {
+                                            pointRadius: 2,
 
-                                    responsive: true,
+                                            pointHoverRadius: 6
 
-                                    maintainAspectRatio: false,
-
-                                    interaction: {
-
-                                        mode: "index",
-
-                                        intersect: false
+                                        }]
 
                                     },
 
-                                    plugins: {
+                                    options: {
 
-                                        legend: {
+                                        responsive: true,
 
-                                            display: false
+                                        maintainAspectRatio:
+                                            false,
+
+                                        interaction: {
+
+                                            mode: "index",
+
+                                            intersect: false
 
                                         },
 
-                                        tooltip: {
+                                        plugins: {
 
-                                            backgroundColor: "#1e293b",
-
-                                            padding: 12,
-
-                                            displayColors: false
-
-                                        }
-
-                                    },
-
-                                    scales: {
-
-                                        x: {
-
-                                            grid: {
+                                            legend: {
 
                                                 display: false
 
@@ -1300,334 +1652,412 @@
 
                                         },
 
-                                        y: {
+                                        scales: {
 
-                                            grid: {
+                                            x: {
 
-                                                color: "#edf2f7"
+                                                grid: {
+
+                                                    display: false
+
+                                                }
+
+                                            },
+
+                                            y: {
+
+                                                beginAtZero: false
 
                                             }
 
                                         }
 
-                                    },
-
-                                    animation: {
-
-                                        duration: 1200,
-
-                                        easing: "easeOutQuart"
-
                                     }
 
                                 }
+                            );
 
-                            }
+                    }
+
+                    // =========================
+                    // pH CHART
+                    // =========================
+
+                    const phCanvas =
+                        document.getElementById(
+                            "phChart"
                         );
 
+                    if (phCanvas) {
 
-                    const phCtx =
-                        document
-                            .getElementById("phChart")
-                            .getContext("2d");
+                        const phCtx =
+                            phCanvas.getContext("2d");
 
-                    const phGradient =
-                        phCtx.createLinearGradient(
+                        const phGradient =
+                            phCtx.createLinearGradient(
+                                0,
+                                0,
+                                0,
+                                350
+                            );
+
+                        phGradient.addColorStop(
                             0,
-                            0,
-                            0,
-                            350
+                            "rgba(34,197,94,0.35)"
                         );
 
-                    phGradient.addColorStop(
-                        0,
-                        "rgba(34,197,94,0.35)"
-                    );
+                        phGradient.addColorStop(
+                            1,
+                            "rgba(34,197,94,0)"
+                        );
 
-                    phGradient.addColorStop(
-                        1,
-                        "rgba(34,197,94,0)"
-                    );
-                    phChart =
-                        new Chart(
-                            phCtx,
-                            {
-                                type: "line",
-                                data: {
-                                    labels: labels,
-                                    datasets: [{
+                        phChart =
+                            new Chart(
+                                phCtx,
+                                {
 
-                                        label: "pH Level",
+                                    type: "line",
 
-                                        data: phs,
+                                    data: {
 
-                                        borderColor: "#22c55e",
+                                        labels: labels,
 
-                                        backgroundColor: phGradient,
+                                        datasets: [{
 
-                                        fill: true,
+                                            label:
+                                                "pH Level",
 
-                                        borderWidth: 3,
+                                            data:
+                                                data.map(
+                                                    x =>
+                                                        Number(
+                                                            x.ph_level
+                                                        )
+                                                ),
 
-                                        tension: 0.35,
+                                            borderColor:
+                                                "#22c55e",
 
-                                        pointRadius: 2,
+                                            backgroundColor:
+                                                phGradient,
 
-                                        pointHoverRadius: 6
+                                            fill: true,
 
+                                            borderWidth: 3,
 
+                                            tension: 0.35,
 
-                                    }]
-                                },
-                                options: {
+                                            pointRadius: 2,
 
-                                    responsive: true,
+                                            pointHoverRadius: 6
 
-                                    maintainAspectRatio: false,
+                                        }]
 
-                                    plugins: {
+                                    },
 
-                                        legend: {
+                                    options: {
 
-                                            display: false
+                                        responsive: true,
+
+                                        maintainAspectRatio:
+                                            false,
+
+                                        interaction: {
+
+                                            mode: "index",
+
+                                            intersect: false
 
                                         },
 
-                                        tooltip: {
+                                        plugins: {
 
-                                            backgroundColor: "#1e293b",
-
-                                            padding: 12,
-
-                                            displayColors: false
-
-                                        }
-
-                                    },
-
-                                    interaction: {
-
-                                        mode: "index",
-
-                                        intersect: false
-
-                                    },
-
-                                    scales: {
-
-                                        x: {
-
-                                            grid: {
+                                            legend: {
 
                                                 display: false
 
                                             }
 
-                                        },
-
-                                        y: {
-
-                                            grid: {
-
-                                                color: "#edf2f7"
-
-                                            }
-
                                         }
-
-                                    },
-
-                                    animation: {
-
-                                        duration: 1200,
-
-                                        easing: "easeOutQuart"
 
                                     }
 
                                 }
-                            }
+                            );
+
+                    }
+
+                    // =========================
+                    // TURBIDITY CHART
+                    // =========================
+
+                    const turbCanvas =
+                        document.getElementById(
+                            "turbidityChart"
                         );
 
-                    const turbCtx =
-                        document
-                            .getElementById("turbidityChart")
-                            .getContext("2d");
+                    if (turbCanvas) {
 
-                    const turbGradient =
-                        turbCtx.createLinearGradient(
+                        const turbCtx =
+                            turbCanvas.getContext("2d");
+
+                        const turbGradient =
+                            turbCtx.createLinearGradient(
+                                0,
+                                0,
+                                0,
+                                350
+                            );
+
+                        turbGradient.addColorStop(
                             0,
-                            0,
-                            0,
-                            350
+                            "rgba(59,130,246,0.35)"
                         );
 
-                    turbGradient.addColorStop(
-                        0,
-                        "rgba(59,130,246,0.35)"
-                    );
+                        turbGradient.addColorStop(
+                            1,
+                            "rgba(59,130,246,0)"
+                        );
 
-                    turbGradient.addColorStop(
-                        1,
-                        "rgba(59,130,246,0)"
-                    );
+                        turbidityChart =
+                            new Chart(
+                                turbCtx,
+                                {
 
-                    turbidityChart =
-                        new Chart(
-                            turbCtx,
-                            {
-                                type: "line",
-                                data: {
-                                    labels: labels,
-                                    datasets: [{
+                                    type: "line",
 
-                                        label: "Turbidity (NTU)",
+                                    data: {
 
-                                        data: turbs,
+                                        labels: labels,
 
-                                        borderColor: "#3b82f6",
+                                        datasets: [{
 
-                                        backgroundColor: turbGradient,
+                                            label:
+                                                "Turbidity (NTU)",
 
-                                        fill: true,
+                                            data:
+                                                data.map(
+                                                    x =>
+                                                        Number(
+                                                            x.turbidity_ntu
+                                                        )
+                                                ),
 
-                                        borderWidth: 3,
+                                            borderColor:
+                                                "#3b82f6",
 
-                                        tension: 0.35,
+                                            backgroundColor:
+                                                turbGradient,
 
-                                        pointRadius: 2,
+                                            fill: true,
 
-                                        pointHoverRadius: 6
+                                            borderWidth: 3,
 
-                                    }]
-                                },
-                                options: {
+                                            tension: 0.35,
 
-                                    responsive: true,
+                                            pointRadius: 2,
 
-                                    maintainAspectRatio: false,
+                                            pointHoverRadius: 6
 
-                                    plugins: {
+                                        }]
 
-                                        legend: {
+                                    },
 
-                                            display: false
+                                    options: {
+
+                                        responsive: true,
+
+                                        maintainAspectRatio:
+                                            false,
+
+                                        interaction: {
+
+                                            mode: "index",
+
+                                            intersect: false
 
                                         },
 
-                                        tooltip: {
+                                        plugins: {
 
-                                            backgroundColor: "#1e293b",
-
-                                            padding: 12,
-
-                                            displayColors: false
-
-                                        }
-
-                                    },
-
-                                    interaction: {
-
-                                        mode: "index",
-
-                                        intersect: false
-
-                                    },
-
-                                    scales: {
-
-                                        x: {
-
-                                            grid: {
+                                            legend: {
 
                                                 display: false
 
                                             }
 
-                                        },
-
-                                        y: {
-
-                                            grid: {
-
-                                                color: "#edf2f7"
-
-                                            }
-
                                         }
-
-                                    },
-
-                                    animation: {
-
-                                        duration: 1200,
-
-                                        easing: "easeOutQuart"
 
                                     }
 
                                 }
-                            }
+                            );
+
+                    }
+
+                    // =========================
+                    // HISTORY TABLE
+                    // =========================
+
+                    const historyBody =
+                        document.getElementById(
+                            "historyTableBody"
                         );
-
-                    // ======================
-                    // Fill History Table
-                    // ======================
-
-                    const historyBody = document.getElementById("historyTableBody");
 
                     if (historyBody) {
 
+                        console.log(
+                            "===== HISTORY TABLE START ====="
+                        );
+
+                        console.log(
+                            "History Body:",
+                            historyBody
+                        );
+
+                        console.log(
+                            "Data Length:",
+                            data.length
+                        );
+
                         historyBody.innerHTML = "";
 
+                        console.log(
+                            "Rows After Clear:",
+                            historyBody.querySelectorAll("tr").length
+                        );
+
                         data.forEach(item => {
+
+                            const temp =
+                                Number(item.temp_c);
+
+                            const ph =
+                                Number(item.ph_level);
+
+                            const turb =
+                                Number(item.turbidity_ntu);
 
                             let quality = "Good";
 
                             if (
-                                item.ph_level < 6.5 ||
-                                item.ph_level > 8.5 ||
-                                item.turbidity_ntu > 20
+                                ph < 6.5 ||
+                                ph > 8.5
                             ) {
+
+                                quality = "Warning";
+
+                            }
+
+                            if (turb > 20) {
 
                                 quality = "Poor";
 
                             }
 
+                            const qualityClass =
+                                quality === "Good"
+                                    ? "good-badge"
+                                    : "bad-badge";
+
                             historyBody.innerHTML += `
-                          <tr>
-                          <td>${item.log_time}</td>
-                          <td>
-                          <span class="boat-tag">
-                          🚤 ${item.boat_id}
-                          </span>
-                          </td>
-                          <td>${item.temp_c}</td>
-                          <td>${item.ph_level}</td>
-                          <td>${item.turbidity_ntu}</td>
-                          <td>
-                          <span class="${quality == "Good" ? "good-badge" : "bad-badge"}">
-                          ${quality}
-                          </span>
-                          </td>
-                          <td>${Number(item.latitude).toFixed(5)}</td>
-                          <td>${Number(item.longitude).toFixed(5)}</td>
-                          </tr>
-                           `;
+
+                    <tr>
+
+                        <td>
+                            ${item.log_time ?? "-"}
+                        </td>
+
+                        <td>
+
+                            <span class="boat-tag">
+                                🚤 ${item.boat_id ?? "-"}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${Number.isFinite(temp)
+                                    ? temp.toFixed(2)
+                                    : "-"
+                                }
+                        </td>
+
+                        <td>
+                            ${Number.isFinite(ph)
+                                    ? ph.toFixed(2)
+                                    : "-"
+                                }
+                        </td>
+
+                        <td>
+                            ${Number.isFinite(turb)
+                                    ? turb.toFixed(2)
+                                    : "-"
+                                }
+                        </td>
+
+                        <td>
+
+                            <span class="${qualityClass}">
+                                ${quality}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${Number.isFinite(
+                                    Number(item.latitude)
+                                )
+                                    ? Number(item.latitude).toFixed(5)
+                                    : "-"
+                                }
+                        </td>
+
+                        <td>
+                            ${Number.isFinite(
+                                    Number(item.longitude)
+                                )
+                                    ? Number(item.longitude).toFixed(5)
+                                    : "-"
+                                }
+                        </td>
+
+                    </tr>
+
+                `;
 
                         });
 
                     }
 
-                    console.log("Temp Chart:", tempChart);
-                    console.log("PH Chart:", phChart);
-                    console.log("Turbidity Chart:", turbidityChart);
+                    console.log(
+                        "===== HISTORY LOADED ====="
+                    );
+
+                    console.log(
+                        "Temp Chart:",
+                        tempChart
+                    );
+
+                    console.log(
+                        "PH Chart:",
+                        phChart
+                    );
+
+                    console.log(
+                        "Turbidity Chart:",
+                        turbidityChart
+                    );
 
                 }
+
                 catch (error) {
 
-                    console.log(error);
+                    console.error(
+                        "LOAD HISTORY ERROR:",
+                        error
+                    );
 
                 }
 
@@ -1685,6 +2115,41 @@
 
                     document.getElementById("monitorNTU").innerText =
                         data.turbidity_ntu;
+
+                    // =========================
+                    // MONITOR ALERT
+                    // =========================
+
+                    const monitorAlert =
+                        document.getElementById("monitorAlert");
+
+                    if (monitorAlert) {
+
+                        let alertMessage = "✓ No Alert";
+
+                        if (
+                            Number(data.ph_level) < 6.5 ||
+                            Number(data.ph_level) > 8.5
+                        ) {
+
+                            alertMessage =
+                                "⚠️ Abnormal pH";
+
+                        }
+
+                        else if (
+                            Number(data.turbidity_ntu) > 30
+                        ) {
+
+                            alertMessage =
+                                "⚠️ High Turbidity";
+
+                        }
+
+                        monitorAlert.innerText =
+                            alertMessage;
+
+                    }
 
                     document.getElementById("monitorLat").innerText =
                         Number(data.latitude).toFixed(6);
@@ -1843,11 +2308,29 @@
 
                     }
 
-                    document.getElementById("headingMonitor").innerText =
-                        heading + "°";
+                    const headingElement =
+                        document.getElementById("headingMonitor");
 
-                    document.getElementById("compass").style.transform =
-                        `rotate(${heading}deg)`
+                    if (headingElement) {
+
+                        headingElement.innerText =
+                            data.heading + "°";
+
+                    }
+
+                    // =========================
+                    // COMPASS ARROW
+                    // =========================
+
+                    const compassArrow =
+                        document.querySelector(".compass-arrow");
+
+                    if (compassArrow) {
+
+                        compassArrow.style.transform =
+                            `translate(-50%, -50%) rotate(${heading}deg)`;
+
+                    }
 
                     const monitorHeading =
                         document.getElementById("monitorHeading");
@@ -1856,6 +2339,96 @@
 
                         monitorHeading.innerText =
                             heading + "°";
+
+                    }
+
+                    // =========================
+                    // WATER FLOW
+                    // =========================
+
+                    const flowLat =
+                        Number(data.flow_v_lat);
+
+                    const flowLng =
+                        Number(data.flow_v_lng);
+
+                    if (
+                        Number.isFinite(flowLat) &&
+                        Number.isFinite(flowLng)
+                    ) {
+
+                        // Vector
+                        const vectorElement =
+                            document.getElementById(
+                                "monitorFlowVector"
+                            );
+
+                        if (vectorElement) {
+
+                            vectorElement.innerText =
+                                `${flowLat.toFixed(6)}, ${flowLng.toFixed(6)}`;
+
+                        }
+
+
+                        // Direction
+                        let direction =
+                            Math.atan2(
+                                flowLng,
+                                flowLat
+                            ) * 180 / Math.PI;
+
+                        if (direction < 0) {
+
+                            direction += 360;
+
+                        }
+
+                        const directions = [
+                            "N",
+                            "NE",
+                            "E",
+                            "SE",
+                            "S",
+                            "SW",
+                            "W",
+                            "NW"
+                        ];
+
+                        const directionIndex =
+                            Math.round(direction / 45) % 8;
+
+                        const directionElement =
+                            document.getElementById(
+                                "monitorFlowDirection"
+                            );
+
+                        if (directionElement) {
+
+                            directionElement.innerText =
+                                `${directions[directionIndex]} (${direction.toFixed(1)}°)`;
+
+                        }
+
+
+                        // Speed
+                        const speed =
+                            Math.sqrt(
+                                (flowLat * flowLat) +
+                                (flowLng * flowLng)
+                            );
+
+                        const speedElement =
+                            document.getElementById(
+                                "monitorFlowSpeed"
+                            );
+
+                        if (speedElement) {
+
+                            speedElement.innerText =
+                                speed.toFixed(6);
+
+                        }
 
                     }
 
@@ -2058,8 +2631,10 @@
 
                 }
             }
+
+
             // ======================================
-            // REAL TURBIDITY HEATMAP
+            // REAL TURBIDITY HEATMAP + IDW
             // ======================================
 
             async function loadHeatMap() {
@@ -2076,6 +2651,7 @@
                     const response =
                         await fetch(`${API_URL}/logs`);
 
+
                     if (!response.ok) {
 
                         throw new Error(
@@ -2084,8 +2660,10 @@
 
                     }
 
+
                     const data =
                         await response.json();
+
 
                     console.log(
                         "Heatmap Logs:",
@@ -2094,10 +2672,11 @@
 
 
                     // ==================================
-                    // 2. PREPARE HEATMAP DATA
+                    // 2. CREATE SENSOR POINTS
                     // ==================================
 
-                    const heatData = [];
+                    const sensorPoints = [];
+
 
                     data.forEach(point => {
 
@@ -2122,34 +2701,362 @@
                         }
 
 
-                        // NTU → Heat intensity
-                        const intensity =
-                            Math.min(
-                                Math.max(ntu / 40, 0),
-                                1
-                            );
+                        sensorPoints.push({
 
+                            lat: lat,
 
-                        heatData.push([
-                            lat,
-                            lng,
-                            intensity
-                        ]);
+                            lng: lng,
+
+                            ntu: ntu
+
+                        });
 
                     });
 
 
                     console.log(
-                        "Heatmap Points:",
-                        heatData
+                        "IDW Sensor Points:",
+                        sensorPoints
+                    );
+
+                    console.table(sensorPoints);
+
+                    // ==================================
+                    // 3. CHECK SENSOR DATA
+                    // ==================================
+
+                    if (
+                        sensorPoints.length === 0
+                    ) {
+
+                        console.log(
+                            "No valid sensor points"
+                        );
+
+                        return;
+
+                    }
+
+
+                    // ==================================
+                    // 4. FIND AREA
+                    // ==================================
+
+                    const lats =
+                        sensorPoints.map(
+                            p => p.lat
+                        );
+
+
+                    const lngs =
+                        sensorPoints.map(
+                            p => p.lng
+                        );
+
+
+                    const minLat =
+                        Math.min(...lats);
+
+                    const maxLat =
+                        Math.max(...lats);
+
+                    const minLng =
+                        Math.min(...lngs);
+
+                    const maxLng =
+                        Math.max(...lngs);
+
+
+                    console.log(
+                        "IDW Area:",
+                        {
+                            minLat,
+                            maxLat,
+                            minLng,
+                            maxLng
+                        }
                     );
 
 
                     // ==================================
-                    // 3. CHECK DATA
+                    // 5. NTU RANGE
                     // ==================================
 
-                    if (heatData.length === 0) {
+                    const ntuValues =
+                        sensorPoints.map(
+                            p => p.ntu
+                        );
+
+
+                    const minNTU =
+                        Math.min(...ntuValues);
+
+
+                    const maxNTU =
+                        Math.max(...ntuValues);
+
+
+                    console.log(
+                        "NTU Range:",
+                        minNTU,
+                        "→",
+                        maxNTU
+                    );
+
+                    // =========================
+                    // HEATMAP SUMMARY
+                    // =========================
+
+                    const avgNTU =
+                        ntuValues.reduce(
+                            (sum, value) => sum + value,
+                            0
+                        ) / ntuValues.length;
+
+
+                    // Maximum NTU
+                    const maxNTUElement =
+                        document.getElementById("monitorMaxNTU");
+
+                    if (maxNTUElement) {
+
+                        maxNTUElement.innerText =
+                            maxNTU.toFixed(2) + " NTU";
+
+                    }
+
+
+                    // Average NTU
+                    const avgNTUElement =
+                        document.getElementById("monitorAvgNTU");
+
+                    if (avgNTUElement) {
+
+                        avgNTUElement.innerText =
+                            avgNTU.toFixed(2) + " NTU";
+
+                    }
+
+
+                    // Sample Points
+                    const samplesElement =
+                        document.getElementById("monitorSamples");
+
+                    if (samplesElement) {
+
+                        samplesElement.innerText =
+                            ntuValues.length;
+
+                    }
+
+
+                    // ==================================
+                    // 6. IDW SETTINGS
+                    // ==================================
+
+                    const gridRows = 25;
+
+                    const gridCols = 25;
+
+                    const power = 3;
+
+
+                    // ==================================
+                    // 7. CREATE IDW GRID
+                    // ==================================
+
+                    const heatData = [];
+
+                    let highNTUCount = 0;
+
+
+                    for (
+                        let row = 0;
+                        row < gridRows;
+                        row++
+                    ) {
+
+
+                        const lat =
+                            minLat +
+                            (
+                                (maxLat - minLat) *
+                                row /
+                                (gridRows - 1)
+                            );
+
+
+                        for (
+                            let col = 0;
+                            col < gridCols;
+                            col++
+                        ) {
+
+
+                            const lng =
+                                minLng +
+                                (
+                                    (maxLng - minLng) *
+                                    col /
+                                    (gridCols - 1)
+                                );
+
+
+                            let weightedValue = 0;
+
+                            let totalWeight = 0;
+
+
+                            // ==================================
+                            // IDW CALCULATION
+                            // ==================================
+
+                            sensorPoints.forEach(
+                                sensor => {
+
+
+                                    const dLat =
+                                        lat -
+                                        sensor.lat;
+
+
+                                    const dLng =
+                                        lng -
+                                        sensor.lng;
+
+
+                                    const distance =
+                                        Math.sqrt(
+                                            dLat * dLat +
+                                            dLng * dLng
+                                        );
+
+
+                                    // Grid ตรงกับ Sensor
+                                    if (
+                                        distance === 0
+                                    ) {
+
+                                        weightedValue =
+                                            sensor.ntu;
+
+                                        totalWeight = 1;
+
+                                        return;
+
+                                    }
+
+
+                                    const weight =
+                                        1 /
+                                        Math.pow(
+                                            distance,
+                                            power
+                                        );
+
+
+                                    weightedValue +=
+                                        sensor.ntu *
+                                        weight;
+
+
+                                    totalWeight +=
+                                        weight;
+
+                                }
+                            );
+
+
+                            const interpolatedNTU =
+                                weightedValue /
+                                totalWeight;
+
+                            if (interpolatedNTU > 30) {
+
+                                highNTUCount++;
+
+                            }
+
+
+                            // ==================================
+                            // NTU → INTENSITY
+                            // ==================================
+
+                            // ==================================
+                            // NTU → HEATMAP INTENSITY
+                            // ==================================
+
+                            let intensity = 0;
+
+                            if (maxNTU > minNTU) {
+
+                                intensity =
+                                    (
+                                        interpolatedNTU - minNTU
+                                    ) /
+                                    (
+                                        maxNTU - minNTU
+                                    );
+
+                            }
+
+                            // เพิ่ม contrast
+                            intensity =
+                                Math.pow(intensity, 1.8);
+
+                            intensity =
+                                Math.min(
+                                    Math.max(
+                                        intensity,
+                                        0
+                                    ),
+                                    1
+                                );
+
+
+                            intensity =
+                                Math.min(
+                                    Math.max(
+                                        intensity,
+                                        0
+                                    ),
+                                    1
+                                );
+
+
+                            heatData.push([
+
+                                lat,
+
+                                lng,
+
+                                intensity
+
+                            ]);
+
+                        }
+
+                    }
+
+
+                    console.log(
+                        "IDW Heatmap Points:",
+                        heatData.length
+                    );
+
+                    console.log(
+                        "Points > 30 NTU:",
+                        highNTUCount
+                    );
+
+
+                    // ==================================
+                    // 8. CHECK HEATMAP DATA
+                    // ==================================
+
+                    if (
+                        heatData.length === 0
+                    ) {
 
                         console.log(
                             "No Heatmap Data"
@@ -2161,7 +3068,7 @@
 
 
                     // ==================================
-                    // 4. CHECK MONITOR MAP
+                    // 9. CHECK MONITOR MAP
                     // ==================================
 
                     const monitorElement =
@@ -2195,7 +3102,9 @@
                     }
 
 
-                    monitorMap.invalidateSize(true);
+                    monitorMap.invalidateSize(
+                        true
+                    );
 
 
                     console.log(
@@ -2205,7 +3114,7 @@
 
 
                     // ==================================
-                    // 5. REMOVE OLD HEATMAPS
+                    // 10. REMOVE OLD HEATMAP
                     // ==================================
 
                     if (heatLayer) {
@@ -2231,7 +3140,7 @@
 
 
                     // ==================================
-                    // 6. DASHBOARD HEATMAP
+                    // 11. DASHBOARD HEATMAP
                     // ==================================
 
                     heatLayer =
@@ -2239,9 +3148,9 @@
                             heatData,
                             {
 
-                                radius: 35,
+                                radius: 30,
 
-                                blur: 25,
+                                blur: 20,
 
                                 maxZoom: 18,
 
@@ -2249,19 +3158,26 @@
 
                                 max: 1,
 
+
                                 gradient: {
 
-                                    0.0: "#0066ff",
+                                    0.0:
+                                        "#0066ff",
 
-                                    0.25: "#00ccff",
+                                    0.25:
+                                        "#00ccff",
 
-                                    0.45: "#00ff66",
+                                    0.45:
+                                        "#00ff66",
 
-                                    0.60: "#ffff00",
+                                    0.60:
+                                        "#ffff00",
 
-                                    0.75: "#ff9900",
+                                    0.75:
+                                        "#ff9900",
 
-                                    1.0: "#ff0000"
+                                    1.0:
+                                        "#ff0000"
 
                                 }
 
@@ -2269,51 +3185,38 @@
                         );
 
 
-                    heatLayer.addTo(map);
+                    heatLayer.addTo(
+                        map
+                    );
 
 
                     // ==================================
-                    // 7. MONITOR HEATMAP
+                    // 12. MONITOR HEATMAP
                     // ==================================
 
                     console.log(
                         "===== CREATE MONITOR HEATMAP ====="
                     );
 
-
                     monitorHeatLayer =
                         L.heatLayer(
                             heatData,
                             {
-
-                                radius: 45,
-
-                                blur: 30,
-
+                                radius: 12,
+                                blur: 10,
                                 maxZoom: 18,
-
-                                minOpacity: 0.45,
-
+                                minOpacity: 0.35,
                                 max: 1,
-
                                 pane: "heatPane",
 
                                 gradient: {
-
                                     0.0: "#0066ff",
-
                                     0.25: "#00ccff",
-
                                     0.45: "#00ff66",
-
                                     0.60: "#ffff00",
-
                                     0.75: "#ff9900",
-
                                     1.0: "#ff0000"
-
                                 }
-
                             }
                         );
 
@@ -2325,7 +3228,7 @@
 
 
                     // ==================================
-                    // 8. ADD TO MONITOR MAP
+                    // 13. ADD HEATMAP
                     // ==================================
 
                     monitorHeatLayer.addTo(
@@ -2342,7 +3245,7 @@
 
 
                     // ==================================
-                    // 9. CHECK CANVAS
+                    // 14. CHECK CANVAS
                     // ==================================
 
                     const canvas =
@@ -2380,7 +3283,7 @@
 
 
                     // ==================================
-                    // 10. WAIT FOR MAP LAYOUT
+                    // 15. REDRAW
                     // ==================================
 
                     setTimeout(() => {
@@ -2394,10 +3297,6 @@
                             true
                         );
 
-
-                        // IMPORTANT:
-                        // Don't manually change canvas width.
-                        // Let Leaflet Heat manage it.
 
                         if (
                             monitorHeatLayer &&
@@ -2440,71 +3339,6 @@
 
                 }
 
-            }
-            // โหลดเส้นทางเรือ
-            async function loadPath() {
-
-                try {
-
-                    const response =
-                        await fetch(`${API_URL}/path`);
-
-                    const data =
-                        await response.json();
-
-                    const coords = [];
-
-                    data.forEach(point => {
-
-                        coords.push([
-                            parseFloat(point.latitude),
-                            parseFloat(point.longitude)
-                        ]);
-
-                    });
-
-                    if (pathLine) {
-
-                        map.removeLayer(pathLine);
-
-                    }
-
-                    pathLine =
-                        L.polyline(
-                            coords,
-                            {
-                                color: 'blue',
-                                weight: 4
-                            }
-                        ).addTo(map);
-                    if (monitorTrailLine) {
-
-                        monitorMap.removeLayer(monitorTrailLine);
-
-                    }
-
-                    monitorTrailLine =
-
-                        L.polyline(
-
-                            coords,
-
-                            {
-
-                                color: "#2563eb",
-
-                                weight: 4
-
-                            }
-
-                        ).addTo(monitorMap);
-
-                }
-                catch (error) {
-
-                    console.log(error);
-
-                }
             }
 
             //====================================
@@ -2719,7 +3553,7 @@
                 try {
 
                     const response =
-                        await fetch(`${API_URL}/history`);
+                        await fetch(`${API_URL}/logs`);
 
                     const data =
                         await response.json();
@@ -2909,11 +3743,28 @@
 
                 try {
 
-                    const response = await fetch(`${API_URL}/mission/status`);
-                    const data = await response.json();
+                    const response =
+                        await fetch(`${API_URL}/mission/status`);
+
+                    const data =
+                        await response.json();
+
+                    // =========================
+                    // MISSION STATUS
+                    // =========================
+
+                    const missionStatusText =
+                        data.running
+                            ? "RUNNING"
+                            : "IDLE";
 
                     document.getElementById("missionStatus").innerText =
                         data.running ? "Running" : "Idle";
+
+
+                    // =========================
+                    // MISSION MODE
+                    // =========================
 
                     document.getElementById("routeType").innerText =
                         data.mode;
@@ -2924,13 +3775,87 @@
                     document.getElementById("missionHeader").innerText =
                         data.mode;
 
-                    const boatState = document.getElementById("boatState");
+
+                    // =========================
+                    // MONITOR STATUS
+                    // =========================
+
+                    const monitorStatus =
+                        document.getElementById("monitorStatus");
+
+                    if (monitorStatus) {
+
+                        monitorStatus.innerText =
+                            missionStatusText;
+
+                        monitorStatus.classList.remove(
+                            "status-idle",
+                            "status-running",
+                            "status-stopped"
+                        );
+
+                        if (data.running) {
+
+                            monitorStatus.classList.add(
+                                "status-running"
+                            );
+
+                        }
+                        else {
+
+                            monitorStatus.classList.add(
+                                "status-idle"
+                            );
+
+                        }
+
+                    }
+
+
+                    // =========================
+                    // MONITOR MISSION MODE
+                    // =========================
+
+                    const monitorMission =
+                        document.getElementById("monitorMission");
+
+                    if (monitorMission) {
+
+                        monitorMission.innerText =
+                            data.mode || "MANUAL";
+
+                    }
+
+
+                    // =========================
+                    // BOAT STATE
+                    // =========================
+
+                    const boatState =
+                        document.getElementById("boatState");
 
                     if (boatState) {
 
-                        boatState.innerText = data.boat_state;
+                        boatState.innerText =
+                            data.boat_state || "-";
 
                     }
+
+
+                    console.log(
+                        "Monitor Status:",
+                        missionStatusText
+                    );
+
+                    console.log(
+                        "Monitor Mission:",
+                        data.mode
+                    );
+
+                    console.log(
+                        "Boat State:",
+                        data.boat_state
+                    );
 
                 }
                 catch (error) {
@@ -3002,7 +3927,6 @@
             //=====================================
             // Update Monitor Waypoints
             //=====================================
-
             function updateMonitorWaypoints() {
 
                 console.log("updateMonitorWaypoints ทำงานแล้ว");
@@ -3012,6 +3936,10 @@
                     return;
 
                 }
+
+                // =====================================
+                // UPDATE WAYPOINTS ON MAP
+                // =====================================
 
                 monitorWaypointGroup.clearLayers();
 
@@ -3052,17 +3980,170 @@
                     )
 
                         .bindTooltip(
+
                             String(index + 1),
+
                             {
+
                                 permanent: true,
+
                                 direction: "top",
+
                                 className: "waypoint-label"
+
                             }
+
                         )
 
                         .addTo(monitorWaypointGroup);
 
                 });
+
+
+                // =====================================
+                // UPDATE ROUTE & WAYPOINTS PANEL
+                // =====================================
+
+                const routeContainer =
+                    document.getElementById(
+                        "monitorRouteWaypoints"
+                    );
+
+                if (!routeContainer) {
+
+                    console.warn(
+                        "monitorRouteWaypoints ไม่พบ"
+                    );
+
+                    return;
+
+                }
+
+
+                routeContainer.innerHTML = "";
+
+
+                manualRoute.forEach((point, index) => {
+
+                    const waypoint =
+                        document.createElement("div");
+
+                    waypoint.className =
+                        "monitor-route-waypoint";
+
+
+                    // -----------------------------
+                    // WAYPOINT NUMBER
+                    // -----------------------------
+
+                    const number =
+                        document.createElement("div");
+
+                    number.className =
+                        "route-waypoint-number";
+
+                    number.innerText =
+                        index + 1;
+
+
+                    // -----------------------------
+                    // WAYPOINT STATUS
+                    // -----------------------------
+
+                    if (index < currentMonitorWaypoint) {
+
+                        waypoint.classList.add(
+                            "completed"
+                        );
+
+                    }
+
+                    else if (index === currentMonitorWaypoint) {
+
+                        waypoint.classList.add(
+                            "current"
+                        );
+
+                    }
+
+                    else {
+
+                        waypoint.classList.add(
+                            "upcoming"
+                        );
+
+                    }
+
+
+                    waypoint.appendChild(number);
+
+
+                    // -----------------------------
+                    // CONNECTOR LINE
+                    // -----------------------------
+
+                    routeContainer.appendChild(
+                        waypoint
+                    );
+
+
+                    if (
+                        index <
+                        manualRoute.length - 1
+                    ) {
+
+                        const line =
+                            document.createElement("div");
+
+                        line.className =
+                            "route-waypoint-line";
+
+
+                        if (
+                            index <
+                            currentMonitorWaypoint
+                        ) {
+
+                            line.classList.add(
+                                "completed"
+                            );
+
+                        }
+
+                        else if (
+                            index ===
+                            currentMonitorWaypoint
+                        ) {
+
+                            line.classList.add(
+                                "current"
+                            );
+
+                        }
+
+                        else {
+
+                            line.classList.add(
+                                "upcoming"
+                            );
+
+                        }
+
+
+                        routeContainer.appendChild(
+                            line
+                        );
+
+                    }
+
+                });
+
+
+                console.log(
+                    "Route Panel Updated:",
+                    manualRoute.length,
+                    "waypoints"
+                );
 
             }
 
@@ -3882,6 +4963,112 @@
             document.getElementById("monitorPage").style.display = "none";
 
             document.getElementById(page).style.display = "block";
+
+            // ===============================
+            // LOAD HISTORY WHEN OPEN HISTORY
+            // ===============================
+
+            if (
+                page === "historyPage" ||
+                page === "analyticsPage"
+            ) {
+
+                console.log(
+                    "===== LOAD ANALYTICS / HISTORY ====="
+                );
+
+                loadHistory()
+                    .then(() => {
+
+                        console.log(
+                            "===== HISTORY / ANALYTICS LOADED ====="
+                        );
+
+                        if (page === "analyticsPage") {
+
+                            setTimeout(() => {
+
+                                if (tempChart) {
+                                    tempChart.resize();
+                                }
+
+                                if (phChart) {
+                                    phChart.resize();
+                                }
+
+                                if (turbidityChart) {
+                                    turbidityChart.resize();
+                                }
+
+                                console.log(
+                                    "Analytics Charts Resized"
+                                );
+
+                            }, 300);
+
+                        }
+
+                    })
+                    .catch(error => {
+
+                        console.error(
+                            "History / Analytics Load Error:",
+                            error
+                        );
+
+                    });
+
+            }
+
+            // =====================================
+            // FIX ANALYTICS CHART SIZE
+            // =====================================
+
+            if (page === "analyticsPage") {
+
+                setTimeout(() => {
+
+                    if (tempChart) {
+                        tempChart.resize();
+                    }
+
+                    if (phChart) {
+                        phChart.resize();
+                    }
+
+                    if (turbidityChart) {
+                        turbidityChart.resize();
+                    }
+
+                    console.log(
+                        "Analytics Charts Resized"
+                    );
+
+                    console.log(
+                        "Temp Canvas:",
+                        document
+                            .getElementById("tempChart")
+                            ?.getBoundingClientRect()
+                    );
+
+                    console.log(
+                        "PH Canvas:",
+                        document
+                            .getElementById("phChart")
+                            ?.getBoundingClientRect()
+                    );
+
+                    console.log(
+                        "Turbidity Canvas:",
+                        document
+                            .getElementById("turbidityChart")
+                            ?.getBoundingClientRect()
+                    );
+
+                }, 300);
+
+            }
+
             if (page === "monitorPage") {
 
                 setTimeout(async () => {

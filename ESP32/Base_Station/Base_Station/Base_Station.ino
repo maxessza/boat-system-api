@@ -10,6 +10,7 @@
 
 #include <WiFi.h>
 #include <esp_now.h>
+#include <esp_wifi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
@@ -19,12 +20,12 @@
 //==================================================
 
 // WiFi
-const char* ssid = "YOUR_WIFI";
-const char* password = "YOUR_PASSWORD";
+const char* ssid = "max";
+const char* password = "0924639159";
 
 
 // Backend
-const char* serverIP = "192.168.1.4";
+const char* serverIP = "192.168.1.36";
 const int serverPort = 8000;
 
 
@@ -99,13 +100,10 @@ struct AckPacket {
 
 struct SensorPacket {
   int8_t type;
-
   int index;
-
   int total;
 
   float latitude;
-
   float longitude;
 
   bool lastPacket;
@@ -113,10 +111,12 @@ struct SensorPacket {
   char boatID[16];
 
   float temperature;
-
   float ph;
-
   float turbidity;
+
+  float heading;
+  float flow_v_lat;
+  float flow_v_lng;
 };
 
 MissionPacket outgoingMission;
@@ -468,11 +468,27 @@ void uploadSensorData() {
 
   doc["longitude"] = incomingSensor.longitude;
 
+  doc["heading"] = incomingSensor.heading;
+
+  doc["flow_v_lat"] = incomingSensor.flow_v_lat;
+
+  doc["flow_v_lng"] = incomingSensor.flow_v_lng;
+
   String json;
 
   serializeJson(doc, json);
 
+  Serial.println("===== SENDING TO BACKEND =====");
+  Serial.print("URL: ");
+  Serial.println(sensorAPI);
+
+  Serial.print("JSON: ");
+  Serial.println(json);
+
   int httpCode = http.POST(json);
+
+  Serial.print("HTTP CODE: ");
+  Serial.println(httpCode);
 
   if (httpCode == 200) {
     Serial.println("Upload Success");
@@ -673,16 +689,98 @@ void runBaseStation() {
       break;
   }
 }
+//==================================================
+// TEST SENSOR UPLOAD
+//==================================================
 
+void testSensorUpload() {
+
+  strcpy(
+    incomingSensor.boatID,
+    "Boat01");
+
+  incomingSensor.temperature = 31.2;
+
+  incomingSensor.ph = 7.3;
+
+  incomingSensor.turbidity = 20.0;
+
+  incomingSensor.latitude = 13.75370309;
+
+  incomingSensor.longitude = 100.48686313;
+
+  incomingSensor.heading = 90.0;
+
+  incomingSensor.flow_v_lat = 0.00137537;
+
+  incomingSensor.flow_v_lng = 0.0100487;
+
+
+  Serial.println();
+
+  Serial.println("===== TEST SENSOR UPLOAD =====");
+
+
+  Serial.print("Boat ID : ");
+  Serial.println(incomingSensor.boatID);
+
+
+  Serial.print("Temperature : ");
+  Serial.println(incomingSensor.temperature);
+
+
+  Serial.print("pH : ");
+  Serial.println(incomingSensor.ph);
+
+
+  Serial.print("Turbidity : ");
+  Serial.println(incomingSensor.turbidity);
+
+
+  Serial.println("STEP A");
+
+
+  Serial.print("Latitude : ");
+  Serial.println(incomingSensor.latitude);
+
+
+  Serial.println("STEP B");
+
+
+  Serial.print("Longitude : ");
+  Serial.println(incomingSensor.longitude);
+
+
+  Serial.println("STEP C");
+
+
+  uploadSensorData();
+
+
+  Serial.println("STEP D");
+}
 
 //==================================================
 // Setup
 //==================================================
 
 void setup() {
+
   Serial.begin(115200);
 
   WiFi.mode(WIFI_STA);
+
+  //==================================================
+  // BASE MAC
+  //==================================================
+
+  Serial.print("Base MAC : ");
+  Serial.println(WiFi.macAddress());
+
+
+  //==================================================
+  // ESP-NOW
+  //==================================================
 
   if (esp_now_init() != ESP_OK) {
     Serial.println("ESP-NOW Init Failed");
@@ -691,42 +789,103 @@ void setup() {
 
   Serial.println("ESP-NOW Ready");
 
+  //==================================================
+  // Wi-Fi
+  //==================================================
+
   WiFi.begin(
     ssid,
     password);
 
   Serial.println();
-
   Serial.println("Connecting WiFi...");
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-
     Serial.print(".");
   }
 
   Serial.println();
-
   Serial.println("WiFi Connected");
 
   Serial.print("IP : ");
+  Serial.println(WiFi.localIP());
 
-  Serial.println(
-    WiFi.localIP());
+  Serial.print("WiFi Channel : ");
+  Serial.println(WiFi.channel());
 
+  //==================================================
+  // ENABLE LONG RANGE ESP-NOW
+  //==================================================
+
+  Serial.println();
+  Serial.println("==============================");
+  Serial.println("LONG RANGE ESP-NOW");
+  Serial.println("==============================");
+
+  uint8_t protocol =
+    WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_LR;
+
+  esp_err_t lrResult =
+    esp_wifi_set_protocol(
+      WIFI_IF_STA,
+      protocol);
+
+  if (lrResult == ESP_OK) {
+
+    Serial.println("LONG RANGE ESP-NOW : ENABLED");
+
+  } else {
+
+    Serial.print("LONG RANGE ESP-NOW : FAILED, ERROR = ");
+    Serial.println(lrResult);
+  }
+
+
+  // Check current protocol
+
+  uint8_t protocolCheck = 0;
+
+  esp_err_t checkResult =
+    esp_wifi_get_protocol(
+      WIFI_IF_STA,
+      &protocolCheck);
+
+  Serial.print("Protocol Check Result : ");
+
+  if (checkResult == ESP_OK) {
+    Serial.println("OK");
+  } else {
+    Serial.println("FAILED");
+  }
+
+  Serial.print("Protocol Bitmap : 0x");
+  Serial.println(protocolCheck, HEX);
+
+  Serial.println("==============================");
+
+
+  testSensorUpload();
+
+
+  //==================================================
   // Register Callback
-  esp_now_register_recv_cb(onDataReceive);
+  //==================================================
 
+  esp_now_register_recv_cb(onDataReceive);
   esp_now_register_send_cb(onDataSent);
 
+
+  //==================================================
   // Add Boat Peer
+  //==================================================
+
   memcpy(
     peerInfo.peer_addr,
     boatMacAddress,
     6);
 
   peerInfo.channel = 0;
-
   peerInfo.encrypt = false;
 
   if (esp_now_add_peer(&peerInfo) != ESP_OK) {
@@ -736,7 +895,6 @@ void setup() {
 
   Serial.println("Boat Peer Added");
 }
-
 
 //==================================================
 // Loop

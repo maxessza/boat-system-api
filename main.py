@@ -63,6 +63,9 @@ class SensorData(BaseModel):
     temp_c: float
     ph_level: float
     turbidity_ntu: float
+    heading: float | None = None
+    flow_v_lat: float | None = None
+    flow_v_lng: float | None = None
 
 #====================================
 # Manual Route Models
@@ -99,35 +102,95 @@ def home():
 # ✅ รับข้อมูล + บันทึก DB + คำนวณ
 @app.post("/data")
 def receive_data(data: SensorData):
+    conn = None
+    cursor = None
+
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
+        # ==============================
+        # FLOW VECTOR
+        # ==============================
+
+        flow_v_lat = data.flow_v_lat
+        flow_v_lng = data.flow_v_lng
+
+        # ==============================
+        # INSERT SENSOR DATA
+        # ==============================
+
         cursor.execute("""
             INSERT INTO sensor_logs
-            (boat_id, log_time, latitude, longitude, temp_c, ph_level, turbidity_ntu)
-            VALUES (%s, NOW(), %s, %s, %s, %s, %s)
+            (
+                boat_id,
+                log_time,
+                latitude,
+                longitude,
+                heading,
+                temp_c,
+                ph_level,
+                turbidity_ntu,
+                flow_v_lat,
+                flow_v_lng
+            )
+            VALUES
+            (
+                %s,
+                NOW(),
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
         """, (
             data.boat_id,
             data.latitude,
             data.longitude,
+            data.heading,
             data.temp_c,
             data.ph_level,
-            data.turbidity_ntu
+            data.turbidity_ntu,
+            flow_v_lat,
+            flow_v_lng
         ))
 
-        flow_v_lat = data.latitude * 0.0001
-        flow_v_lng = data.longitude * 0.0001
+        # ==============================
+        # DRIFT PREDICTION
+        # ==============================
 
         predicted_lat = data.latitude + 0.0003
         predicted_lng = data.longitude + 0.0003
 
         cursor.execute("""
             INSERT INTO drift_predictions
-            (log_time,start_lat,start_lng,end_lat,end_lng,
-            flow_v_lat,flow_v_lng,predicted_lat,predicted_lng)
+            (
+                log_time,
+                start_lat,
+                start_lng,
+                end_lat,
+                end_lng,
+                flow_v_lat,
+                flow_v_lng,
+                predicted_lat,
+                predicted_lng
+            )
             VALUES
-            (NOW(),%s,%s,%s,%s,%s,%s,%s,%s)
+            (
+                NOW(),
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
         """, (
             data.latitude,
             data.longitude,
@@ -138,6 +201,10 @@ def receive_data(data: SensorData):
             predicted_lat,
             predicted_lng
         ))
+
+        # ==============================
+        # COMMIT
+        # ==============================
 
         conn.commit()
 
@@ -154,15 +221,25 @@ def receive_data(data: SensorData):
         }
 
     except Exception as e:
-        return {"error": str(e)}
+
+        if conn:
+            conn.rollback()
+
+        print("DATA ERROR:", e)
+
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 
     finally:
-        try:
-            cursor.close()
-            conn.close()
-        except:
-            pass
 
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+            
 # ✅ ดูข้อมูล sensor_logs ล่าสุด 100 รายการ
 @app.get("/logs")
 def get_logs():
@@ -238,6 +315,7 @@ def get_path():
 
 
 # ✅ ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
+# ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
 @app.get("/latest")
 def get_latest():
 
@@ -245,13 +323,24 @@ def get_latest():
     cursor = None
 
     try:
+
         conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT *
-            FROM sensor_logs
-            ORDER BY id DESC
+            SELECT
+                s.*,
+                d.flow_v_lat,
+                d.flow_v_lng,
+                d.predicted_lat,
+                d.predicted_lng
+            FROM sensor_logs s
+            LEFT JOIN drift_predictions d
+                ON d.predict_id = (
+                    SELECT MAX(predict_id)
+                    FROM drift_predictions
+                )
+            ORDER BY s.id DESC
             LIMIT 1
         """)
 
@@ -260,9 +349,11 @@ def get_latest():
         return data
 
     except Exception as e:
+
         return {"error": str(e)}
 
     finally:
+
         if cursor:
             cursor.close()
 

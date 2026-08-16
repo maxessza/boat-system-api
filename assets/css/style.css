@@ -1763,7 +1763,9 @@ Mini Map
 
 .monitor-layout {
 
-    display: flex;
+    display: grid;
+
+    grid-template-columns: 3fr 1fr;
 
     gap: 20px;
 
@@ -1920,4 +1922,573 @@ Monitor Heatmap Legend
 /* เอาลูกศรสามเหลี่ยมของ Tooltip ออก */
 .waypoint-label::before {
     display: none;
+}
+
+
+/* =========================================
+   MONITOR NEW LAYOUT
+   ========================================= */
+
+.monitor-main-grid {
+
+    display: grid;
+
+    grid-template-columns: minmax(0, 3fr) minmax(320px, 1fr);
+
+    gap: 18px;
+
+    align-items: start;
+
+}
+
+
+.monitor-main-left {
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+
+}
+
+
+.monitor-right-column {
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+
+}
+
+
+/* =========================================
+   SENSOR / FLOW / HEATMAP SUMMARY
+   ========================================= */
+
+.monitor-summary-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 18px;
+
+}
+
+
+.monitor-summary-grid .card {
+
+    min-width: 0;
+
+}
+
+
+/* =========================================
+   ROUTE
+   ========================================= */
+
+.monitor-route-panel {
+
+    width: 100%;
+
+}
+
+
+.monitor-route-waypoints {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    min-height: 55px;
+
+    overflow-x: auto;
+
+}
+
+
+.route-legend {
+
+    display: flex;
+
+    gap: 20px;
+
+    margin-top: 15px;
+
+    font-size: 13px;
+
+}
+
+
+/* =========================================
+   RIGHT COLUMN CARD
+   ========================================= */
+
+.monitor-right-column .card {
+
+    width: 100%;
+
+}
+
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+
+@media (max-width: 1100px) {
+
+    .monitor-main-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .monitor-summary-grid {
+
+        grid-template-columns: repeat(3, 1fr);
+
+    }
+
+}
+
+
+@media (max-width: 800px) {
+
+    .monitor-summary-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
+
+/* =========================================
+   ROUTE & WAYPOINTS
+========================================= */
+
+.monitor-route-panel {
+
+    margin-top: 0;
+
+}
+
+
+.monitor-route-waypoints {
+
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+
+    overflow-x: auto;
+
+    padding: 15px 5px 20px;
+
+}
+
+
+.monitor-route-waypoint {
+
+    flex: 0 0 auto;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+
+.route-waypoint-number {
+
+    width: 34px;
+
+    height: 34px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    border: 2px solid #d1d5db;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+}
+
+
+/* COMPLETED */
+
+.monitor-route-waypoint.completed .route-waypoint-number {
+
+    background: #22c55e;
+
+    border-color: #22c55e;
+
+    color: #ffffff;
+
+}
+
+
+/* CURRENT */
+
+.monitor-route-waypoint.current .route-waypoint-number {
+
+    background: #2563eb;
+
+    border-color: #2563eb;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, .15);
+
+}
+
+
+/* UPCOMING */
+
+.monitor-route-waypoint.upcoming .route-waypoint-number {
+
+    background: #ffffff;
+
+    border-color: #d1d5db;
+
+    color: #64748b;
+
+}
+
+
+/* =========================================
+   CONNECTING LINE
+========================================= */
+
+.route-waypoint-line {
+
+    flex: 0 0 30px;
+
+    height: 3px;
+
+    background: #d1d5db;
+
+}
+
+
+.route-waypoint-line.completed {
+
+    background: #22c55e;
+
+}
+
+
+.route-waypoint-line.current {
+
+    background:
+        linear-gradient(to right,
+            #2563eb 50%,
+            #d1d5db 50%);
+
+}
+
+
+.route-waypoint-line.upcoming {
+
+    background: #d1d5db;
+
+}
+
+
+/* =========================================
+   LEGEND
+========================================= */
+
+.route-legend {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+
+    padding-top: 5px;
+
+    font-size: 13px;
+
+    color: #64748b;
+
+}
+
+
+.route-legend span {
+
+    white-space: nowrap;
+
+}
+
+/* =========================================
+   MONITOR ALERTS
+========================================= */
+
+.monitor-right-column #monitorAlert {
+
+    margin-top: 10px;
+
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    border-left: 4px solid #22c55e;
+
+    color: #334155;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    min-height: 20px;
+
+}
+
+
+/* No Alert */
+
+.monitor-right-column #monitorAlert:has(p) {
+
+    border-left-color: #22c55e;
+
+}
+
+
+/* Alert text */
+
+.monitor-right-column #monitorAlert p {
+
+    margin: 0;
+
+}
+
+/* =========================================
+   BOAT STATUS
+========================================= */
+
+.monitor-right-column .card h3 {
+
+    margin-bottom: 16px;
+
+}
+
+
+.monitor-right-column .card p {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin: 10px 0;
+
+    font-size: 14px;
+
+}
+
+
+.monitor-right-column .card p b {
+
+    font-weight: 700;
+
+}
+
+
+/* =========================================
+   BOAT STATUS - STATUS VALUE
+========================================= */
+
+#monitorStatus {
+
+    display: inline-block;
+
+    padding: 4px 10px;
+
+    border-radius: 20px;
+
+    background: #dcfce7;
+
+    color: #16a34a;
+
+    font-size: 12px;
+
+}
+
+
+/* =========================================
+   CURRENT POSITION
+========================================= */
+
+.monitor-right-column #monitorLat,
+.monitor-right-column #monitorLng,
+.monitor-right-column #monitorHeading {
+
+    font-family: monospace;
+
+    font-size: 13px;
+
+}
+
+
+/* =========================================
+   MISSION TYPE
+========================================= */
+
+#monitorMission {
+
+    color: #2563eb;
+
+}
+
+
+/* =========================================
+   BOAT STATUS
+========================================= */
+
+.boat-status-card {
+    padding: 20px;
+}
+
+.boat-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 12px 0;
+}
+
+.boat-status-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+
+/* STATUS */
+
+.boat-status-value {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-idle {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+
+/* MISSION MODE */
+
+#monitorMission {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   COMPASS
+========================================= */
+
+.boat-compass-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.compass-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.monitor-compass {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    background: #f8fafc;
+    box-shadow:
+        inset 0 0 0 8px #ffffff,
+        0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.compass-n,
+.compass-e,
+.compass-s,
+.compass-w {
+    position: absolute;
+    font-weight: 700;
+    color: #334155;
+    font-size: 14px;
+}
+
+.compass-n {
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.compass-e {
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.compass-s {
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.compass-w {
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.compass-arrow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #2563eb;
+    font-size: 42px;
+    line-height: 1;
+}
+
+.heading-value {
+    margin-top: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
 }
