@@ -13,6 +13,7 @@
 #include <esp_wifi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include "Packets.h"
 
 
 //==================================================
@@ -20,8 +21,8 @@
 //==================================================
 
 // WiFi
-const char* ssid = "max";
-const char* password = "0924639159";
+const char* ssid = "IBS_211 2.4G";
+const char* password = "Icebrightesso211";
 
 
 // Backend
@@ -52,80 +53,6 @@ uint8_t boatMacAddress[] = {
   0x00,
   0x00
 };
-
-//==================================================
-// ESP-NOW Packet
-//==================================================
-
-enum PacketType {
-  PACKET_MISSION = 1,
-  PACKET_SENSOR = 2,
-  PACKET_ROUTE = 3,
-  PACKET_ACK = 4
-};
-
-struct MissionPacket {
-  uint8_t type;
-
-  char command[16];
-
-  char mode[16];
-};
-
-struct RoutePoint {
-  float latitude;
-
-  float longitude;
-};
-
-struct RoutePacket {
-  uint8_t type;
-
-  int index;
-
-  int total;
-
-  bool lastPacket;
-
-  RoutePoint point;
-};
-
-struct AckPacket {
-  uint8_t type;
-
-  bool routeReceived;
-
-  bool missionReceived;
-};
-
-struct SensorPacket {
-  int8_t type;
-  int index;
-  int total;
-
-  float latitude;
-  float longitude;
-
-  bool lastPacket;
-
-  char boatID[16];
-
-  float temperature;
-  float ph;
-  float turbidity;
-
-  float heading;
-  float flow_v_lat;
-  float flow_v_lng;
-};
-
-MissionPacket outgoingMission;
-
-RoutePacket outgoingRoute;
-
-AckPacket incomingAck;
-
-SensorPacket incomingSensor;
 
 esp_now_peer_info_t peerInfo;
 
@@ -201,54 +128,111 @@ bool espNowSendSuccess = false;
 // ESP-NOW Callback
 //==================================================
 
-void uploadSensorData();
+void uploadSensorData(const TelemetryPacket& telemetry);
+
 
 void onDataReceive(
   const esp_now_recv_info_t* info,
   const uint8_t* incomingData,
   int len) {
 
-  uint8_t packetType = incomingData[0];
+  if (incomingData == nullptr || len <= 0) {
+    return;
+  }
 
-  if (packetType == PACKET_SENSOR) {
+  //========================================
+  // Telemetry
+  //========================================
+
+  if (len == sizeof(TelemetryPacket)) {
+    TelemetryPacket telemetry;
+
     memcpy(
-      &incomingSensor,
+      &telemetry,
       incomingData,
-      sizeof(SensorPacket));
+      sizeof(TelemetryPacket));
 
     Serial.println();
-
     Serial.println("==========");
-    Serial.println("Sensor Packet Received");
+    Serial.println("Telemetry Packet Received");
 
-    Serial.print("Boat : ");
-    Serial.println(incomingSensor.boatID);
+    Serial.print("Sequence : ");
+    Serial.println(telemetry.sequence_number);
+
+    Serial.print("Latitude : ");
+    Serial.println(telemetry.gps_lat, 8);
+
+    Serial.print("Longitude : ");
+    Serial.println(telemetry.gps_lon, 8);
 
     Serial.print("Temperature : ");
-    Serial.println(incomingSensor.temperature);
+    Serial.println(telemetry.water_temp);
 
     Serial.print("pH : ");
-    Serial.println(incomingSensor.ph);
+    Serial.println(telemetry.water_ph);
 
     Serial.print("Turbidity : ");
-    Serial.println(incomingSensor.turbidity);
+    Serial.println(telemetry.water_turbidity);
+
+    Serial.print("Heading : ");
+    Serial.println(telemetry.heading_angle);
+
+    Serial.print("Battery : ");
+    Serial.println(telemetry.battery_percent);
 
     Serial.println("==========");
 
-    uploadSensorData();
-  } else if (packetType == PACKET_ACK) {
+    uploadSensorData(telemetry);
+
+    return;
+  }
+
+
+  //========================================
+  // Waypoint ACK
+  //========================================
+
+  if (len == sizeof(WaypointACKPacket)) {
+
+    WaypointACKPacket ack;
+
     memcpy(
-      &incomingAck,
+      &ack,
       incomingData,
-      sizeof(AckPacket));
+      sizeof(WaypointACKPacket));
 
-    routeAck = incomingAck.routeReceived;
-    missionAck = incomingAck.missionReceived;
+    Serial.println();
+    Serial.println("==========");
+    Serial.println("Waypoint ACK Received");
 
-    Serial.println("ACK Received");
-  }  // ปิด else if
+    Serial.print("Packet Index : ");
+    Serial.println(
+      ack.packet_index);
 
-}  // <<< เพิ่มบรรทัดนี้ เพื่อปิด onDataReceive()
+    Serial.print("ACK Status : ");
+    Serial.println(
+      ack.ack_status);
+
+    if (ack.ack_status == ACK_OK) {
+      Serial.println("Status : ACK OK");
+    } else {
+      Serial.println("Status : ACK NACK");
+    }
+
+    Serial.println("==========");
+
+    return;
+  }
+
+
+  //========================================
+  // Unknown packet
+  //========================================
+
+  Serial.print("Unknown Packet Length : ");
+  Serial.println(len);
+}
+
 
 
 void onDataSent(
@@ -322,29 +306,82 @@ void getMissionCommand() {
 //==================================================
 
 void sendMissionESPNow() {
-  outgoingMission.type = PACKET_MISSION;
+  CommandPacket outgoingCommand = {};
 
-  strcpy(
-    outgoingMission.command,
-    missionCommand.c_str());
+  //========================================
+  // Convert Mission Command
+  //========================================
 
-  strcpy(
-    outgoingMission.mode,
-    missionMode.c_str());
+  if (missionCommand == "START") {
 
-  esp_now_send(
+    outgoingCommand.sys_command = CMD_START_ARM;
+
+  } else if (missionCommand == "STOP") {
+
+    outgoingCommand.sys_command = CMD_NORMAL;
+
+  } else if (missionCommand == "EMERGENCY_STOP") {
+
+    outgoingCommand.sys_command = CMD_EMERGENCY_STOP;
+
+  } else if (missionCommand == "RTH") {
+
+    outgoingCommand.sys_command = CMD_FORCE_RTH;
+
+  } else if (missionCommand == "CLEAR_ESTOP") {
+
+    outgoingCommand.sys_command = CMD_CLEAR_ESTOP;
+
+  } else {
+
+    outgoingCommand.sys_command = CMD_NORMAL;
+  }
+
+
+  //========================================
+  // Manual Control
+  //========================================
+
+  outgoingCommand.manual_steer = 0;
+  outgoingCommand.manual_speed = 0;
+
+
+  //========================================
+  // Send Command
+  //========================================
+
+  esp_err_t result = esp_now_send(
     boatMacAddress,
-    (uint8_t*)&outgoingMission,
-    sizeof(outgoingMission));
+    (uint8_t*)&outgoingCommand,
+    sizeof(outgoingCommand));
+
+
+  //========================================
+  // Serial Monitor
+  //========================================
 
   Serial.println();
-  Serial.println("Mission Sent To Boat");
+  Serial.println("===== COMMAND SENT TO BOAT =====");
 
   Serial.print("Command : ");
   Serial.println(missionCommand);
 
   Serial.print("Mode : ");
   Serial.println(missionMode);
+
+  Serial.print("Command Code : ");
+  Serial.println(
+    outgoingCommand.sys_command);
+
+  Serial.print("Send Result : ");
+
+  if (result == ESP_OK) {
+    Serial.println("OK");
+  } else {
+    Serial.println("FAILED");
+  }
+
+  Serial.println("===============================");
 }
 
 //==================================================
@@ -400,52 +437,83 @@ void downloadRoute() {
 //==================================================
 // Send Route To Boat
 //==================================================
-
 void sendRouteESPNow() {
+
   Serial.println();
   Serial.println("Sending Route To Boat...");
 
-  for (int i = 0; i < totalWaypoints; i++) {
-    outgoingRoute.type = PACKET_ROUTE;
+  int startIndex = 0;
+  int batchIndex = 0;
 
-    outgoingRoute.index = i;
+  // ส่งครั้งละไม่เกิน 12 waypoint
+  while (startIndex < totalWaypoints) {
 
-    outgoingRoute.total = totalWaypoints;
+    WaypointArrayPacket packet = {};
 
-    outgoingRoute.point.latitude =
-      waypointLat[i];
+    int remaining =
+      totalWaypoints - startIndex;
 
-    outgoingRoute.point.longitude =
-      waypointLng[i];
+    int count =
+      (remaining > 12) ? 12 : remaining;
 
-    if (i == totalWaypoints - 1) {
-      outgoingRoute.lastPacket = true;
-    } else {
-      outgoingRoute.lastPacket = false;
+    packet.packet_index = batchIndex;
+    packet.waypoint_count = count;
+
+    // ใส่ waypoint ลงใน packet
+    for (int i = 0; i < count; i++) {
+
+      packet.waypoints[i].lat =
+        waypointLat[startIndex + i];
+
+      packet.waypoints[i].lon =
+        waypointLng[startIndex + i];
     }
 
-    esp_now_send(
+    // ส่ง packet
+    esp_err_t result = esp_now_send(
       boatMacAddress,
-      (uint8_t*)&outgoingRoute,
-      sizeof(outgoingRoute));
+      (uint8_t*)&packet,
+      sizeof(packet));
 
-    Serial.print("Send Waypoint ");
+    Serial.println();
+    Serial.print("Send Batch : ");
+    Serial.println(batchIndex);
 
-    Serial.println(i + 1);
+    Serial.print("Waypoint : ");
+    Serial.print(startIndex);
+    Serial.print(" - ");
+    Serial.println(
+      startIndex + count - 1);
+
+    Serial.print("Waypoint Count : ");
+    Serial.println(count);
+
+    Serial.print("Send Result : ");
+
+    if (result == ESP_OK) {
+      Serial.println("OK");
+    } else {
+      Serial.println("FAILED");
+    }
+
+    startIndex += count;
+    batchIndex++;
 
     delay(100);
   }
 
   Serial.println();
   Serial.println("Route Send Complete");
-}
 
+  // บอก Boat ว่า Upload Route เสร็จแล้ว
+  sendMissionESPNow();
+}
 
 //==================================================
 // Upload Sensor To Backend
 //==================================================
 
-void uploadSensorData() {
+void uploadSensorData(const TelemetryPacket& telemetry) {
   HTTPClient http;
 
   http.begin(sensorAPI);
@@ -456,51 +524,94 @@ void uploadSensorData() {
 
   DynamicJsonDocument doc(512);
 
-  doc["boat_id"] = incomingSensor.boatID;
+  //========================================
+  // Boat ID
+  //========================================
 
-  doc["temp_c"] = incomingSensor.temperature;
+  doc["boat_id"] = "Boat01";
 
-  doc["ph_level"] = incomingSensor.ph;
 
-  doc["turbidity_ntu"] = incomingSensor.turbidity;
+  //========================================
+  // Sensor Data
+  //========================================
 
-  doc["latitude"] = incomingSensor.latitude;
+  doc["temp_c"] =
+    telemetry.water_temp;
 
-  doc["longitude"] = incomingSensor.longitude;
+  doc["ph_level"] =
+    telemetry.water_ph;
 
-  doc["heading"] = incomingSensor.heading;
+  doc["turbidity_ntu"] =
+    telemetry.water_turbidity;
 
-  doc["flow_v_lat"] = incomingSensor.flow_v_lat;
+  doc["latitude"] =
+    telemetry.gps_lat;
 
-  doc["flow_v_lng"] = incomingSensor.flow_v_lng;
+  doc["longitude"] =
+    telemetry.gps_lon;
+
+  doc["heading"] =
+    telemetry.heading_angle;
+
+
+  //========================================
+  // Flow
+  //========================================
+
+  doc["flow_v_lat"] = 0.0;
+  doc["flow_v_lng"] = 0.0;
+
+
+  //========================================
+  // Convert JSON
+  //========================================
 
   String json;
 
-  serializeJson(doc, json);
+  serializeJson(
+    doc,
+    json);
 
-  Serial.println("===== SENDING TO BACKEND =====");
+
+  //========================================
+  // Serial Monitor
+  //========================================
+
+  Serial.println();
+  Serial.println(
+    "===== SENDING TO BACKEND =====");
+
   Serial.print("URL: ");
   Serial.println(sensorAPI);
 
   Serial.print("JSON: ");
   Serial.println(json);
 
-  int httpCode = http.POST(json);
+
+  //========================================
+  // POST
+  //========================================
+
+  int httpCode =
+    http.POST(json);
 
   Serial.print("HTTP CODE: ");
   Serial.println(httpCode);
 
-  if (httpCode == 200) {
-    Serial.println("Upload Success");
-  } else {
-    Serial.print("Upload Failed : ");
 
-    Serial.println(httpCode);
+  if (httpCode == 200) {
+    Serial.println(
+      "Upload Success");
+  } else {
+    Serial.print(
+      "Upload Failed : ");
+
+    Serial.println(
+      httpCode);
   }
 
   http.end();
 }
-
 
 //==================================================
 // Base State Machine
@@ -693,73 +804,96 @@ void runBaseStation() {
 // TEST SENSOR UPLOAD
 //==================================================
 
-void testSensorUpload() {
+void testSensorUpload()
+{
+  //========================================
+  // Create Test Telemetry
+  //========================================
 
-  strcpy(
-    incomingSensor.boatID,
-    "Boat01");
+  TelemetryPacket testTelemetry = {};
 
-  incomingSensor.temperature = 31.2;
+  testTelemetry.sequence_number = 117;
 
-  incomingSensor.ph = 7.3;
+  testTelemetry.gps_lat =
+    13.75370309;
 
-  incomingSensor.turbidity = 20.0;
+  testTelemetry.gps_lon =
+    100.48686313;
 
-  incomingSensor.latitude = 13.75370309;
+  testTelemetry.water_temp =
+    31.2;
 
-  incomingSensor.longitude = 100.48686313;
+  testTelemetry.water_ph =
+    7.3;
 
-  incomingSensor.heading = 90.0;
+  testTelemetry.water_turbidity =
+    20.0;
 
-  incomingSensor.flow_v_lat = 0.00137537;
+  testTelemetry.current_mode =
+    0;
 
-  incomingSensor.flow_v_lng = 0.0100487;
+  testTelemetry.battery_percent =
+    100;
 
+  testTelemetry.heading_angle =
+    90.0;
+
+
+  //========================================
+  // Serial Test
+  //========================================
 
   Serial.println();
+  Serial.println(
+    "===== TEST TELEMETRY UPLOAD ====="
+  );
 
-  Serial.println("===== TEST SENSOR UPLOAD =====");
-
-
-  Serial.print("Boat ID : ");
-  Serial.println(incomingSensor.boatID);
-
-
-  Serial.print("Temperature : ");
-  Serial.println(incomingSensor.temperature);
-
-
-  Serial.print("pH : ");
-  Serial.println(incomingSensor.ph);
-
-
-  Serial.print("Turbidity : ");
-  Serial.println(incomingSensor.turbidity);
-
-
-  Serial.println("STEP A");
-
+  Serial.print("Sequence : ");
+  Serial.println(
+    testTelemetry.sequence_number
+  );
 
   Serial.print("Latitude : ");
-  Serial.println(incomingSensor.latitude);
-
-
-  Serial.println("STEP B");
-
+  Serial.println(
+    testTelemetry.gps_lat,
+    8
+  );
 
   Serial.print("Longitude : ");
-  Serial.println(incomingSensor.longitude);
+  Serial.println(
+    testTelemetry.gps_lon,
+    8
+  );
+
+  Serial.print("Temperature : ");
+  Serial.println(
+    testTelemetry.water_temp
+  );
+
+  Serial.print("pH : ");
+  Serial.println(
+    testTelemetry.water_ph
+  );
+
+  Serial.print("Turbidity : ");
+  Serial.println(
+    testTelemetry.water_turbidity
+  );
+
+  Serial.print("Heading : ");
+  Serial.println(
+    testTelemetry.heading_angle
+  );
 
 
-  Serial.println("STEP C");
+  //========================================
+  // Upload
+  //========================================
 
-
-  uploadSensorData();
-
-
-  Serial.println("STEP D");
+  uploadSensorData(
+    testTelemetry
+  );
 }
-
 //==================================================
 // Setup
 //==================================================
