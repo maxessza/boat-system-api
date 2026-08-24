@@ -186,6 +186,8 @@
                             </div>
                         </div>
 
+
+
                     </div>
 
                     <div class="mission-progress">
@@ -266,9 +268,22 @@
                                     ▶ Start Mission
                                 </button>
 
-                                <button id="stopMission">
-                                    ⏹ Stop Mission
+                                <button id="returnHome">
+                                    🏠 Return Home
                                 </button>
+
+                                <button id="stopMission">
+                                    ⏹ Stop (E-Stop)
+                                </button>
+
+                                <button id="clearEstop">
+                                    🔓 CLEAR E-STOP
+                                </button>
+
+                                <button id="emergencyStop">
+                                    🚨 EMERGENCY STOP
+                                </button>
+
 
                             </div>
 
@@ -724,22 +739,22 @@
                         <div class="card">
 
                             <div style="
-                             display:flex;
-                             justify-content:space-between;
-                             align-items:center;
-                             margin-bottom:15px;
-                             ">
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                                margin-bottom:15px;
+                                ">
 
                                 <h3 style="margin:0;">
                                     🗺 Live Mission Map
                                 </h3>
 
                                 <div style="
-                                 background:#f8fafc;
-                                 padding:8px 15px;
-                                 border-radius:10px;
-                                 font-size:14px;
-                                 ">
+                                    background:#f8fafc;
+                                    padding:8px 15px;
+                                    border-radius:10px;
+                                    font-size:14px;
+                                    ">
                                     🌊 Turbidity Heatmap
                                 </div>
 
@@ -774,13 +789,13 @@
 
 
                             <div style="
-                             display:flex;
-                             justify-content:center;
-                             gap:25px;
-                             margin-top:15px;
-                             font-size:14px;
-                             font-weight:600;
-                             ">
+                                display:flex;
+                                justify-content:center;
+                                gap:25px;
+                                margin-top:15px;
+                                font-size:14px;
+                                font-weight:600;
+                                ">
 
                                 <span>
                                     🟢 Completed
@@ -1229,6 +1244,10 @@
 
             let missionStatus = "Idle";
 
+            let boatCurrentMode = 0;
+
+            let needsClearEstop = false;
+
 
             const map =
                 L.map('map').setView([13.7563, 100.5018], 13);
@@ -1239,6 +1258,71 @@
                     attribution: '© OpenStreetMap'
                 }
             ).addTo(map);
+
+
+            // ======================================
+            // Get My Real GPS Location
+            // ======================================
+
+            function getMyLocation() {
+
+                if (!navigator.geolocation) {
+
+                    console.log("Geolocation is not supported");
+
+                    return;
+
+                }
+
+                navigator.geolocation.getCurrentPosition(
+
+                    function (position) {
+
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        console.log("My GPS:", lat, lng);
+
+                        // Move Main Map
+                        map.setView(
+                            [lat, lng],
+                            16
+                        );
+
+                        // Add My Location Marker
+                        L.marker([lat, lng])
+                            .addTo(map)
+                            .bindPopup(
+                                `
+                        <b>📍 My Location</b><br>
+                        Latitude: ${lat.toFixed(6)}<br>
+                        Longitude: ${lng.toFixed(6)}
+                        `
+                            )
+                            .openPopup();
+
+                    },
+
+                    function (error) {
+
+                        console.log(
+                            "GPS Error:",
+                            error.message
+                        );
+
+                    },
+
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+
+                );
+
+            }
+
+
             map.on("click", addManualWaypoint);
 
             let marker = null;
@@ -1962,70 +2046,70 @@
 
                             historyBody.innerHTML += `
 
-                    <tr>
+                        <tr>
 
-                        <td>
-                            ${item.log_time ?? "-"}
-                        </td>
+                            <td>
+                                ${item.log_time ?? "-"}
+                            </td>
 
-                        <td>
+                            <td>
 
-                            <span class="boat-tag">
-                                🚤 ${item.boat_id ?? "-"}
-                            </span>
+                                <span class="boat-tag">
+                                    🚤 ${item.boat_id ?? "-"}
+                                </span>
 
-                        </td>
+                            </td>
 
-                        <td>
-                            ${Number.isFinite(temp)
+                            <td>
+                                ${Number.isFinite(temp)
                                     ? temp.toFixed(2)
                                     : "-"
                                 }
-                        </td>
+                            </td>
 
-                        <td>
-                            ${Number.isFinite(ph)
+                            <td>
+                                ${Number.isFinite(ph)
                                     ? ph.toFixed(2)
                                     : "-"
                                 }
-                        </td>
+                            </td>
 
-                        <td>
-                            ${Number.isFinite(turb)
+                            <td>
+                                ${Number.isFinite(turb)
                                     ? turb.toFixed(2)
                                     : "-"
                                 }
-                        </td>
+                            </td>
 
-                        <td>
+                            <td>
 
-                            <span class="${qualityClass}">
-                                ${quality}
-                            </span>
+                                <span class="${qualityClass}">
+                                    ${quality}
+                                </span>
 
-                        </td>
+                            </td>
 
-                        <td>
-                            ${Number.isFinite(
+                            <td>
+                                ${Number.isFinite(
                                     Number(item.latitude)
                                 )
                                     ? Number(item.latitude).toFixed(5)
                                     : "-"
                                 }
-                        </td>
+                            </td>
 
-                        <td>
-                            ${Number.isFinite(
+                            <td>
+                                ${Number.isFinite(
                                     Number(item.longitude)
                                 )
                                     ? Number(item.longitude).toFixed(5)
                                     : "-"
                                 }
-                        </td>
+                            </td>
 
-                    </tr>
+                        </tr>
 
-                `;
+                    `;
 
                         });
 
@@ -2163,12 +2247,34 @@
 
                     if (monitorBoatMarker) {
 
+                        const boatLat =
+                            Number(data.latitude);
+
+                        const boatLng =
+                            Number(data.longitude);
+
                         monitorBoatMarker.setLatLng([
-                            data.latitude,
-                            data.longitude
+                            boatLat,
+                            boatLng
                         ]);
 
+                        // Center Monitor Map ครั้งแรกที่ได้รับ GPS เรือ
+                        if (!monitorHasCentered) {
+
+                            monitorMap.setView(
+                                [
+                                    boatLat,
+                                    boatLng
+                                ],
+                                15
+                            );
+
+                            monitorHasCentered = true;
+
+                        }
+
                     }
+
                     // =========================
                     // Monitor Waypoint Tracking
                     // =========================
@@ -2482,17 +2588,17 @@
 
                         `Boat : ${data.boat_id}
 
-                        <br>
+                            <br>
 
-                        Temperature : ${data.temp_c} °C
+                            Temperature : ${data.temp_c} °C
 
-                        <br>
+                            <br>
 
-                        pH : ${data.ph_level}
+                            pH : ${data.ph_level}
 
-                        <br>
+                            <br>
 
-                        NTU : ${data.turbidity_ntu}`
+                            NTU : ${data.turbidity_ntu}`
 
                     );
 
@@ -2583,31 +2689,31 @@
                     miniMarker = L.marker([lat, lng]).addTo(miniMap);
 
                     miniMarker.bindPopup(`
-                    <div style="min-width:180px">
+                        <div style="min-width:180px">
 
-                    <b>🚤 ${data.boat_id}</b>
+                        <b>🚤 ${data.boat_id}</b>
 
-                    <hr style="margin:6px 0">
+                        <hr style="margin:6px 0">
 
-                    🌡 <b>Temperature</b><br>
-                    ${data.temp_c} °C
+                        🌡 <b>Temperature</b><br>
+                        ${data.temp_c} °C
 
-                    <br><br>
+                        <br><br>
 
-                    💧 <b>pH</b><br>
-                    ${data.ph_level}
+                        💧 <b>pH</b><br>
+                        ${data.ph_level}
 
-                    <br><br>
+                        <br><br>
 
-                    🌊 <b>Turbidity</b><br>
-                    ${data.turbidity_ntu} NTU
+                        🌊 <b>Turbidity</b><br>
+                        ${data.turbidity_ntu} NTU
 
-                    <br><br>
+                        <br><br>
 
-                    🕒 ${data.log_time}
+                        🕒 ${data.log_time}
 
-                    </div>
-                    `);
+                        </div>
+                        `);
 
                     miniMap.setView([lat, lng], 15);
 
@@ -3535,10 +3641,10 @@
 
                     predictionMarker.bindPopup(
                         `
-        <b>🔴 Predicted Position</b><br>
-        Lat: ${lat}<br>
-        Lng: ${lng}
-        `);
+            <b>🔴 Predicted Position</b><br>
+            Lat: ${lat}<br>
+            Lng: ${lng}
+            `);
 
                 }
                 catch (error) {
@@ -3624,7 +3730,96 @@
                     startMission
                 );
 
+            document
+                .getElementById("returnHome")
+                .addEventListener(
+                    "click",
+                    returnHome
+                );
+
+            function updateBoatModeUI(mode, stageIntent) {
+
+                boatCurrentMode = mode;
+
+                const modeEl = document.getElementById("boatCurrentMode");
+                const badgeEl = document.getElementById("boatModeBadge");
+                const clearBtn = document.getElementById("clearEstop");
+                const startBtn = document.getElementById("startMission");
+                const uploadBtn = document.getElementById("uploadRoute");
+
+                let label = "Unknown";
+
+                if (mode === 0) {
+
+                    label = "STANDBY (0)";
+
+                }
+                else if (mode === 1) {
+
+                    label = "GRID PATROL (1)";
+
+                }
+                else if (mode === 2) {
+
+                    label = "SPIRAL MAPPING (2)";
+
+                }
+                else if (mode === 3) {
+
+                    label = "RETURN HOME (3)";
+
+                }
+                else if (mode === 4) {
+
+                    label = "E-STOP (4)";
+
+                }
+                else {
+
+                    label = `MODE ${mode}`;
+
+                }
+
+                if (stageIntent === 8) {
+                    label += " — รอ Unlock";
+                }
+
+                if (modeEl) modeEl.innerText = label;
+
+                needsClearEstop = (mode === 4 || stageIntent === 8);
+
+                if (clearBtn) {
+                    clearBtn.disabled = !needsClearEstop;
+                }
+
+                if (startBtn) {
+                    startBtn.disabled = needsClearEstop;
+                }
+
+                if (uploadBtn) {
+                    uploadBtn.disabled = needsClearEstop;
+                }
+
+                if (badgeEl) {
+                    badgeEl.classList.remove("badge-red", "badge-green", "badge-orange");
+                    if (mode === 4) badgeEl.classList.add("badge-red");
+                    else if (mode === 1) badgeEl.classList.add("badge-green");
+                    else badgeEl.classList.add("badge-orange");
+                }
+            }
+
             async function startMission() {
+
+                if (needsClearEstop) {
+
+                    showPopup(
+                        "warning",
+                        "⚠ E-Stop Active",
+                        "กด Unlock E-Stop (คำสั่ง 4) ก่อน แล้วรอ mode=0"
+                    );
+
+                    return;
+                }
 
                 try {
 
@@ -3672,10 +3867,24 @@
             }
 
             document
+                .getElementById("clearEstop")
+                .addEventListener(
+                    "click",
+                    clearEstop
+                );
+
+            document
                 .getElementById("stopMission")
                 .addEventListener(
                     "click",
                     stopMission
+                );
+
+            document
+                .getElementById("emergencyStop")
+                .addEventListener(
+                    "click",
+                    emergencyStop
                 );
 
             document
@@ -3713,6 +3922,103 @@
                     uploadRoute
                 );
 
+            async function returnHome() {
+
+                // =====================================
+                // ห้าม RTH ตอน E-STOP
+                // =====================================
+
+                if (needsClearEstop) {
+
+                    showPopup(
+                        "warning",
+                        "🚨 E-STOP ACTIVE",
+                        "กรุณากด CLEAR E-STOP ก่อน"
+                    );
+
+                    return;
+                }
+
+                try {
+
+                    const confirmed =
+                        confirm(
+                            "🏠 RETURN HOME\n\nต้องการให้เรือกลับจุด Home หรือไม่?"
+                        );
+
+                    if (!confirmed) {
+
+                        return;
+
+                    }
+
+                    const response =
+                        await fetch(
+                            `${API_URL}/mission/rth`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            }
+                        );
+
+                    const data =
+                        await response.json();
+
+                    console.log(
+                        "RTH RESPONSE:",
+                        data
+                    );
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.detail || "RTH command failed"
+                        );
+
+                    }
+
+                    // =====================================
+                    // RTH = MODE 2
+                    // =====================================
+
+                    missionRunning = false;
+
+                    boatCurrentMode = 3;
+
+                    needsClearEstop = false;
+
+                    updateMissionStatus("Return Home");
+
+                    updateBoatModeUI(3);
+
+                    showPopup(
+                        "success",
+                        "🏠 RETURN HOME",
+                        "ส่งคำสั่ง Return Home (Mode 2) ไปยังเรือแล้ว"
+                    );
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        "RTH ERROR:",
+                        error
+                    );
+
+                    showPopup(
+                        "error",
+                        "❌ RTH ERROR",
+                        "ไม่สามารถส่งคำสั่ง Return Home ได้"
+                    );
+
+                }
+
+            }
+
             async function stopMission() {
                 try {
                     const response =
@@ -3726,7 +4032,13 @@
 
                     missionRunning = false;
 
-                    updateMissionStatus(data.status);
+                    updateMissionStatus("E-Stop");
+
+                    showPopup(
+                        "warning",
+                        "⏹ E-Stop",
+                        "ส่งคำสั่ง 1 แล้ว — รอ mode=4 แล้วกด Unlock E-Stop (4) ก่อน Start ใหม่"
+                    );
 
                     console.log(data);
 
@@ -3735,8 +4047,98 @@
                     console.log(error);
                 }
             }
+            async function clearEstop() {
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `${API_URL}/mission/clear-estop`,
+                            {
+                                method: "POST"
+                            }
+                        );
+
+                    const data =
+                        await response.json();
+
+                    missionRunning = false;
+
+                    updateMissionStatus(
+                        data.status
+                    );
+
+                    console.log(
+                        "CLEAR E-STOP:",
+                        data
+                    );
+
+                }
+
+                catch (error) {
+
+                    console.log(
+                        "CLEAR E-STOP ERROR:",
+                        error
+                    );
+
+                }
+
+            }
 
             updateMissionStatus("Idle");
+
+            async function emergencyStop() {
+
+                try {
+
+                    const confirmed =
+                        confirm(
+                            "⚠️ EMERGENCY STOP\n\nAre you sure you want to stop the boat immediately?"
+                        );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    const response =
+                        await fetch(
+                            `${API_URL}/mission/emergency-stop`,
+                            {
+                                method: "POST"
+                            }
+                        );
+
+                    const data =
+                        await response.json();
+
+                    missionRunning = false;
+
+                    updateMissionStatus("E-Stop");
+
+                    showPopup(
+                        "warning",
+                        "🚨 EMERGENCY STOP",
+                        "ส่งคำสั่ง 1 แล้ว — กด Unlock E-Stop (4) ก่อนเริ่มใหม่"
+                    );
+
+                    console.log(
+                        "EMERGENCY STOP:",
+                        data
+                    );
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        "EMERGENCY STOP ERROR:",
+                        error
+                    );
+
+                }
+
+            }
 
 
             async function loadMissionStatus() {
@@ -4708,28 +5110,28 @@
                 className: "boat-marker",
 
                 html: `
-                <img
+                    <img
 
-                id="boatImage"
+                    id="boatImage"
 
-                src="/assets/boat.png"
+                    src="/assets/boat.png"
 
-                style="
+                    style="
 
-                width:48px;
+                    width:48px;
 
-                height:48px;
+                    height:48px;
 
-                object-fit:contain;
+                    object-fit:contain;
 
-                display:block;
+                    display:block;
 
-                transform-origin:center center;
+                    transform-origin:center center;
 
-                transition:transform .4s;
+                    transition:transform .4s;
 
-                ">
-                `
+                    ">
+                    `
 
             });
 
@@ -4746,6 +5148,8 @@
                     }
 
                 ).addTo(monitorMap);
+
+            let monitorHasCentered = false;
 
             let monitorRouteLine = null;
 
@@ -4794,6 +5198,8 @@
 
                 console.log("Start Initialize");
 
+                getMyLocation();
+
                 await loadManualRoute();
 
                 console.log("Route Loaded");
@@ -4815,6 +5221,7 @@
                 // await loadHeatMap();
 
                 console.log("Dashboard Ready");
+
 
             }
 
@@ -4889,8 +5296,8 @@
 
         </script>
         <!-- =========================
-     Popup Message
-    =========================== -->
+        Popup Message
+        =========================== -->
 
         <div id="popupOverlay" class="popup-overlay">
 

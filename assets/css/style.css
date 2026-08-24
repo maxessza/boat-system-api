@@ -129,6 +129,16 @@ p {
     background: #b71c1c;
 }
 
+#emergencyStop {
+    background: #991b1b;
+    color: white;
+    font-weight: 700;
+}
+
+#emergencyStop:hover {
+    background: #7f1d1d;
+}
+
 /*=================================
 Popup
 ==================================*/
@@ -681,6 +691,15 @@ Mission Buttons
 
     background: #dc2626;
 
+}
+
+#clearEstop {
+    background: #f59e0b;
+    color: white;
+}
+
+#clearEstop:hover {
+    background: #d97706;
 }
 
 
@@ -2478,12 +2497,24 @@ Monitor Heatmap Legend
 
 .compass-arrow {
     position: absolute;
+
+    width: 24px;
+    height: 49px;
+
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%);
-    color: #2563eb;
-    font-size: 42px;
-    line-height: 1;
+
+    transform-origin: 50% 50%;
+
+    background: #2563eb;
+
+    clip-path: polygon(50% 0%,
+            100% 100%,
+            0% 100%);
+
+    filter: drop-shadow(0 0 5px rgba(37, 99, 235, .25));
+
+    z-index: 4;
 }
 
 .heading-value {

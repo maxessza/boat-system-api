@@ -14,9 +14,9 @@ app.mount(
     name="assets"
 )
 
-#=========================
+#====================================
 # Mission State
-#=========================
+#====================================
 
 mission_running = False
 
@@ -24,9 +24,19 @@ mission_mode = "MANUAL"
 
 boat_state = "Idle"
 
+mission_command = "IDLE"
+
 current_waypoint = 0
 
 total_waypoints = 0
+
+# ====================================
+# Boat State From Telemetry
+# ====================================
+
+current_boat_mode = 0
+
+current_stage_intent = 0
 
 # ✅ CORS สำหรับ Dashboard
 app.add_middleware(
@@ -66,6 +76,8 @@ class SensorData(BaseModel):
     heading: float | None = None
     flow_v_lat: float | None = None
     flow_v_lng: float | None = None
+    current_mode: int | None = None
+    stage_intent: int | None = None
 
 #====================================
 # Manual Route Models
@@ -104,6 +116,45 @@ def home():
 def receive_data(data: SensorData):
     conn = None
     cursor = None
+
+    global current_boat_mode
+    global current_stage_intent
+
+    if data.current_mode is not None:
+        current_boat_mode = data.current_mode
+
+    if data.stage_intent is not None:
+        current_stage_intent = data.stage_intent
+
+    # ====================================
+    # RTH COMPLETED
+    # ====================================
+
+    if (
+        data.current_mode == 0
+        and (
+            mission_command == "RTH"
+            or mission_command == "CLEAR_ESTOP"
+        )
+    ):
+
+        if mission_command == "RTH":
+
+            print(
+                "RTH completed -> Mission IDLE"
+            )
+
+        else:
+
+            print(
+                "E-Stop cleared -> Mission IDLE"
+            )
+
+        mission_command = "IDLE"
+
+        mission_running = False
+
+        boat_state = "Idle"
 
     try:
         conn = get_connection()
@@ -360,6 +411,65 @@ def get_latest():
         if conn:
             conn.close()
 
+
+#====================================
+# Clear Sensor & Prediction Data
+#====================================
+
+@app.post("/clear_data")
+def clear_data():
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # ลบ Prediction ก่อน
+        cursor.execute("""
+            DELETE FROM drift_predictions
+        """)
+
+        deleted_predictions = cursor.rowcount
+
+        # ลบ Sensor Logs
+        cursor.execute("""
+            DELETE FROM sensor_logs
+        """)
+
+        deleted_logs = cursor.rowcount
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "message": "Database data cleared successfully",
+            "deleted": {
+                "drift_predictions": deleted_predictions,
+                "sensor_logs": deleted_logs
+            }
+        }
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()            
+
 @app.get("/dbtest")
 def dbtest():
     try:
@@ -434,18 +544,45 @@ def startMission(request: MissionRequest):
     global mission_running
     global mission_mode
     global boat_state
+    global mission_command
 
     mission_running = True
     boat_state = "Navigating"
     mission_mode = request.mode.upper()
+    mission_command = "START"
 
     return {
         "success": True,
         "status": "Running",
         "mode": mission_mode
     }
+
 #====================================
-# Stop Mission
+# Retrun home
+#====================================
+
+@app.post("/mission/rth")
+def returnHome():
+
+    global mission_running
+    global mission_mode
+    global boat_state
+    global mission_command
+
+    mission_running = False
+    mission_mode = "RTH"
+    boat_state = "Returning Home"
+    mission_command = "RTH"
+
+    return {
+        "success": True,
+        "status": "Returning Home",
+        "mode": "RTH",
+        "command": "RTH"
+    }
+
+#====================================
+# Stop / Emergency Stop
 #====================================
 
 @app.post("/mission/stop")
@@ -454,15 +591,63 @@ def stopMission():
     global mission_running
     global mission_mode
     global boat_state
+    global mission_command
 
     mission_running = False
-    boat_state = "Idle"
+    boat_state = "Emergency Stop"
+    mission_command = "EMERGENCY_STOP"
 
     return {
         "success": True,
-        "status": "Stopped",
-        "mode": mission_mode
+        "status": "Emergency Stop",
+        "mode": mission_mode,
+        "command": "EMERGENCY_STOP"
     }
+
+#====================================
+# Clear Emergency Stop
+#====================================
+
+@app.post("/mission/clear-estop")
+def clearEstop():
+
+    global mission_running
+    global boat_state
+    global mission_command
+
+    mission_running = False
+    boat_state = "Clearing E-Stop"
+    mission_command = "CLEAR_ESTOP"
+
+    return {
+        "success": True,
+        "status": "Clearing E-Stop",
+        "command": "CLEAR_ESTOP"
+    }
+
+#====================================
+# Emergency Stop
+#====================================
+
+@app.post("/mission/emergency-stop")
+def emergencyStop():
+
+    global mission_running
+    global mission_mode
+    global boat_state
+    global mission_command
+
+    mission_running = False
+    boat_state = "Emergency Stop"
+    mission_command = "EMERGENCY_STOP"
+
+    return {
+        "success": True,
+        "status": "Emergency Stop",
+        "mode": mission_mode,
+        "command": "EMERGENCY_STOP"
+    }
+
 #====================================
 # Mission Status
 #====================================
@@ -470,13 +655,19 @@ def stopMission():
 @app.get("/mission/status")
 def missionStatus():
 
-   return{
+    return {
 
-    "running":mission_running,
-    "mode":mission_mode,
-    "boat_state":boat_state
+        "running": mission_running,
 
-   }
+        "mode": mission_mode,
+
+        "boat_state": boat_state,
+
+        "current_mode": current_boat_mode,
+
+        "stage_intent": current_stage_intent
+
+    }
 
 
 
@@ -499,9 +690,29 @@ def missionProgress():
 #====================================
 # ESP32 Mission API
 #====================================
-
 @app.get("/mission")
 def getMission():
+
+    if mission_command == "EMERGENCY_STOP":
+
+        return {
+            "command": "EMERGENCY_STOP",
+            "mode": mission_mode
+        }
+
+    if mission_command == "CLEAR_ESTOP":
+
+        return {
+            "command": "CLEAR_ESTOP",
+            "mode": mission_mode
+        }
+
+    if mission_command == "RTH":
+
+        return {
+            "command": "RTH",
+            "mode": mission_mode
+        }
 
     if mission_running:
 
@@ -511,14 +722,12 @@ def getMission():
         }
 
     return {
-        "command": "STOP",
+        "command": "IDLE",
         "mode": mission_mode
     }
 
-
 @app.post("/generate_sweep")
 def generateSweep(area: SweepArea):
-
     conn = get_connection()
     cursor = conn.cursor()
 
