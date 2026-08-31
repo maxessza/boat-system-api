@@ -44,6 +44,7 @@ typedef struct __attribute__((packed)) {
     uint32_t sequence_number;   // monotonic, replay protection
     double   gps_lat;
     double   gps_lon;
+    // Water fields are NaN in STANDBY/ESTOP. Filled only while GRID/SPIRAL/RTH.
     float    water_ph;
     float    water_turbidity;   // NTU
     float    water_temp;
@@ -101,7 +102,8 @@ enum StageReasonCode {
     STAGE_REASON_GPS_FAULT          = 9,
     STAGE_REASON_CRITICAL_SAFETY    = 10,
     STAGE_REASON_ARRIVED_HOME       = 11,
-    STAGE_REASON_CLEAR_ESTOP        = 12
+    STAGE_REASON_CLEAR_ESTOP        = 12,
+    STAGE_REASON_FORCE_SPIRAL       = 13  // shore CMD_FORCE_SPIRAL (not water anomaly)
 };
 
 enum StageStatusFlags {
@@ -125,11 +127,13 @@ enum CommandCode {
     CMD_NORMAL              = 0,  // idle / clear force-RTH latch (does NOT clear E-Stop)
     CMD_EMERGENCY_STOP      = 1,  // latch E-Stop immediately
     CMD_FORCE_RTH           = 2,  // force return-to-home
-    CMD_START_ARM           = 3,  // arm mission start (requires waypoints + GPS)
+    CMD_START_ARM           = 3,  // seal pending upload if any, then arm (needs GPS+compass)
     CMD_CLEAR_ESTOP         = 4,  // explicit clear of latched E-Stop -> STANDBY
     // Seal multi-batch waypoint upload when the last batch is full (count==12).
     // Batches with waypoint_count < 12 auto-seal. Wire size unchanged.
-    CMD_MISSION_UPLOAD_DONE = 5
+    CMD_MISSION_UPLOAD_DONE = 5,
+    CMD_SET_HOME            = 6,  // latch current GPS as RTH home (STANDBY + fix)
+    CMD_FORCE_SPIRAL        = 7   // GRID -> spiral now (no water anomaly required)
 };
 
 enum AckStatus {

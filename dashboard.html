@@ -52,14 +52,33 @@
 
         </div>
 
-        <div class="boat-card">
+        <!-- =========================================
+     SIDEBAR BATTERY
+========================================= -->
 
-            <div class="boat-name">
-                🚤 Boat01
-            </div>
+        <div class="sidebar-bottom">
 
-            <div class="boat-status">
-                🟢 Online
+            <div class="sidebar-battery">
+
+                <div class="battery-title">
+                    🔋 Boat01
+                </div>
+
+                <div class="battery-value">
+                    <span id="sidebarBattery">--</span>%
+                </div>
+
+                <div class="battery-label">
+                    Battery
+                </div>
+
+                <div class="battery-bar">
+
+                    <div id="sidebarBatteryBar" class="battery-bar-fill" style="width: 0%;">
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
@@ -272,18 +291,21 @@
                                     🏠 Return Home
                                 </button>
 
-                                <button id="stopMission">
-                                    ⏹ Stop (E-Stop)
+                                <button class="btn btn-primary" onclick="setHome()">
+                                    🏠 SET HOME
+                                </button>
+
+                                <button class="btn btn-primary" onclick="forceSpiral()">
+                                    🌀 FORCE SPIRAL
+                                </button>
+
+                                <button id="emergencyStop">
+                                    🛑 E-STOP
                                 </button>
 
                                 <button id="clearEstop">
                                     🔓 CLEAR E-STOP
                                 </button>
-
-                                <button id="emergencyStop">
-                                    🚨 EMERGENCY STOP
-                                </button>
-
 
                             </div>
 
@@ -1250,12 +1272,19 @@
 
 
             const map =
-                L.map('map').setView([13.7563, 100.5018], 13);
+                L.map('map', {
+                    zoomControl: true,
+                    scrollWheelZoom: true,
+                    doubleClickZoom: true,
+                    boxZoom: true,
+                    keyboard: true
+                }).setView([13.7563, 100.5018], 13);
 
             L.tileLayer(
                 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 {
-                    attribution: '© OpenStreetMap'
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 20
                 }
             ).addTo(map);
 
@@ -2186,6 +2215,66 @@
 
                     let waterStatus = "Good";
                     let badgeClass = "good";
+
+                    // ======================================
+                    // UPDATE SIDEBAR BATTERY
+                    // ======================================
+
+                    const batteryElement =
+                        document.getElementById("sidebarBattery");
+
+                    const batteryBar =
+                        document.getElementById("sidebarBatteryBar");
+
+                    const battery =
+                        Number(
+                            data.battery ??
+                            data.battery_percent ??
+                            data.batt
+                        );
+
+                    if (
+                        batteryElement &&
+                        Number.isFinite(battery)
+                    ) {
+
+                        const batteryValue =
+                            Math.max(
+                                0,
+                                Math.min(
+                                    100,
+                                    Math.round(battery)
+                                )
+                            );
+
+                        batteryElement.innerText =
+                            batteryValue;
+
+                        if (batteryBar) {
+
+                            batteryBar.style.width =
+                                batteryValue + "%";
+
+                        }
+
+                    }
+                    else {
+
+                        if (batteryElement) {
+
+                            batteryElement.innerText =
+                                "--";
+
+                        }
+
+                        if (batteryBar) {
+
+                            batteryBar.style.width =
+                                "0%";
+
+                        }
+
+                    }
 
                     //==========================
                     // Monitor
@@ -3874,13 +3963,6 @@
                 );
 
             document
-                .getElementById("stopMission")
-                .addEventListener(
-                    "click",
-                    stopMission
-                );
-
-            document
                 .getElementById("emergencyStop")
                 .addEventListener(
                     "click",
@@ -4019,34 +4101,138 @@
 
             }
 
-            async function stopMission() {
+            async function setHome() {
+
+                const confirmed = confirm(
+                    "🏠 SET HOME\n\n" +
+                    "ต้องการใช้ตำแหน่ง GPS ปัจจุบันของเรือเป็นจุด Home หรือไม่?"
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
                 try {
-                    const response =
-                        await fetch(`${API_URL}/mission/stop`,
-                            {
-                                method: "POST"
-                            });
 
-                    const data =
-                        await response.json();
-
-                    missionRunning = false;
-
-                    updateMissionStatus("E-Stop");
-
-                    showPopup(
-                        "warning",
-                        "⏹ E-Stop",
-                        "ส่งคำสั่ง 1 แล้ว — รอ mode=4 แล้วกด Unlock E-Stop (4) ก่อน Start ใหม่"
+                    const response = await fetch(
+                        `${API_URL}/mission/set-home`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }
                     );
 
-                    console.log(data);
+                    const data = await response.json();
+
+                    console.log(
+                        "SET HOME RESPONSE:",
+                        data
+                    );
+
+                    if (data.success) {
+
+                        showPopup(
+                            "success",
+                            "🏠 SET HOME",
+                            "ส่งคำสั่ง Set Home ไปยังเรือแล้ว"
+                        );
+
+                    } else {
+
+                        showPopup(
+                            "error",
+                            "❌ SET HOME",
+                            "ไม่สามารถตั้งจุด Home ได้"
+                        );
+
+                    }
 
                 }
                 catch (error) {
-                    console.log(error);
+
+                    console.error(
+                        "SET HOME ERROR:",
+                        error
+                    );
+
+                    showPopup(
+                        "error",
+                        "❌ SET HOME ERROR",
+                        "ไม่สามารถส่งคำสั่ง Set Home ได้"
+                    );
+
                 }
+
             }
+
+            async function forceSpiral() {
+
+                const confirmed = confirm(
+                    "🌀 FORCE SPIRAL\n\n" +
+                    "ต้องการให้เรือเข้าสู่โหมดก้นหอยหรือไม่?"
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                try {
+
+                    const response = await fetch(
+                        `${API_URL}/mission/force-spiral`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    console.log(
+                        "FORCE SPIRAL RESPONSE:",
+                        data
+                    );
+
+                    if (data.success) {
+
+                        showPopup(
+                            "success",
+                            "🌀 FORCE SPIRAL",
+                            "ส่งคำสั่ง Force Spiral ไปยังเรือแล้ว"
+                        );
+
+                    } else {
+
+                        showPopup(
+                            "error",
+                            "❌ FORCE SPIRAL",
+                            "ไม่สามารถส่งคำสั่ง Force Spiral ได้"
+                        );
+
+                    }
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "FORCE SPIRAL ERROR:",
+                        error
+                    );
+
+                    showPopup(
+                        "error",
+                        "❌ FORCE SPIRAL ERROR",
+                        "ไม่สามารถส่งคำสั่ง Force Spiral ได้"
+                    );
+
+                }
+
+            }
+            
             async function clearEstop() {
 
                 try {
@@ -4634,6 +4820,41 @@
                     });
 
                     const data = await response.json();
+
+                    // =========================================
+                    // UPDATE SIDEBAR BATTERY
+                    // =========================================
+
+                    const battery =
+                        Number(data.battery ?? data.batt);
+
+                    const batteryText =
+                        document.getElementById("sidebarBattery");
+
+                    const batteryBar =
+                        document.getElementById("sidebarBatteryBar");
+
+                    if (
+                        Number.isFinite(battery) &&
+                        battery >= 0 &&
+                        battery <= 100
+                    ) {
+
+                        batteryText.innerText =
+                            Math.round(battery);
+
+                        batteryBar.style.width =
+                            `${Math.round(battery)}%`;
+
+                    }
+                    else {
+
+                        batteryText.innerText =
+                            "--";
+
+                        batteryBar.style.width =
+                            "0%";
+                    }
 
                     console.log(data);
 

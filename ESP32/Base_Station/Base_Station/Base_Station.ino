@@ -652,6 +652,9 @@ void uploadSensorData(const TelemetryPacket& telemetry) {
   doc["current_mode"] =
     telemetry.current_mode;
 
+  doc["battery"] =
+    telemetry.battery_percent;
+
   doc["stage_intent"] =
     boatStageIntent;
 
@@ -855,6 +858,47 @@ void runBaseStation() {
           baseState =
             WAIT_MODE_RTH;
         }
+      }
+
+      //==========================================
+      // SET HOME
+      // Command Code : 6
+      //==========================================
+      else if (
+        missionCommand == "SET_HOME") {
+
+        Serial.println();
+        Serial.println(">>> SET HOME REQUEST RECEIVED <<<");
+
+        sendCommandPacket(
+          CMD_SET_HOME);
+
+        Serial.println(
+          "SET HOME Command Code : 6");
+
+        baseState =
+          WAIT_SENSOR;
+      }
+
+      //==========================================
+      // FORCE_SPIRAL
+      // Command Code : 7
+      //==========================================
+
+      else if (
+        missionCommand == "FORCE_SPIRAL") {
+
+        Serial.println();
+        Serial.println(">>> FORCE SPIRAL REQUEST RECEIVED <<<");
+
+        sendCommandPacket(
+          CMD_FORCE_SPIRAL);
+
+        Serial.println(
+          "FORCE SPIRAL Command Code : 7");
+
+        baseState =
+          WAIT_SENSOR;
       }
 
       //==========================================
@@ -1682,6 +1726,12 @@ void processTelemetryQueue() {
   Serial.print("Turbidity : ");
   Serial.println(
     telemetry.water_turbidity);
+
+
+  Serial.print("Battery : ");
+  Serial.print(
+    telemetry.battery_percent);
+  Serial.println("%");
 
   Serial.println("==========");
 

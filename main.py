@@ -38,6 +38,8 @@ current_boat_mode = 0
 
 current_stage_intent = 0
 
+current_battery = None
+
 # ✅ CORS สำหรับ Dashboard
 app.add_middleware(
     CORSMiddleware,
@@ -73,6 +75,7 @@ class SensorData(BaseModel):
     temp_c: float
     ph_level: float
     turbidity_ntu: float
+    battery: float | None = None
     heading: float | None = None
     flow_v_lat: float | None = None
     flow_v_lng: float | None = None
@@ -114,17 +117,22 @@ def home():
 # ✅ รับข้อมูล + บันทึก DB + คำนวณ
 @app.post("/data")
 def receive_data(data: SensorData):
+
     conn = None
     cursor = None
 
     global current_boat_mode
     global current_stage_intent
+    global current_battery
 
     if data.current_mode is not None:
         current_boat_mode = data.current_mode
 
     if data.stage_intent is not None:
         current_stage_intent = data.stage_intent
+
+    if data.battery is not None:
+        current_battery = data.battery
 
     # ====================================
     # RTH COMPLETED
@@ -397,6 +405,13 @@ def get_latest():
 
         data = cursor.fetchone()
 
+        if data is None:
+            return {
+                "battery": current_battery
+            }
+
+        data["battery"] = current_battery
+
         return data
 
     except Exception as e:
@@ -582,27 +597,43 @@ def returnHome():
     }
 
 #====================================
-# Stop / Emergency Stop
+# set home
 #====================================
 
-@app.post("/mission/stop")
-def stopMission():
+@app.post("/mission/set-home")
+def setHome():
 
-    global mission_running
-    global mission_mode
-    global boat_state
     global mission_command
+    global boat_state
 
-    mission_running = False
-    boat_state = "Emergency Stop"
-    mission_command = "EMERGENCY_STOP"
+    mission_command = "SET_HOME"
+    boat_state = "Setting Home"
 
     return {
         "success": True,
-        "status": "Emergency Stop",
-        "mode": mission_mode,
-        "command": "EMERGENCY_STOP"
+        "status": "Setting Home",
+        "command": "SET_HOME"
     }
+
+#====================================
+# force-spiral  
+#====================================   
+
+@app.post("/mission/force-spiral")
+def forceSpiral():
+
+    global mission_command
+    global boat_state
+
+    mission_command = "FORCE_SPIRAL"
+    boat_state = "Spiral"
+
+    return {
+        "success": True,
+        "status": "Spiral",
+        "command": "FORCE_SPIRAL"
+    }
+
 
 #====================================
 # Clear Emergency Stop
