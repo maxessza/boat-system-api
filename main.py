@@ -72,7 +72,7 @@ class SensorData(BaseModel):
     boat_id: str
     latitude: float
     longitude: float
-    temp_c: float
+    temp_c: float 
     ph_level: float
     turbidity_ntu: float
     battery: float | None = None
@@ -374,7 +374,6 @@ def get_path():
 
 
 # ✅ ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
-# ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
 @app.get("/latest")
 def get_latest():
 
@@ -745,6 +744,20 @@ def getMission():
             "mode": mission_mode
         }
 
+    if mission_command == "SET_HOME":
+
+        return {
+            "command": "SET_HOME",
+            "mode": mission_mode
+        }
+
+    if mission_command == "FORCE_SPIRAL":
+
+        return {
+            "command": "FORCE_SPIRAL",
+            "mode": mission_mode
+        }
+
     if mission_running:
 
         return {
@@ -756,168 +769,154 @@ def getMission():
         "command": "IDLE",
         "mode": mission_mode
     }
-
 @app.post("/generate_sweep")
 def generateSweep(area: SweepArea):
+
     conn = get_connection()
     cursor = conn.cursor()
 
+    # ==============================
+    # Clear Old Route
+    # ==============================
     cursor.execute("DELETE FROM routes")
 
     route = []
 
     lat = area.start_lat
-
     direction = 1
-
     order = 1
-
     count = 0
+
+    end_lat = area.start_lat + area.height
 
     print("========== Sweep ==========")
     print("Start Lat :", area.start_lat)
-    print("End Lat   :", area.start_lat + area.height)
+    print("End Lat   :", end_lat)
     print("Height    :", area.height)
     print("Spacing   :", area.spacing)
     print("===========================")
 
-    while lat <= area.start_lat + area.height:
+    # ==========================================
+    # Function: Add Waypoint
+    # ==========================================
+    def add_waypoint(lat, lng):
+
+        nonlocal order
+
+        route.append({
+            "order": order,
+            "latitude": lat,
+            "longitude": lng
+        })
+
+        cursor.execute("""
+            INSERT INTO routes
+            (
+                route_name,
+                waypoint_order,
+                latitude,
+                longitude
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s
+            )
+        """, (
+            "Sweep Mission",
+            order,
+            lat,
+            lng
+        ))
+
+        print(
+            f"WP {order}: "
+            f"Lat={lat}, "
+            f"Lng={lng}"
+        )
+
+        order += 1
+
+    # ==========================================
+    # Generate Sweep
+    # ==========================================
+    while lat <= end_lat:
 
         count += 1
 
         print(f"Loop {count}")
         print(f"Current Lat : {lat}")
 
+        start_lng = area.start_lng
+        end_lng = area.start_lng + area.width
+
+        # ==========================================
+        # 4 Points per Sweep Line
+        #
+        # Point 1 = 0%
+        # Point 2 = 33.33%
+        # Point 3 = 66.67%
+        # Point 4 = 100%
+        # ==========================================
+
         if direction == 1:
 
-            route.append({
-                "order": order,
-                "latitude": lat,
-                "longitude": area.start_lng
-            })
-
-            cursor.execute("""
-                INSERT INTO routes
-                (
-                    route_name,
-                    waypoint_order,
-                    latitude,
-                    longitude
-                )
-                VALUES
-                (
-                    %s,
-                    %s,
-                    %s,
-                    %s
-                )
-            """,
-            (
-                "Sweep Mission",
-                order,
+            # Start
+            add_waypoint(
                 lat,
-                area.start_lng
-            ))
+                start_lng
+            )
 
-            order += 1
-
-            route.append({
-                "order": order,
-                "latitude": lat,
-                "longitude": area.start_lng + area.width
-            })
-
-            cursor.execute("""
-                INSERT INTO routes
-                (
-                    route_name,
-                    waypoint_order,
-                    latitude,
-                    longitude
-                )
-                VALUES
-                (
-                    %s,
-                    %s,
-                    %s,
-                    %s
-                )
-            """,
-            (
-                "Sweep Mission",
-                order,
+            # 1/3
+            add_waypoint(
                 lat,
-                area.start_lng + area.width
-            ))
+                start_lng + (area.width * 1 / 3)
+            )
 
-            order += 1
+            # 2/3
+            add_waypoint(
+                lat,
+                start_lng + (area.width * 2 / 3)
+            )
+
+            # End
+            add_waypoint(
+                lat,
+                end_lng
+            )
 
         else:
 
-            route.append({
-                "order": order,
-                "latitude": lat,
-                "longitude": area.start_lng + area.width
-            })
-
-            cursor.execute("""
-                INSERT INTO routes
-                (
-                    route_name,
-                    waypoint_order,
-                    latitude,
-                    longitude
-                )
-                VALUES
-                (
-                    %s,
-                    %s,
-                    %s,
-                    %s
-                )
-            """,
-            (
-                "Sweep Mission",
-                order,
+            # Start from right
+            add_waypoint(
                 lat,
-                area.start_lng + area.width
-            ))
+                end_lng
+            )
 
-            order += 1
-
-            route.append({
-                "order": order,
-                "latitude": lat,
-                "longitude": area.start_lng
-            })
-
-            cursor.execute("""
-                INSERT INTO routes
-                (
-                    route_name,
-                    waypoint_order,
-                    latitude,
-                    longitude
-                )
-                VALUES
-                (
-                    %s,
-                    %s,
-                    %s,
-                    %s
-                )
-            """,
-            (
-                "Sweep Mission",
-                order,
+            # 2/3
+            add_waypoint(
                 lat,
-                area.start_lng
-            ))
+                start_lng + (area.width * 2 / 3)
+            )
 
-            order += 1
+            # 1/3
+            add_waypoint(
+                lat,
+                start_lng + (area.width * 1 / 3)
+            )
 
+            # End
+            add_waypoint(
+                lat,
+                start_lng
+            )
+
+        # Reverse direction
         direction *= -1
-        
+
+        # Move to next sweep line
         lat += area.spacing
 
     print("===========================")
@@ -928,7 +927,6 @@ def generateSweep(area: SweepArea):
     conn.commit()
 
     cursor.close()
-    
     conn.close()
 
     return route

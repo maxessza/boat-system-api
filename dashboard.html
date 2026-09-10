@@ -209,28 +209,7 @@
 
                     </div>
 
-                    <div class="mission-progress">
 
-                        <div class="progress-title">
-
-                            🚤 Mission Progress
-
-                            <span id="progressPercent">
-                                0%
-                            </span>
-
-                        </div>
-
-                        <div class="progress">
-
-                            <div id="missionProgressBar"
-                                class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                                style="width:0%">
-                            </div>
-
-                        </div>
-
-                    </div>
 
 
                     <div class="mission-buttons">
@@ -356,7 +335,7 @@
                     <div class="title">Turbidity</div>
 
                     <div class="value">
-                        <span id="turbidity_top">--</span> NTU
+                        <span id="turbidity_top">--</span>
                     </div>
 
                 </div>
@@ -921,31 +900,38 @@
 
                         </div>
 
-
-                        <!-- WATER FLOW -->
+                        <!-- =============================== -->
+                        <!-- MISSION PROGRESS -->
+                        <!-- =============================== -->
 
                         <div class="card">
-
-                            <h3>🌊 WATER FLOW (CURRENT)</h3>
+                            <h3>
+                                🚩 MISSION PROGRESS
+                            </h3>
 
                             <p>
-                                ↗️ Direction :
-                                <b id="monitorFlowDirection">--</b>
+                                Current Waypoint :
+                                <b id="monitorCurrentWP">
+                                    0
+                                </b>
                             </p>
 
                             <p>
-                                🌊 Speed :
-                                <b id="monitorFlowSpeed">--</b>
-                                m/s
+                                Total Waypoints :
+                                <b id="monitorTotalWP">
+                                    0
+                                </b>
                             </p>
 
-                            <p>
-                                🎯 Vector :
-                                <b id="monitorFlowVector">--</b>
-                            </p>
+                            <div class="progress">
+                                <div id="monitorProgressBar" class="progress-bar bg-success" style="width:0%">
+                                </div>
+                            </div>
 
+                            <p id="monitorProgressText">
+                                0%
+                            </p>
                         </div>
-
 
                         <!-- HEATMAP SUMMARY -->
 
@@ -1150,47 +1136,6 @@
                         </p>
 
                     </div>
-
-
-                    <!-- =============================== -->
-                    <!-- MISSION PROGRESS -->
-                    <!-- =============================== -->
-
-                    <div class="card">
-
-                        <h3>
-                            🚩 MISSION PROGRESS
-                        </h3>
-
-                        <p>
-                            Current Waypoint :
-                            <b id="monitorCurrentWP">
-                                0
-                            </b>
-                        </p>
-
-                        <p>
-                            Total Waypoints :
-                            <b id="monitorTotalWP">
-                                0
-                            </b>
-                        </p>
-
-
-                        <div class="progress">
-
-                            <div id="monitorProgressBar" class="progress-bar bg-success" style="width:0%">
-                            </div>
-
-                        </div>
-
-
-                        <p id="monitorProgressText">
-                            0%
-                        </p>
-
-                    </div>
-
 
                     <!-- =============================== -->
                     <!-- ALERTS -->
@@ -2534,96 +2479,6 @@
 
                         monitorHeading.innerText =
                             heading + "°";
-
-                    }
-
-                    // =========================
-                    // WATER FLOW
-                    // =========================
-
-                    const flowLat =
-                        Number(data.flow_v_lat);
-
-                    const flowLng =
-                        Number(data.flow_v_lng);
-
-                    if (
-                        Number.isFinite(flowLat) &&
-                        Number.isFinite(flowLng)
-                    ) {
-
-                        // Vector
-                        const vectorElement =
-                            document.getElementById(
-                                "monitorFlowVector"
-                            );
-
-                        if (vectorElement) {
-
-                            vectorElement.innerText =
-                                `${flowLat.toFixed(6)}, ${flowLng.toFixed(6)}`;
-
-                        }
-
-
-                        // Direction
-                        let direction =
-                            Math.atan2(
-                                flowLng,
-                                flowLat
-                            ) * 180 / Math.PI;
-
-                        if (direction < 0) {
-
-                            direction += 360;
-
-                        }
-
-                        const directions = [
-                            "N",
-                            "NE",
-                            "E",
-                            "SE",
-                            "S",
-                            "SW",
-                            "W",
-                            "NW"
-                        ];
-
-                        const directionIndex =
-                            Math.round(direction / 45) % 8;
-
-                        const directionElement =
-                            document.getElementById(
-                                "monitorFlowDirection"
-                            );
-
-                        if (directionElement) {
-
-                            directionElement.innerText =
-                                `${directions[directionIndex]} (${direction.toFixed(1)}°)`;
-
-                        }
-
-
-                        // Speed
-                        const speed =
-                            Math.sqrt(
-                                (flowLat * flowLat) +
-                                (flowLng * flowLng)
-                            );
-
-                        const speedElement =
-                            document.getElementById(
-                                "monitorFlowSpeed"
-                            );
-
-                        if (speedElement) {
-
-                            speedElement.innerText =
-                                speed.toFixed(6);
-
-                        }
 
                     }
 
@@ -4232,7 +4087,7 @@
                 }
 
             }
-            
+
             async function clearEstop() {
 
                 try {
@@ -5271,7 +5126,19 @@
 
                 zoomControl: true,
 
-                preferCanvas: true
+                scrollWheelZoom: true,
+
+                doubleClickZoom: true,
+
+                boxZoom: true,
+
+                keyboard: true,
+
+                dragging: true,
+
+                preferCanvas: true,
+
+                maxZoom: 22
 
             }).setView([13.7563, 100.5018], 13);
 
@@ -5315,7 +5182,9 @@
 
                 {
 
-                    attribution: '© OpenStreetMap'
+                    attribution: '© OpenStreetMap',
+
+                    maxZoom: 22
 
                 }
 

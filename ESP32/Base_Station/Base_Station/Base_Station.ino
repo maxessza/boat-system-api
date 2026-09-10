@@ -26,7 +26,7 @@ const char* ssid = "iPhone (129)";
 const char* password = "1122334455";
 
 // Backend
-const char* serverIP = "172.20.10.3";
+const char* serverIP = "172.20.10.4";
 const int serverPort = 8000;
 
 
