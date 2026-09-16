@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 import pymysql
 import os
+import math
 
 app = FastAPI()
 
@@ -70,11 +71,11 @@ def get_connection():
 # ✅ Model รับข้อมูล
 class SensorData(BaseModel):
     boat_id: str
-    latitude: float
-    longitude: float
-    temp_c: float 
-    ph_level: float
-    turbidity_ntu: float
+    latitude: float | None = None
+    longitude: float | None = None
+    temp_c: float | None = None
+    ph_level: float | None = None
+    turbidity_ntu: float | None = None
     battery: float | None = None
     heading: float | None = None
     flow_v_lat: float | None = None
@@ -114,6 +115,26 @@ def home():
     return {"message": "API is running"}
 
 
+# ====================================
+# Convert NaN / Infinity -> None
+# ====================================
+
+def clean_float(value):
+    if value is None:
+        return None
+
+    try:
+        value = float(value)
+
+        if not math.isfinite(value):
+            return None
+
+        return value
+
+    except (TypeError, ValueError):
+        return None
+
+
 # ✅ รับข้อมูล + บันทึก DB + คำนวณ
 @app.post("/data")
 def receive_data(data: SensorData):
@@ -124,6 +145,23 @@ def receive_data(data: SensorData):
     global current_boat_mode
     global current_stage_intent
     global current_battery
+    global mission_command
+    global mission_running
+    global boat_state
+
+    # ====================================
+    # CLEAN SENSOR VALUES
+    # ====================================
+
+    latitude = clean_float(data.latitude)
+    longitude = clean_float(data.longitude)
+    temp_c = clean_float(data.temp_c)
+    ph_level = clean_float(data.ph_level)
+    turbidity_ntu = clean_float(data.turbidity_ntu)
+    heading = clean_float(data.heading)
+    flow_v_lat = clean_float(data.flow_v_lat)
+    flow_v_lng = clean_float(data.flow_v_lng)
+    battery = clean_float(data.battery)
 
     if data.current_mode is not None:
         current_boat_mode = data.current_mode
@@ -131,8 +169,8 @@ def receive_data(data: SensorData):
     if data.stage_intent is not None:
         current_stage_intent = data.stage_intent
 
-    if data.battery is not None:
-        current_battery = data.battery
+    if battery is not None:
+        current_battery = battery
 
     # ====================================
     # RTH COMPLETED
@@ -147,33 +185,17 @@ def receive_data(data: SensorData):
     ):
 
         if mission_command == "RTH":
-
-            print(
-                "RTH completed -> Mission IDLE"
-            )
-
+            print("RTH completed -> Mission IDLE")
         else:
-
-            print(
-                "E-Stop cleared -> Mission IDLE"
-            )
+            print("E-Stop cleared -> Mission IDLE")
 
         mission_command = "IDLE"
-
         mission_running = False
-
         boat_state = "Idle"
 
     try:
         conn = get_connection()
         cursor = conn.cursor()
-
-        # ==============================
-        # FLOW VECTOR
-        # ==============================
-
-        flow_v_lat = data.flow_v_lat
-        flow_v_lng = data.flow_v_lng
 
         # ==============================
         # INSERT SENSOR DATA
@@ -208,12 +230,12 @@ def receive_data(data: SensorData):
             )
         """, (
             data.boat_id,
-            data.latitude,
-            data.longitude,
-            data.heading,
-            data.temp_c,
-            data.ph_level,
-            data.turbidity_ntu,
+            latitude,
+            longitude,
+            heading,
+            temp_c,
+            ph_level,
+            turbidity_ntu,
             flow_v_lat,
             flow_v_lng
         ))
@@ -222,8 +244,15 @@ def receive_data(data: SensorData):
         # DRIFT PREDICTION
         # ==============================
 
-        predicted_lat = data.latitude + 0.0003
-        predicted_lng = data.longitude + 0.0003
+        if latitude is not None:
+           predicted_lat = latitude + 0.0003
+        else:
+           predicted_lat = None
+
+        if longitude is not None:
+           predicted_lng = longitude + 0.0003
+        else:
+           predicted_lng = None
 
         cursor.execute("""
             INSERT INTO drift_predictions
@@ -251,8 +280,8 @@ def receive_data(data: SensorData):
                 %s
             )
         """, (
-            data.latitude,
-            data.longitude,
+            latitude,
+            longitude,
             predicted_lat,
             predicted_lng,
             flow_v_lat,
@@ -614,6 +643,8 @@ def setHome():
         "command": "SET_HOME"
     }
 
+    
+
 #====================================
 # force-spiral  
 #====================================   
@@ -722,23 +753,21 @@ def missionProgress():
 #====================================
 @app.get("/mission")
 def getMission():
+    global mission_command
 
     if mission_command == "EMERGENCY_STOP":
-
         return {
             "command": "EMERGENCY_STOP",
             "mode": mission_mode
         }
 
     if mission_command == "CLEAR_ESTOP":
-
         return {
             "command": "CLEAR_ESTOP",
             "mode": mission_mode
         }
 
     if mission_command == "RTH":
-
         return {
             "command": "RTH",
             "mode": mission_mode
@@ -746,20 +775,22 @@ def getMission():
 
     if mission_command == "SET_HOME":
 
-        return {
+        response = {
             "command": "SET_HOME",
             "mode": mission_mode
         }
 
-    if mission_command == "FORCE_SPIRAL":
+        mission_command = "IDLE"
 
+        return response
+
+    if mission_command == "FORCE_SPIRAL":
         return {
             "command": "FORCE_SPIRAL",
             "mode": mission_mode
         }
 
     if mission_running:
-
         return {
             "command": "START",
             "mode": mission_mode
@@ -769,6 +800,7 @@ def getMission():
         "command": "IDLE",
         "mode": mission_mode
     }
+
 @app.post("/generate_sweep")
 def generateSweep(area: SweepArea):
 

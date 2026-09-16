@@ -1181,6 +1181,8 @@
 
             let manualRoute = [];
 
+            let lastHeatmapWaypoint = -1;
+
             //==============================
             // Sweep Area
             //==============================
@@ -2373,7 +2375,30 @@
                                 currentMonitorWaypoint + 1
                             );
 
+                            // =========================
+                            // UPDATE HEATMAP
+                            // =========================
+
+                            if (
+                                currentMonitorWaypoint !== lastHeatmapWaypoint
+                            ) {
+
+                                console.log(
+                                    "Updating Heatmap at WP:",
+                                    currentMonitorWaypoint + 1
+                                );
+
+                                await loadHeatMap();
+
+                                lastHeatmapWaypoint =
+                                    currentMonitorWaypoint;
+
+                            }
+
+                            // =========================
                             // ไป Waypoint ถัดไป
+                            // =========================
+
                             if (
                                 currentMonitorWaypoint <
                                 manualRoute.length - 1
@@ -5200,27 +5225,17 @@
                 className: "boat-marker",
 
                 html: `
-                    <img
-
-                    id="boatImage"
-
-                    src="/assets/boat.png"
-
-                    style="
-
-                    width:48px;
-
-                    height:48px;
-
-                    object-fit:contain;
-
-                    display:block;
-
-                    transform-origin:center center;
-
-                    transition:transform .4s;
-
-                    ">
+                  <img
+                      id="boatImage"
+                      src="/assets/boat.png"
+                      style="
+                        width:80px;
+                        height:80px;
+                        object-fit:contain;
+                        display:block;
+                        transform-origin:center center;
+                        transition:transform .4s;
+                      ">
                     `
 
             });
@@ -5616,8 +5631,6 @@
                             "Starting Heatmap..."
                         );
 
-
-                        await loadHeatMap();
 
 
                         console.log(

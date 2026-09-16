@@ -144,6 +144,8 @@ bool clearEstopCommandSent = false;
 
 bool rthCommandSent = false;
 
+bool setHomeCommandSent = false;
+
 bool batchAckReceived = false;
 
 uint8_t lastAckBatchIndex = 0;
@@ -748,6 +750,10 @@ void runBaseStation() {
 
       getMissionCommand();
 
+      if (missionCommand != "SET_HOME") {
+        setHomeCommandSent = false;
+      }
+
       //==========================================
       // E-STOP
       //==========================================
@@ -867,14 +873,19 @@ void runBaseStation() {
       else if (
         missionCommand == "SET_HOME") {
 
-        Serial.println();
-        Serial.println(">>> SET HOME REQUEST RECEIVED <<<");
+        if (!setHomeCommandSent) {
 
-        sendCommandPacket(
-          CMD_SET_HOME);
+          Serial.println();
+          Serial.println(">>> SET HOME REQUEST RECEIVED <<<");
 
-        Serial.println(
-          "SET HOME Command Code : 6");
+          sendCommandPacket(
+            CMD_SET_HOME);
+
+          Serial.println(
+            "SET HOME Command Code : 6");
+
+          setHomeCommandSent = true;
+        }
 
         baseState =
           WAIT_SENSOR;
