@@ -104,6 +104,7 @@ class SweepArea(BaseModel):
     width: float
     height: float
     spacing: float
+    orientation: str = "vertical"
 
 
 class MissionRequest(BaseModel):
@@ -800,7 +801,6 @@ def getMission():
         "command": "IDLE",
         "mode": mission_mode
     }
-
 @app.post("/generate_sweep")
 def generateSweep(area: SweepArea):
 
@@ -810,27 +810,19 @@ def generateSweep(area: SweepArea):
     # ==============================
     # Clear Old Route
     # ==============================
+
     cursor.execute("DELETE FROM routes")
 
     route = []
 
-    lat = area.start_lat
     direction = 1
     order = 1
     count = 0
 
-    end_lat = area.start_lat + area.height
-
-    print("========== Sweep ==========")
-    print("Start Lat :", area.start_lat)
-    print("End Lat   :", end_lat)
-    print("Height    :", area.height)
-    print("Spacing   :", area.spacing)
-    print("===========================")
-
-    # ==========================================
+    # ==============================
     # Function: Add Waypoint
-    # ==========================================
+    # ==============================
+
     def add_waypoint(lat, lng):
 
         nonlocal order
@@ -871,85 +863,173 @@ def generateSweep(area: SweepArea):
 
         order += 1
 
-    # ==========================================
-    # Generate Sweep
-    # ==========================================
-    while lat <= end_lat:
+    # ==============================
+    # Area
+    # ==============================
 
-        count += 1
+    start_lng = area.start_lng
+    end_lng = area.start_lng + area.width
 
-        print(f"Loop {count}")
-        print(f"Current Lat : {lat}")
+    start_lat = area.start_lat
+    end_lat = area.start_lat + area.height
 
-        start_lng = area.start_lng
-        end_lng = area.start_lng + area.width
+    # ==============================
+    # VERTICAL SWEEP
+    # ==============================
 
-        # ==========================================
-        # 4 Points per Sweep Line
-        #
-        # Point 1 = 0%
-        # Point 2 = 33.33%
-        # Point 3 = 66.67%
-        # Point 4 = 100%
-        # ==========================================
+    if area.orientation == "vertical":
 
-        if direction == 1:
+        lng = start_lng
 
-            # Start
-            add_waypoint(
-                lat,
-                start_lng
-            )
+        while lng <= end_lng:
 
-            # 1/3
-            add_waypoint(
-                lat,
-                start_lng + (area.width * 1 / 3)
-            )
+            count += 1
 
-            # 2/3
-            add_waypoint(
-                lat,
-                start_lng + (area.width * 2 / 3)
-            )
+            print(f"Loop {count}")
+            print(f"Current Lng : {lng}")
 
-            # End
-            add_waypoint(
-                lat,
-                end_lng
-            )
+            # --------------------------
+            # Bottom -> Top
+            # --------------------------
 
-        else:
+            if direction == 1:
 
-            # Start from right
-            add_waypoint(
-                lat,
-                end_lng
-            )
+                # 0%
+                add_waypoint(
+                    start_lat,
+                    lng
+                )
 
-            # 2/3
-            add_waypoint(
-                lat,
-                start_lng + (area.width * 2 / 3)
-            )
+                # 33%
+                add_waypoint(
+                    start_lat + (area.height * 1 / 3),
+                    lng
+                )
 
-            # 1/3
-            add_waypoint(
-                lat,
-                start_lng + (area.width * 1 / 3)
-            )
+                # 66%
+                add_waypoint(
+                    start_lat + (area.height * 2 / 3),
+                    lng
+                )
 
-            # End
-            add_waypoint(
-                lat,
-                start_lng
-            )
+                # 100%
+                add_waypoint(
+                    end_lat,
+                    lng
+                )
 
-        # Reverse direction
-        direction *= -1
+            # --------------------------
+            # Top -> Bottom
+            # --------------------------
 
-        # Move to next sweep line
-        lat += area.spacing
+            else:
+
+                # 100%
+                add_waypoint(
+                    end_lat,
+                    lng
+                )
+
+                # 66%
+                add_waypoint(
+                    start_lat + (area.height * 2 / 3),
+                    lng
+                )
+
+                # 33%
+                add_waypoint(
+                    start_lat + (area.height * 1 / 3),
+                    lng
+                )
+
+                # 0%
+                add_waypoint(
+                    start_lat,
+                    lng
+                )
+
+            # Reverse direction
+
+            direction *= -1
+
+            # Move to next vertical line
+
+            lng += area.spacing
+
+    # ==============================
+    # HORIZONTAL SWEEP
+    # ==============================
+
+    else:
+
+        lat = start_lat
+
+        while lat <= end_lat:
+
+            count += 1
+
+            print(f"Loop {count}")
+            print(f"Current Lat : {lat}")
+
+            # --------------------------
+            # Left -> Right
+            # --------------------------
+
+            if direction == 1:
+
+                add_waypoint(
+                    lat,
+                    start_lng
+                )
+
+                add_waypoint(
+                    lat,
+                    start_lng + (area.width * 1 / 3)
+                )
+
+                add_waypoint(
+                    lat,
+                    start_lng + (area.width * 2 / 3)
+                )
+
+                add_waypoint(
+                    lat,
+                    end_lng
+                )
+
+            # --------------------------
+            # Right -> Left
+            # --------------------------
+
+            else:
+
+                add_waypoint(
+                    lat,
+                    end_lng
+                )
+
+                add_waypoint(
+                    lat,
+                    start_lng + (area.width * 2 / 3)
+                )
+
+                add_waypoint(
+                    lat,
+                    start_lng + (area.width * 1 / 3)
+                )
+
+                add_waypoint(
+                    lat,
+                    start_lng
+                )
+
+            direction *= -1
+
+            lat += area.spacing
+
+    # ==============================
+    # Finish
+    # ==============================
 
     print("===========================")
     print("Total Loop :", count)
@@ -962,6 +1042,7 @@ def generateSweep(area: SweepArea):
     conn.close()
 
     return route
+    
 #====================================
 # Save Manual Route
 #====================================
