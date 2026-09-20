@@ -2707,6 +2707,186 @@
                 }
             }
 
+            // =========================================
+            // CLIP MONITOR HEATMAP TO WAYPOINT AREA
+            // =========================================
+
+            function clipMonitorHeatmapToWaypoints() {
+
+                if (
+                    !monitorMap ||
+                    !monitorHeatLayer ||
+                    !monitorHeatLayer._canvas ||
+                    !manualRoute ||
+                    manualRoute.length < 4
+                ) {
+                    return;
+                }
+
+
+                const points =
+                    manualRoute
+                        .map(
+                            p => {
+
+                                const lat =
+                                    Number(p.lat);
+
+                                const lng =
+                                    Number(p.lng);
+
+
+                                if (
+                                    !Number.isFinite(lat) ||
+                                    !Number.isFinite(lng)
+                                ) {
+                                    return null;
+                                }
+
+
+                                return monitorMap
+                                    .latLngToContainerPoint(
+                                        [
+                                            lat,
+                                            lng
+                                        ]
+                                    );
+
+                            }
+                        )
+                        .filter(
+                            Boolean
+                        );
+
+
+                if (
+                    points.length < 4
+                ) {
+                    return;
+                }
+
+
+                const xs =
+                    points.map(
+                        p => p.x
+                    );
+
+                const ys =
+                    points.map(
+                        p => p.y
+                    );
+
+
+                const left =
+                    Math.max(
+                        0,
+                        Math.min(
+                            ...xs
+                        )
+                    );
+
+                const right =
+                    Math.min(
+                        monitorMap.getSize().x,
+                        Math.max(
+                            ...xs
+                        )
+                    );
+
+                const top =
+                    Math.max(
+                        0,
+                        Math.min(
+                            ...ys
+                        )
+                    );
+
+                const bottom =
+                    Math.min(
+                        monitorMap.getSize().y,
+                        Math.max(
+                            ...ys
+                        )
+                    );
+
+
+                const width =
+                    right - left;
+
+                const height =
+                    bottom - top;
+
+
+                if (
+                    width <= 0 ||
+                    height <= 0
+                ) {
+                    return;
+                }
+
+
+                const canvas =
+                    monitorHeatLayer._canvas;
+
+                const mapSize =
+                    monitorMap.getSize();
+
+
+                const clipTop =
+                    (
+                        top /
+                        mapSize.y
+                    ) * 100;
+
+
+                const clipRight =
+                    100 -
+                    (
+                        (
+                            right /
+                            mapSize.x
+                        ) * 100
+                    );
+
+
+                const clipBottom =
+                    100 -
+                    (
+                        (
+                            bottom /
+                            mapSize.y
+                        ) * 100
+                    );
+
+
+                const clipLeft =
+                    (
+                        left /
+                        mapSize.x
+                    ) * 100;
+
+
+                const clipValue =
+                    `inset(
+            ${clipTop}%
+            ${clipRight}%
+            ${clipBottom}%
+            ${clipLeft}%
+        )`;
+
+
+                canvas.style.clipPath =
+                    clipValue;
+
+                canvas.style.webkitClipPath =
+                    clipValue;
+
+
+                console.log(
+                    "Heatmap clipped to waypoint boundary"
+                );
+            }
+
 
             // ======================================
             // REAL TURBIDITY HEATMAP + IDW
@@ -2815,32 +2995,119 @@
 
                     // ==================================
                     // 4. FIND AREA
+                    //    USE WAYPOINT BOUNDARY
                     // ==================================
 
-                    const lats =
-                        sensorPoints.map(
-                            p => p.lat
+                    let minLat;
+                    let maxLat;
+                    let minLng;
+                    let maxLng;
+
+
+                    // ==================================
+                    // USE WAYPOINT BOUNDARY
+                    // ==================================
+
+                    if (
+                        manualRoute &&
+                        manualRoute.length >= 4
+                    ) {
+
+                        const routeLats =
+                            manualRoute
+                                .map(
+                                    p => Number(p.lat)
+                                )
+                                .filter(
+                                    Number.isFinite
+                                );
+
+                        const routeLngs =
+                            manualRoute
+                                .map(
+                                    p => Number(p.lng)
+                                )
+                                .filter(
+                                    Number.isFinite
+                                );
+
+
+                        minLat =
+                            Math.min(
+                                ...routeLats
+                            );
+
+                        maxLat =
+                            Math.max(
+                                ...routeLats
+                            );
+
+                        minLng =
+                            Math.min(
+                                ...routeLngs
+                            );
+
+                        maxLng =
+                            Math.max(
+                                ...routeLngs
+                            );
+
+
+                        console.log(
+                            "Heatmap Area = WAYPOINT BOUNDARY"
                         );
 
+                    }
 
-                    const lngs =
-                        sensorPoints.map(
-                            p => p.lng
+
+                    // ==================================
+                    // FALLBACK
+                    // ==================================
+
+                    else {
+
+                        const lats =
+                            sensorPoints.map(
+                                p => p.lat
+                            );
+
+                        const lngs =
+                            sensorPoints.map(
+                                p => p.lng
+                            );
+
+
+                        minLat =
+                            Math.min(
+                                ...lats
+                            );
+
+                        maxLat =
+                            Math.max(
+                                ...lats
+                            );
+
+                        minLng =
+                            Math.min(
+                                ...lngs
+                            );
+
+                        maxLng =
+                            Math.max(
+                                ...lngs
+                            );
+
+
+                        console.log(
+                            "Heatmap Area = SENSOR DATA"
                         );
 
+                    }
 
-                    const minLat =
-                        Math.min(...lats);
 
-                    const maxLat =
-                        Math.max(...lats);
-
-                    const minLng =
-                        Math.min(...lngs);
-
-                    const maxLng =
-                        Math.max(...lngs);
-
+                    // ==================================
+                    // DEBUG
+                    // ==================================
 
                     console.log(
                         "IDW Area:",
@@ -3277,8 +3544,8 @@
                         L.heatLayer(
                             heatData,
                             {
-                                radius: 12,
-                                blur: 10,
+                                radius: 10,
+                                blur: 6,
                                 maxZoom: 18,
                                 minOpacity: 0.35,
                                 max: 1,
@@ -3309,6 +3576,9 @@
                     monitorHeatLayer.addTo(
                         monitorMap
                     );
+
+                    clipMonitorHeatmapToWaypoints();
+
 
 
                     console.log(
@@ -3382,6 +3652,8 @@
 
                             monitorHeatLayer._redraw();
 
+                            clipMonitorHeatmapToWaypoints();
+
 
                             console.log(
                                 "Heatmap Redrawn"
@@ -3403,6 +3675,56 @@
                     console.log(
                         "===== REAL HEATMAP LOADED ====="
                     );
+
+                    // ==================================
+                    // KEEP CLIP AFTER ZOOM / MOVE
+                    // ==================================
+
+                    if (monitorMap) {
+
+                        if (
+                            monitorMap.__heatmapClipHandler
+                        ) {
+
+                            monitorMap.off(
+                                "zoomend",
+                                monitorMap.__heatmapClipHandler
+                            );
+
+                            monitorMap.off(
+                                "moveend",
+                                monitorMap.__heatmapClipHandler
+                            );
+
+                        }
+
+
+                        monitorMap.__heatmapClipHandler =
+                            function () {
+
+                                setTimeout(
+                                    () => {
+
+                                        clipMonitorHeatmapToWaypoints();
+
+                                    },
+                                    50
+                                );
+
+                            };
+
+
+                        monitorMap.on(
+                            "zoomend",
+                            monitorMap.__heatmapClipHandler
+                        );
+
+                        monitorMap.on(
+                            "moveend",
+                            monitorMap.__heatmapClipHandler
+                        );
+
+                    }
 
                 }
                 catch (error) {
@@ -4673,7 +4995,7 @@
                 const width = originalWidth - (marginLng * 2);
                 const height = originalHeight - (marginLat * 2);
 
-                const spacing = Math.max(height / 12, 0.00002);
+                const spacing = Math.max(width / 12, 0.00002);
 
                 try {
 
@@ -4693,7 +5015,9 @@
                             width: width,
                             height: height,
 
-                            spacing: spacing
+                            spacing: spacing,
+
+                            orientation: "vertical"
 
                         })
 
