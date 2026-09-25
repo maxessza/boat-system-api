@@ -32,6 +32,12 @@ current_waypoint = 0
 total_waypoints = 0
 
 # ====================================
+# Current Mission
+# ====================================
+
+current_mission_id = None
+
+# ====================================
 # Boat State From Telemetry
 # ====================================
 
@@ -149,6 +155,7 @@ def receive_data(data: SensorData):
     global mission_command
     global mission_running
     global boat_state
+    global current_mission_id
 
     # ====================================
     # CLEAN SENSOR VALUES
@@ -206,6 +213,7 @@ def receive_data(data: SensorData):
             INSERT INTO sensor_logs
             (
                 boat_id,
+                mission_id,
                 log_time,
                 latitude,
                 longitude,
@@ -219,6 +227,7 @@ def receive_data(data: SensorData):
             VALUES
             (
                 %s,
+                %s,
                 NOW(),
                 %s,
                 %s,
@@ -231,6 +240,7 @@ def receive_data(data: SensorData):
             )
         """, (
             data.boat_id,
+            current_mission_id,
             latitude,
             longitude,
             heading,
@@ -526,7 +536,224 @@ def dbtest():
 @app.get("/dashboard")
 def dashboard():
     return FileResponse("dashboard.html")
-    
+
+# ====================================
+# Mission History
+# ====================================
+
+@app.get("/missions")
+def get_missions():
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn = get_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("""
+            SELECT
+                mission_id,
+                boat_id,
+                mission_name,
+                mode,
+                start_time,
+                end_time,
+                status,
+                total_waypoints,
+                completed_waypoints,
+                distance_m,
+                sensor_samples,
+                avg_temp,
+                avg_ph,
+                avg_turbidity,
+                max_turbidity,
+                min_turbidity,
+                created_at
+            FROM missions
+            ORDER BY mission_id DESC
+        """)
+
+        missions = cursor.fetchall()
+
+        return missions
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+@app.get("/missions/{mission_id}")
+def get_mission(mission_id: int):
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn = get_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("""
+            SELECT
+                mission_id,
+                boat_id,
+                mission_name,
+                mode,
+                start_time,
+                end_time,
+                status,
+                total_waypoints,
+                completed_waypoints,
+                distance_m,
+                sensor_samples,
+                avg_temp,
+                avg_ph,
+                avg_turbidity,
+                max_turbidity,
+                min_turbidity,
+                created_at
+            FROM missions
+            WHERE mission_id = %s
+        """, (
+            mission_id,
+        ))
+
+        mission = cursor.fetchone()
+
+        if not mission:
+
+            return {
+                "success": False,
+                "message": "Mission not found"
+            }
+
+        return mission
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+@app.get("/missions/{mission_id}/route")
+def get_mission_route(mission_id: int):
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn = get_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("""
+            SELECT
+                id,
+                route_name,
+                waypoint_order,
+                latitude,
+                longitude,
+                created_at,
+                mission_id
+            FROM routes
+            WHERE mission_id = %s
+            ORDER BY waypoint_order
+        """, (
+            mission_id,
+        ))
+
+        route = cursor.fetchall()
+
+        return route
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+@app.get("/missions/{mission_id}/logs")
+def get_mission_logs(mission_id: int):
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn = get_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("""
+            SELECT
+                id,
+                boat_id,
+                mission_id,
+                log_time,
+                latitude,
+                longitude,
+                heading,
+                temp_c,
+                ph_level,
+                turbidity_ntu,
+                flow_v_lat,
+                flow_v_lng
+            FROM sensor_logs
+            WHERE mission_id = %s
+            ORDER BY log_time ASC
+        """, (
+            mission_id,
+        ))
+
+        logs = cursor.fetchall()
+
+        return logs
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()                                    
+
+
 @app.get("/history")
 def history():
 
@@ -557,20 +784,63 @@ def history():
 @app.get("/route")
 def get_route():
 
+    global current_mission_id
+
     conn = get_connection()
 
     cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-    cursor.execute("""
-        SELECT
-            waypoint_order,
-            latitude,
-            longitude
-        FROM routes
-        ORDER BY waypoint_order
-    """)
+    # ====================================
+    # ถ้ามี Mission กำลังทำงาน
+    # ให้ส่ง Route ของ Mission นั้น
+    # ====================================
+
+    if current_mission_id is not None:
+
+        print(
+            "GET /route -> Active Mission:",
+            current_mission_id
+        )
+
+        cursor.execute("""
+            SELECT
+                waypoint_order,
+                latitude,
+                longitude
+            FROM routes
+            WHERE mission_id = %s
+            ORDER BY waypoint_order
+        """, (
+            current_mission_id,
+        ))
+
+    # ====================================
+    # ถ้ายังไม่มี Mission
+    # ให้ส่ง Draft Route
+    # ====================================
+
+    else:
+
+        print(
+            "GET /route -> Draft Route"
+        )
+
+        cursor.execute("""
+            SELECT
+                waypoint_order,
+                latitude,
+                longitude
+            FROM routes
+            WHERE mission_id IS NULL
+            ORDER BY waypoint_order
+        """)
 
     data = cursor.fetchall()
+
+    print(
+        "GET /route -> Total:",
+        len(data)
+    )
 
     cursor.close()
     conn.close()
@@ -589,17 +859,328 @@ def startMission(request: MissionRequest):
     global mission_mode
     global boat_state
     global mission_command
+    global current_mission_id
+    global current_waypoint
+    global total_waypoints
 
-    mission_running = True
-    boat_state = "Navigating"
-    mission_mode = request.mode.upper()
-    mission_command = "START"
+    # ====================================
+    # Prevent duplicate mission start
+    # ====================================
 
-    return {
-        "success": True,
-        "status": "Running",
-        "mode": mission_mode
-    }
+    if mission_running:
+
+        return {
+            "success": False,
+            "message": "Mission is already running",
+            "mission_id": current_mission_id
+        }
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # ====================================
+        # Mission Mode
+        # ====================================
+
+        mission_mode = request.mode.upper()
+
+        # ====================================
+        # Find Boat ID
+        # ====================================
+
+        cursor.execute("""
+            SELECT boat_id
+            FROM sensor_logs
+            WHERE boat_id IS NOT NULL
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+
+        boat_row = cursor.fetchone()
+
+        if boat_row:
+
+            boat_id = boat_row["boat_id"]
+
+        else:
+
+            boat_id = "Boat01"
+
+        # ====================================
+        # Count Draft Route
+        # ====================================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM routes
+            WHERE mission_id IS NULL
+        """)
+
+        route_row = cursor.fetchone()
+
+        total_waypoints = route_row["total"]
+
+        # ====================================
+        # Create New Mission
+        # ====================================
+
+        cursor.execute("""
+            INSERT INTO missions
+            (
+                boat_id,
+                mission_name,
+                mode,
+                start_time,
+                status,
+                total_waypoints,
+                completed_waypoints
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                NOW(),
+                'RUNNING',
+                %s,
+                0
+            )
+        """, (
+            boat_id,
+            "New Mission",
+            mission_mode,
+            total_waypoints
+        ))
+
+        current_mission_id = cursor.lastrowid
+
+        # ====================================
+        # Attach Draft Route To Mission
+        # ====================================
+
+        cursor.execute("""
+            UPDATE routes
+            SET mission_id = %s
+            WHERE mission_id IS NULL
+        """, (
+            current_mission_id
+        ))
+
+        conn.commit()
+
+        # ====================================
+        # Update Runtime State
+        # ====================================
+
+        mission_running = True
+
+        boat_state = "Navigating"
+
+        mission_command = "START"
+
+        current_waypoint = 0
+
+        print(
+            "===================================="
+        )
+
+        print(
+            "MISSION STARTED"
+        )
+
+        print(
+            "Mission ID :",
+            current_mission_id
+        )
+
+        print(
+            "Mode       :",
+            mission_mode
+        )
+
+        print(
+            "Waypoints  :",
+            total_waypoints
+        )
+
+        print(
+            "===================================="
+        )
+
+        return {
+
+            "success": True,
+
+            "status": "Running",
+
+            "mode": mission_mode,
+
+            "mission_id": current_mission_id,
+
+            "total_waypoints": total_waypoints
+
+        }
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print(
+            "START MISSION ERROR:",
+            e
+        )
+
+        return {
+
+            "success": False,
+
+            "message": str(e)
+
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+# ====================================
+# Complete Mission
+# ====================================
+
+@app.post("/mission/complete")
+def completeMission():
+
+    global mission_running
+    global mission_mode
+    global boat_state
+    global mission_command
+    global current_mission_id
+    global current_waypoint
+
+    conn = None
+    cursor = None
+
+    try:
+
+        if current_mission_id is None:
+            return {
+                "success": False,
+                "message": "No active mission"
+            }
+
+        conn = get_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        # ==============================
+        # COUNT SENSOR DATA
+        # ==============================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS sensor_samples,
+                AVG(temp_c) AS avg_temp,
+                AVG(ph_level) AS avg_ph,
+                AVG(turbidity_ntu) AS avg_turbidity,
+                MAX(turbidity_ntu) AS max_turbidity,
+                MIN(turbidity_ntu) AS min_turbidity
+            FROM sensor_logs
+            WHERE mission_id = %s
+        """, (
+            current_mission_id,
+        ))
+
+        sensor_stats = cursor.fetchone()
+
+        # ==============================
+        # COUNT COMPLETED WAYPOINTS
+        # ==============================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM routes
+            WHERE mission_id = %s
+        """, (
+            current_mission_id,
+        ))
+
+        route_stats = cursor.fetchone()
+
+        completed_waypoints = route_stats["total"]
+
+        # ==============================
+        # UPDATE MISSION
+        # ==============================
+
+        cursor.execute("""
+            UPDATE missions
+            SET
+                end_time = NOW(),
+                status = 'COMPLETED',
+                completed_waypoints = %s,
+                sensor_samples = %s,
+                avg_temp = %s,
+                avg_ph = %s,
+                avg_turbidity = %s,
+                max_turbidity = %s,
+                min_turbidity = %s
+            WHERE mission_id = %s
+        """, (
+            completed_waypoints,
+            sensor_stats["sensor_samples"],
+            sensor_stats["avg_temp"],
+            sensor_stats["avg_ph"],
+            sensor_stats["avg_turbidity"],
+            sensor_stats["max_turbidity"],
+            sensor_stats["min_turbidity"],
+            current_mission_id
+        ))
+
+        conn.commit()
+
+        mission_running = False
+        mission_mode = "IDLE"
+        boat_state = "Mission Completed"
+        mission_command = "STOP"
+
+        completed_mission_id = current_mission_id
+
+        current_mission_id = None
+        current_waypoint = 0
+
+        return {
+            "success": True,
+            "message": "Mission completed",
+            "mission_id": completed_mission_id,
+            "completed_waypoints": completed_waypoints,
+            "sensor_samples": sensor_stats["sensor_samples"]
+        }
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()            
 
 #====================================
 # Retrun home
@@ -811,7 +1392,10 @@ def generateSweep(area: SweepArea):
     # Clear Old Route
     # ==============================
 
-    cursor.execute("DELETE FROM routes")
+    cursor.execute("""
+       DELETE FROM routes
+       WHERE mission_id IS NULL
+    """)
 
     route = []
 
@@ -873,159 +1457,78 @@ def generateSweep(area: SweepArea):
     start_lat = area.start_lat
     end_lat = area.start_lat + area.height
 
+        # ==============================
+    # Waypoint spacing in meters
     # ==============================
-    # VERTICAL SWEEP
+
+    step_m = area.spacing
+
+    mid_lat = (start_lat + end_lat) / 2
+
+    meters_per_lat_degree = 111_320
+    meters_per_lng_degree = 111_320 * max(
+        abs(math.cos(math.radians(mid_lat))),
+        1e-6
+    )
+
+    lat_step_deg = step_m / meters_per_lat_degree
+    lng_step_deg = step_m / meters_per_lng_degree
+
+    lat_distance_m = (
+        abs(end_lat - start_lat) * meters_per_lat_degree
+    )
+    lng_distance_m = (
+        abs(end_lng - start_lng) * meters_per_lng_degree
+    )
+
+    # จำนวนช่วงเต็ม 2.5 เมตรในแต่ละทิศ
+    lat_intervals = int(math.floor(lat_distance_m / step_m + 1e-9))
+    lng_intervals = int(math.floor(lng_distance_m / step_m + 1e-9))
+
+    lat_direction = 1 if end_lat >= start_lat else -1
+    lng_direction = 1 if end_lng >= start_lng else -1
+
+    latitudes = [
+        start_lat + lat_direction * lat_step_deg * i
+        for i in range(lat_intervals + 1)
+    ]
+
+    longitudes = [
+        start_lng + lng_direction * lng_step_deg * i
+        for i in range(lng_intervals + 1)
+    ]
+
+    # ==============================
+    # Generate serpentine route
     # ==============================
 
-    if area.orientation == "vertical":
+    if area.orientation.lower() == "vertical":
 
-        lng = start_lng
+        count = len(longitudes)
 
-        while lng <= end_lng:
+        for column_index, lng in enumerate(longitudes):
 
-            count += 1
-
-            print(f"Loop {count}")
-            print(f"Current Lng : {lng}")
-
-            # --------------------------
-            # Bottom -> Top
-            # --------------------------
-
-            if direction == 1:
-
-                # 0%
-                add_waypoint(
-                    start_lat,
-                    lng
-                )
-
-                # 33%
-                add_waypoint(
-                    start_lat + (area.height * 1 / 3),
-                    lng
-                )
-
-                # 66%
-                add_waypoint(
-                    start_lat + (area.height * 2 / 3),
-                    lng
-                )
-
-                # 100%
-                add_waypoint(
-                    end_lat,
-                    lng
-                )
-
-            # --------------------------
-            # Top -> Bottom
-            # --------------------------
-
+            if column_index % 2 == 0:
+                lat_sequence = latitudes
             else:
+                lat_sequence = reversed(latitudes)
 
-                # 100%
-                add_waypoint(
-                    end_lat,
-                    lng
-                )
-
-                # 66%
-                add_waypoint(
-                    start_lat + (area.height * 2 / 3),
-                    lng
-                )
-
-                # 33%
-                add_waypoint(
-                    start_lat + (area.height * 1 / 3),
-                    lng
-                )
-
-                # 0%
-                add_waypoint(
-                    start_lat,
-                    lng
-                )
-
-            # Reverse direction
-
-            direction *= -1
-
-            # Move to next vertical line
-
-            lng += area.spacing
-
-    # ==============================
-    # HORIZONTAL SWEEP
-    # ==============================
+            for lat in lat_sequence:
+                add_waypoint(lat, lng)
 
     else:
 
-        lat = start_lat
+        count = len(latitudes)
 
-        while lat <= end_lat:
+        for row_index, lat in enumerate(latitudes):
 
-            count += 1
-
-            print(f"Loop {count}")
-            print(f"Current Lat : {lat}")
-
-            # --------------------------
-            # Left -> Right
-            # --------------------------
-
-            if direction == 1:
-
-                add_waypoint(
-                    lat,
-                    start_lng
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 1 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 2 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    end_lng
-                )
-
-            # --------------------------
-            # Right -> Left
-            # --------------------------
-
+            if row_index % 2 == 0:
+                lng_sequence = longitudes
             else:
+                lng_sequence = reversed(longitudes)
 
-                add_waypoint(
-                    lat,
-                    end_lng
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 2 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 1 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng
-                )
-
-            direction *= -1
-
-            lat += area.spacing
+            for lng in lng_sequence:
+                add_waypoint(lat, lng)
 
     # ==============================
     # Finish
@@ -1057,8 +1560,11 @@ def save_route(route: RouteData):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ลบ Route เดิม
-    cursor.execute("DELETE FROM routes")
+    # ลบเฉพาะ Route ที่ยังไม่ได้ผูกกับ Mission
+    cursor.execute("""
+       DELETE FROM routes
+       WHERE mission_id IS NULL
+    """)
 
     # เพิ่ม Route ใหม่
     for point in route.points:
@@ -1106,7 +1612,10 @@ def clear_route():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM routes")
+    cursor.execute("""
+       DELETE FROM routes
+       WHERE mission_id IS NULL
+    """)
 
     conn.commit()
 

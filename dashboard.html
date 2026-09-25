@@ -54,7 +54,7 @@
 
         <!-- =========================================
      SIDEBAR BATTERY
-========================================= -->
+    ========================================= -->
 
         <div class="sidebar-bottom">
 
@@ -667,58 +667,1081 @@
             </div>
 
         </div>
+        <!-- =========================================
+     MISSION HISTORY PAGE
+    ========================================= -->
 
         <div id="historyPage" style="display:none;">
 
-            <h2>📜 Mission History</h2>
+            <div class="mission-history-page">
 
-            <div class="card">
+                <!-- ==============================
+             HEADER
+        =============================== -->
 
-                <div class="history-toolbar">
+                <div class="mission-history-header">
 
-                    <input type="text" id="searchHistory" placeholder="🔍 Search Boat">
+                    <div>
+                        <h2>📜 Mission History</h2>
 
-                    <button id="downloadCSV">
-                        📥 Export CSV
+                        <p class="mission-history-subtitle">
+                            View previous missions and mission data
+                        </p>
+                    </div>
+
+                    <button class="mission-history-refresh" onclick="loadMissionHistory()">
+                        🔄 Refresh
                     </button>
 
                 </div>
 
-                <table class="history-table">
 
-                    <thead>
+                <!-- ==============================
+             SEARCH
+        =============================== -->
 
-                        <tr>
+                <div class="card mission-history-toolbar">
 
-                            <th>Date</th>
+                    <input type="text" id="missionHistorySearch" placeholder="🔍 Search Mission / Boat / Mode"
+                        oninput="filterMissionHistory()">
 
-                            <th>Boat</th>
+                </div>
 
-                            <th>Temp</th>
 
-                            <th>pH</th>
+                <!-- ==============================
+             MISSION TABLE
+        =============================== -->
 
-                            <th>NTU</th>
+                <div class="card">
 
-                            <th>Quality</th>
+                    <div class="mission-history-table-wrapper">
 
-                            <th>Latitude</th>
+                        <table class="history-table">
 
-                            <th>Longitude</th>
+                            <thead>
 
-                        </tr>
+                                <tr>
 
-                    </thead>
+                                    <th>Mission</th>
 
-                    <tbody id="historyTableBody">
+                                    <th>Date</th>
 
-                    </tbody>
+                                    <th>Boat</th>
 
-                </table>
+                                    <th>Mode</th>
+
+                                    <th>Status</th>
+
+                                    <th>Waypoints</th>
+
+                                    <th>Samples</th>
+
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="missionHistoryTableBody">
+
+                                <tr>
+
+                                    <td colspan="8">
+
+                                        Loading Mission History...
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
 
             </div>
 
         </div>
+
+        <!-- =========================================
+     MISSION DETAIL PAGE
+    ========================================= -->
+
+        <div id="missionDetailPage" style="display:none;">
+
+            <!-- ==============================
+         HEADER
+    =============================== -->
+
+            <div class="mission-detail-header">
+
+                <button class="mission-back-btn" onclick="backToMissionHistory()">
+                    ← Back to History
+                </button>
+
+            </div>
+
+
+            <!-- ==============================
+         MISSION TITLE
+    =============================== -->
+
+            <div class="mission-detail-title card">
+
+                <div>
+
+                    <h2 id="missionDetailTitle">
+                        Mission Detail
+                    </h2>
+
+                    <p id="missionDetailSubtitle">
+                        Loading...
+                    </p>
+
+                </div>
+
+                <div id="missionDetailStatus">
+                    -
+                </div>
+
+            </div>
+
+
+            <!-- =============================
+         TABS
+    ============================== -->
+
+            <div class="mission-detail-tabs">
+
+                <button class="mission-tab active" onclick="showMissionTab('overview', this)">
+                    📊 Overview
+                </button>
+
+                <button class="mission-tab" onclick="showMissionTab('route', this)">
+                    🗺 Route & Map
+                </button>
+
+                <button class="mission-tab" onclick="showMissionTab('sensor', this)">
+                    🌡 Sensor Data
+                </button>
+
+                <button class="mission-tab" onclick="showMissionTab('charts', this)">
+                    📈 Charts
+                </button>
+
+                <button class="mission-tab" onclick="showMissionTab('heatmap', this)">
+                    🔥 Heatmap
+                </button>
+
+                <button class="mission-tab" onclick="showMissionTab('logs', this)">
+                    📜 Logs
+                </button>
+
+            </div>
+
+
+            <!-- ==============================
+     OVERVIEW
+  ================================= -->
+
+            <div id="missionTabOverview" class="mission-tab-content" style="display:block;">
+
+                <!-- ==================================
+         MISSION SUMMARY HEADER
+    =================================== -->
+
+                <div class="card" style="
+        padding:22px;
+        margin-bottom:18px;
+    ">
+
+                    <div style="
+            display:grid;
+            grid-template-columns:2fr 1fr 1fr 1fr 1fr;
+            gap:15px;
+            align-items:center;
+        ">
+
+                        <!-- Mission -->
+
+                        <div style="
+                display:flex;
+                align-items:center;
+                gap:15px;
+            ">
+
+                            <div style="
+                    width:55px;
+                    height:55px;
+                    border-radius:50%;
+                    background:#e8f1ff;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:28px;
+                ">
+                                🚤
+                            </div>
+
+                            <div>
+
+                                <div style="
+                        font-size:24px;
+                        font-weight:700;
+                        color:#123b69;
+                    " id="overviewMissionTitle">
+                                    Mission #-
+                                </div>
+
+                                <div style="
+                        margin-top:5px;
+                        color:#64748b;
+                    " id="overviewMissionDate">
+                                    -
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- MODE -->
+
+                        <div>
+
+                            <div style="
+                    color:#64748b;
+                    font-size:13px;
+                ">
+                                MODE
+                            </div>
+
+                            <strong id="overviewMode" style="font-size:18px;">
+                                -
+                            </strong>
+
+                        </div>
+
+
+                        <!-- WAYPOINT -->
+
+                        <div>
+
+                            <div style="
+                    color:#64748b;
+                    font-size:13px;
+                ">
+                                WAYPOINTS
+                            </div>
+
+                            <strong id="overviewWaypoints" style="font-size:18px;">
+                                0 / 0
+                            </strong>
+
+                        </div>
+
+
+                        <!-- DISTANCE -->
+
+                        <div>
+
+                            <div style="
+                    color:#64748b;
+                    font-size:13px;
+                ">
+                                DISTANCE
+                            </div>
+
+                            <strong id="overviewDistance" style="font-size:18px;">
+                                -
+                            </strong>
+
+                        </div>
+
+
+                        <!-- SAMPLES -->
+
+                        <div>
+
+                            <div style="
+                    color:#64748b;
+                    font-size:13px;
+                ">
+                                SENSOR SAMPLES
+                            </div>
+
+                            <strong id="overviewSamples" style="font-size:18px;">
+                                0
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ==================================
+     MAIN OVERVIEW
+=================================== -->
+
+                <div style="
+    display:grid;
+    grid-template-columns:minmax(0, 3fr) minmax(320px, 1fr);
+    gap:18px;
+    align-items:start;
+">
+
+                    <!-- ==================================
+         LEFT COLUMN
+    ================================== -->
+
+                    <div>
+                        <!-- ==============================
+             MISSION ROUTE
+        =============================== -->
+
+                        <div class="card" style="
+            padding:18px;
+        ">
+
+                            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:12px;
+            ">
+
+                                <h3 style="margin:0;">
+                                    🗺 Mission Route
+                                </h3>
+
+                                <button onclick="showMissionTab('route')" style="
+                        border:none;
+                        background:#2563eb;
+                        color:white;
+                        padding:7px 13px;
+                        border-radius:8px;
+                        cursor:pointer;
+                    ">
+                                    View Full Map →
+                                </button>
+
+                            </div>
+
+                            <div id="missionOverviewMap" style="
+                    width:100%;
+                    height:330px;
+                    border-radius:12px;
+                    overflow:hidden;
+                "></div>
+
+                            <div style="
+                display:flex;
+                justify-content:center;
+                gap:25px;
+                margin-top:12px;
+                font-size:13px;
+                color:#475569;
+            ">
+
+                                <span>🔵 Route</span>
+                                <span>🟢 Waypoint</span>
+                                <span>🚤 Mission Position</span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==============================
+             ROUTE PLAYBACK
+        =============================== -->
+
+                        <div class="card" style="
+            margin-top:18px;
+            padding:14px 18px;
+        ">
+
+                            <div style="
+                display:flex;
+                align-items:center;
+                gap:15px;
+            ">
+
+                                <button id="routePlaybackBtn" onclick="toggleRoutePlayback()" style="
+                        width:32px;
+                        height:32px;
+                        border:none;
+                        border-radius:50%;
+                        background:#2563eb;
+                        color:white;
+                        cursor:pointer;
+                        font-size:14px;
+                    ">
+                                    ▶
+                                </button>
+
+                                <strong style="
+                    color:#123b69;
+                    white-space:nowrap;
+                ">
+                                    Route Playback
+                                </strong>
+
+                                <input id="routePlaybackSlider" type="range" min="0" max="100" value="0" style="
+                        flex:1;
+                        cursor:pointer;
+                    ">
+
+                                <span id="routePlaybackTime" style="
+                        font-size:13px;
+                        color:#64748b;
+                        white-space:nowrap;
+                    ">
+                                    0%
+                                </span>
+
+                                <span style="
+                    font-size:13px;
+                    color:#64748b;
+                    white-space:nowrap;
+                ">
+                                    Speed:
+                                </span>
+
+                                <select id="routePlaybackSpeed" style="
+                        border:1px solid #dbe3ef;
+                        border-radius:7px;
+                        padding:5px 8px;
+                        color:#334155;
+                    ">
+                                    <option value="1">1x</option>
+                                    <option value="2" selected>2x</option>
+                                    <option value="4">4x</option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- ==================================
+     LOWER OVERVIEW GRID
+=================================== -->
+
+                        <div style="
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-top:18px;
+    align-items:stretch;
+">
+
+
+                            <!-- ==============================
+         SENSOR GRAPH
+    =============================== -->
+
+                            <div class="card" style="
+        padding:18px;
+        height:100%;
+        box-sizing:border-box;
+    ">
+
+                                <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:15px;
+        ">
+
+                                    <h3 style="margin:0;">
+                                        📈 Sensor Graph
+                                    </h3>
+
+                                    <button onclick="showMissionTab('charts')" style="
+                    border:none;
+                    background:#eff6ff;
+                    color:#2563eb;
+                    padding:7px 12px;
+                    border-radius:8px;
+                    cursor:pointer;
+                ">
+                                        View Charts →
+                                    </button>
+
+                                </div>
+
+
+                                <div style="
+            display:flex;
+            gap:6px;
+            margin-bottom:12px;
+        ">
+
+                                    <button id="overviewTempBtn" onclick="showOverviewChart('temperature')" style="
+                    border:none;
+                    background:#2563eb;
+                    color:white;
+                    padding:5px 10px;
+                    border-radius:7px;
+                    cursor:pointer;
+                    font-size:12px;
+                ">
+                                        🌡 Temperature
+                                    </button>
+
+                                    <button id="overviewPhBtn" onclick="showOverviewChart('ph')" style="
+                    border:none;
+                    background:#eff6ff;
+                    color:#2563eb;
+                    padding:5px 10px;
+                    border-radius:7px;
+                    cursor:pointer;
+                    font-size:12px;
+                ">
+                                        🧪 pH
+                                    </button>
+
+                                    <button id="overviewTurbidityBtn" onclick="showOverviewChart('turbidity')" style="
+                    border:none;
+                    background:#eff6ff;
+                    color:#2563eb;
+                    padding:5px 10px;
+                    border-radius:7px;
+                    cursor:pointer;
+                    font-size:12px;
+                ">
+                                        🌊 Turbidity
+                                    </button>
+
+                                </div>
+
+
+                                <div style="
+    height:240px;
+">
+                                    <canvas id="overviewSensorChart"></canvas>
+                                </div>
+
+                            </div>
+
+                            <!-- ==============================
+         WAYPOINTS
+    =============================== -->
+
+                            <div class="card" style="
+        padding:18px;
+        height:100%;
+        box-sizing:border-box;
+    ">
+
+                                <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:12px;
+        ">
+
+                                    <h3 style="margin:0;">
+                                        📍 Waypoints
+                                    </h3>
+
+                                    <button onclick="showMissionTab('route')" style="
+                    border:none;
+                    background:none;
+                    color:#2563eb;
+                    cursor:pointer;
+                    font-weight:600;
+                ">
+                                        View All →
+                                    </button>
+
+                                </div>
+
+
+                                <div style="
+            overflow-x:auto;
+        ">
+
+                                    <table class="history-table">
+
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Latitude</th>
+                                                <th>Longitude</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody id="overviewWaypointTable">
+
+                                            <tr>
+                                                <td colspan="3">
+                                                    No waypoint data
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+
+
+                    <!-- ==================================
+         RIGHT COLUMN
+    ================================== -->
+
+                    <div>
+
+                        <!-- ==============================
+             MISSION SUMMARY
+        =============================== -->
+
+                        <div class="card" style="
+            padding:18px;
+        ">
+
+                            <h3 style="
+                margin:0 0 15px 0;
+            ">
+                                📋 Mission Summary
+                            </h3>
+
+                            <div style="
+                display:flex;
+                flex-direction:column;
+                gap:10px;
+            ">
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>🟢 Status</span>
+                                    <strong id="overviewStatus">-</strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>🕐 Start Time</span>
+                                    <strong id="overviewStartTime">-</strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>🏁 End Time</span>
+                                    <strong id="overviewEndTime">-</strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>⏱ Duration</span>
+                                    <strong id="overviewDuration">-</strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>🚤 Boat</span>
+                                    <strong id="overviewBoat">-</strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>📍 Waypoints</span>
+                                    <strong id="overviewWaypointSummary">-</strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>📏 Distance</span>
+                                    <strong id="overviewDistanceSummary">-</strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                                    <span>📡 Samples</span>
+                                    <strong id="overviewSamplesSummary">-</strong>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==============================
+             SENSOR SUMMARY
+        =============================== -->
+
+                        <div class="card" style="
+            padding:18px;
+            margin-top:18px;
+        ">
+
+                            <h3 style="
+                margin:0 0 15px 0;
+            ">
+                                📡 Sensor Summary
+                            </h3>
+
+                            <div style="
+                display:flex;
+                flex-direction:column;
+                gap:7px;
+            ">
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    padding:6px 0;
+                    border-bottom:1px solid #e5e7eb;
+                ">
+                                    <span>🌡 Average Temperature</span>
+
+                                    <strong>
+                                        <span id="overviewAvgTemp">-</span>
+                                        °C
+                                    </strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    padding:8px 0;
+                    border-bottom:1px solid #e5e7eb;
+                ">
+                                    <span>🧪 Average pH</span>
+
+                                    <strong id="overviewAvgPh">
+                                        -
+                                    </strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    padding:8px 0;
+                    border-bottom:1px solid #e5e7eb;
+                ">
+                                    <span>🌊 Average Turbidity</span>
+
+                                    <strong>
+                                        <span id="overviewAvgTurbidity">-</span>
+                                        NTU
+                                    </strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    padding:8px 0;
+                    border-bottom:1px solid #e5e7eb;
+                ">
+                                    <span>⚠️ Maximum Turbidity</span>
+
+                                    <strong>
+                                        <span id="overviewMaxTurbidity">-</span>
+                                        NTU
+                                    </strong>
+                                </div>
+
+                                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    padding:8px 0;
+                ">
+                                    <span>🔽 Minimum Turbidity</span>
+
+                                    <strong>
+                                        <span id="overviewMinTurbidity">-</span>
+                                        NTU
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div> <!-- ปิด Overview Grid -->
+
+            </div> <!-- ปิด missionTabOverview -->
+
+
+            <!-- ==============================
+         ROUTE
+        ============================== -->
+
+            <div id="missionTabRoute" class="mission-tab-content" style="display:none;">
+
+                <div class="card">
+
+                    <h3>🗺 Mission Route</h3>
+
+                    <div id="missionDetailMap" style="
+                    width:100%;
+                    height:500px;
+                    border-radius:12px;
+                "></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================
+         SENSOR
+    ============================== -->
+
+            <div id="missionTabSensor" class="mission-tab-content" style="display:none;">
+
+                <div class="card">
+
+                    <h3>🌡 Sensor Data</h3>
+
+                    <div style="overflow-x:auto;">
+
+                        <table class="history-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Time</th>
+                                    <th>Temperature</th>
+                                    <th>pH</th>
+                                    <th>Turbidity</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="missionSensorTableBody">
+
+                                <tr>
+
+                                    <td colspan="6">
+                                        Loading...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================
+     CHARTS
+    ================================== -->
+
+            <div id="missionTabCharts" class="mission-tab-content" style="display:none;">
+
+                <div class="card">
+
+                    <h3>
+                        📈 Mission Sensor Charts
+                    </h3>
+
+                    <p style="
+                        color:#64748b;
+                        margin-bottom:20px;
+                    ">
+                        Sensor values recorded during this mission
+                    </p>
+
+
+                    <!-- TEMPERATURE -->
+
+                    <div style="
+                          margin-bottom:30px;
+                        ">
+
+                        <h4>
+                            🌡 Temperature (°C)
+                        </h4>
+
+                        <div style="
+                               height:300px;
+                              ">
+
+                            <canvas id="missionTemperatureChart">
+                            </canvas>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- pH -->
+
+                    <div style="
+                           margin-bottom:30px;
+                        ">
+
+                        <h4>
+                            🧪 pH Level
+                        </h4>
+
+                        <div style="
+                               height:300px;
+                            ">
+
+                            <canvas id="missionPhChart">
+                            </canvas>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TURBIDITY -->
+
+                    <div>
+
+                        <h4>
+                            💧 Turbidity (NTU)
+                        </h4>
+
+                        <div style="
+                              height:300px;
+                             ">
+
+                            <canvas id="missionTurbidityChart">
+                            </canvas>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================
+               HEATMAP
+     ================================== -->
+
+            <div id="missionTabHeatmap" class="mission-tab-content" style="display:none;">
+
+                <div class="card">
+
+                    <h3>
+                        🔥 Mission Turbidity Heatmap
+                    </h3>
+
+                    <p style="
+            color:#64748b;
+            margin-bottom:15px;
+        ">
+                        Turbidity distribution recorded
+                        during this mission
+                    </p>
+
+
+                    <div id="missionHeatmapMap" style="
+                width:100%;
+                height:550px;
+                border-radius:12px;
+                overflow:hidden;
+             ">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================
+         LOGS
+    ============================== -->
+
+            <div id="missionTabLogs" class="mission-tab-content" style="display:none;">
+
+                <div class="card">
+
+                    <h3>📜 Mission Logs</h3>
+
+                    <div style="overflow-x:auto;">
+
+                        <table class="history-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Time</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+                                    <th>Mode</th>
+                                    <th>Stage</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="missionLogsTableBody">
+
+                                <tr>
+
+                                    <td colspan="5">
+                                        Loading...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ==============================
+            MONITOR PAGE
+    ============================== -->
 
         <div id="monitorPage" style="display:none;">
 
@@ -2122,6 +3145,3185 @@
                 }
 
             }
+
+            // ==========================================
+            // Mission History
+            // ==========================================
+
+            let missionHistoryData = [];
+
+
+            async function loadMissionHistory() {
+
+                try {
+
+                    console.log(
+                        "===== LOAD MISSION HISTORY ====="
+                    );
+
+
+                    const response =
+                        await fetch(
+                            `${API_URL}/missions`
+                        );
+
+
+                    console.log(
+                        "Mission History Status:",
+                        response.status
+                    );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `HTTP Error: ${response.status}`
+                        );
+
+                    }
+
+
+                    const data =
+                        await response.json();
+
+
+                    console.log(
+                        "Mission History Data:",
+                        data
+                    );
+
+
+                    if (!Array.isArray(data)) {
+
+                        console.error(
+                            "Mission History is not array:",
+                            data
+                        );
+
+                        return;
+
+                    }
+
+
+                    missionHistoryData = data;
+
+
+                    renderMissionHistory(
+                        missionHistoryData
+                    );
+
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Mission History Error:",
+                        error
+                    );
+
+
+                    const tableBody =
+                        document.getElementById(
+                            "missionHistoryTableBody"
+                        );
+
+
+                    if (tableBody) {
+
+                        tableBody.innerHTML = `
+
+                <tr>
+
+                    <td colspan="8">
+
+                        ❌ Cannot load Mission History
+
+                    </td>
+
+                </tr>
+
+            `;
+
+                    }
+
+                }
+
+            }
+
+            function renderMissionHistory(
+                missions
+            ) {
+
+                const tableBody =
+                    document.getElementById(
+                        "missionHistoryTableBody"
+                    );
+
+
+                if (!tableBody) {
+
+                    console.error(
+                        "missionHistoryTableBody not found"
+                    );
+
+                    return;
+
+                }
+
+
+                tableBody.innerHTML = "";
+
+
+                if (
+                    !Array.isArray(missions) ||
+                    missions.length === 0
+                ) {
+
+                    tableBody.innerHTML = `
+
+            <tr>
+
+                <td colspan="8">
+
+                    No Mission History
+
+                </td>
+
+            </tr>
+
+        `;
+
+                    return;
+
+                }
+
+
+                missions.forEach(
+                    mission => {
+
+                        // =========================
+                        // DATE
+                        // =========================
+
+                        let dateText = "-";
+
+
+                        if (mission.start_time) {
+
+                            const date =
+                                new Date(
+                                    mission.start_time
+                                );
+
+
+                            if (
+                                !isNaN(
+                                    date.getTime()
+                                )
+                            ) {
+
+                                dateText =
+                                    date.toLocaleString(
+                                        "th-TH"
+                                    );
+
+                            }
+
+                        }
+
+
+                        // =========================
+                        // STATUS
+                        // =========================
+
+                        let statusClass =
+                            "mission-status-running";
+
+
+                        if (
+                            mission.status ===
+                            "COMPLETED"
+                        ) {
+
+                            statusClass =
+                                "mission-status-completed";
+
+                        }
+                        else if (
+                            mission.status ===
+                            "FAILED"
+                        ) {
+
+                            statusClass =
+                                "mission-status-failed";
+
+                        }
+
+
+                        // =========================
+                        // WAYPOINT
+                        // =========================
+
+                        const completed =
+                            mission.completed_waypoints
+                            ?? 0;
+
+
+                        const total =
+                            mission.total_waypoints
+                            ?? 0;
+
+
+                        // =========================
+                        // ROW
+                        // =========================
+
+                        tableBody.innerHTML += `
+
+                <tr
+                    class="mission-history-row"
+                    data-search="
+                        mission #${mission.mission_id}
+                        ${mission.boat_id ?? ""}
+                        ${mission.mode ?? ""}
+                        ${mission.status ?? ""}
+                    "
+                >
+
+                    <td>
+
+                        <strong>
+                            Mission #${mission.mission_id}
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        ${dateText}
+
+                    </td>
+
+
+                    <td>
+
+                        🚤
+                        ${mission.boat_id ?? "-"}
+
+                    </td>
+
+
+                    <td>
+
+                        ${mission.mode ?? "-"}
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="${statusClass}"
+                        >
+
+                            ${mission.status ?? "-"}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        ${completed}
+                        /
+                        ${total}
+
+                    </td>
+
+
+                    <td>
+
+                        ${mission.sensor_samples ?? 0}
+
+                    </td>
+
+
+                    <td>
+
+                        <button
+                            class="mission-view-btn"
+                            onclick="
+                                openMissionDetail(
+                                    ${mission.mission_id}
+                                )
+                            "
+                        >
+
+                            👁 View
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+                    }
+                );
+
+            }
+
+            // ==========================================
+            // OPEN MISSION DETAIL
+            // ==========================================
+
+            let currentMissionDetailId = null;
+            let currentMissionDetail = null;
+            let currentMissionRoutes = [];
+            let currentMissionLogs = [];
+
+            // ==========================================
+            // Mission Detail Map
+            // ==========================================
+
+            let missionDetailMap = null;
+
+            let missionDetailRouteLine = null;
+
+            let missionDetailMarkers = [];
+
+            // ==========================================
+            // MISSION OVERVIEW MAP
+            // ==========================================
+
+            let missionOverviewMap = null;
+
+            let missionOverviewRouteLine = null;
+
+            let missionOverviewMarkers = [];
+
+            // ==========================================
+            // MISSION CHARTS
+            // ==========================================
+
+            let missionTemperatureChart = null;
+
+            let missionPhChart = null;
+
+            let missionTurbidityChart = null;
+
+            // ==========================================
+            // OVERVIEW SENSOR CHART
+            // ==========================================
+
+            let overviewSensorChart = null;
+
+            let overviewSensorLogs = [];
+
+            // ==========================================
+            // MISSION HEATMAP
+            // ==========================================
+
+            let missionHeatmapMap = null;
+
+            let missionHeatmapLayer = null;
+
+
+            async function openMissionDetail(
+                missionId
+            ) {
+
+                try {
+
+                    console.log(
+                        "===== OPEN MISSION DETAIL ====="
+                    );
+
+                    console.log(
+                        "Mission ID:",
+                        missionId
+                    );
+
+
+                    currentMissionDetailId =
+                        missionId;
+
+
+                    // ==================================
+                    // HIDE ALL MAIN PAGES
+                    // ==================================
+
+                    document.getElementById(
+                        "missionPage"
+                    ).style.display = "none";
+
+                    document.getElementById(
+                        "dashboardPage"
+                    ).style.display = "none";
+
+                    document.getElementById(
+                        "analyticsPage"
+                    ).style.display = "none";
+
+                    document.getElementById(
+                        "historyPage"
+                    ).style.display = "none";
+
+                    document.getElementById(
+                        "monitorPage"
+                    ).style.display = "none";
+
+
+                    // ==================================
+                    // SHOW DETAIL
+                    // ==================================
+
+                    document.getElementById(
+                        "missionDetailPage"
+                    ).style.display = "block";
+
+
+                    // ==================================
+                    // LOAD MISSION
+                    // ==================================
+
+                    const missionResponse =
+                        await fetch(
+                            `${API_URL}/missions/${missionId}`
+                        );
+
+
+                    if (!missionResponse.ok) {
+
+                        throw new Error(
+                            `Mission HTTP Error: ${missionResponse.status}`
+                        );
+
+                    }
+
+
+                    const mission =
+                        await missionResponse.json();
+
+
+                    console.log(
+                        "Mission:",
+                        mission
+                    );
+
+
+                    currentMissionDetail =
+                        mission;
+
+
+                    // ==================================
+                    // LOAD ROUTE
+                    // ==================================
+
+                    const routeResponse =
+                        await fetch(
+                            `${API_URL}/missions/${missionId}/route`
+                        );
+
+
+                    if (routeResponse.ok) {
+
+                        currentMissionRoutes =
+                            await routeResponse.json();
+
+                    }
+                    else {
+
+                        currentMissionRoutes = [];
+
+                    }
+
+
+                    // ==================================
+                    // LOAD LOGS
+                    // ==================================
+
+                    const logsResponse =
+                        await fetch(
+                            `${API_URL}/missions/${missionId}/logs`
+                        );
+
+
+                    if (logsResponse.ok) {
+
+                        currentMissionLogs =
+                            await logsResponse.json();
+
+                    }
+                    else {
+
+                        currentMissionLogs = [];
+
+                    }
+
+
+                    console.log(
+                        "Routes:",
+                        currentMissionRoutes
+                    );
+
+
+                    console.log(
+                        "Logs:",
+                        currentMissionLogs
+                    );
+
+
+                    // ==================================
+                    // RENDER
+                    // ==================================
+
+                    renderMissionDetail(
+                        mission
+                    );
+
+
+                    renderMissionSensorData(
+                        currentMissionLogs
+                    );
+
+
+                    renderMissionLogs(
+                        currentMissionLogs
+                    );
+
+                    overviewSensorLogs =
+                        currentMissionLogs;
+
+
+                    renderOverviewRecentSensor(
+                        currentMissionLogs
+                    );
+
+
+                    // ==================================
+                    // DEFAULT TAB
+                    // ==================================
+
+                    showMissionTab(
+                        "overview"
+                    );
+
+                    showOverviewChart(
+                        "temperature"
+                    );
+
+
+                    console.log(
+                        "===== MISSION DETAIL READY ====="
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Mission Detail Error:",
+                        error
+                    );
+
+
+                    alert(
+                        "ไม่สามารถโหลดข้อมูล Mission ได้"
+                    );
+
+                }
+
+            }
+
+            function renderMissionDetail(
+                mission
+            ) {
+
+                // ==================================
+                // TITLE
+                // ==================================
+
+                document.getElementById(
+                    "missionDetailTitle"
+                ).textContent =
+                    `Mission #${mission.mission_id}`;
+
+
+                document.getElementById(
+                    "missionDetailSubtitle"
+                ).textContent =
+                    `${mission.boat_id ?? "-"} • ` +
+                    `${mission.mode ?? "-"} • ` +
+                    `${mission.status ?? "-"}`;
+
+
+                // ==================================
+                // HEADER STATUS
+                // ==================================
+
+                document.getElementById(
+                    "missionDetailStatus"
+                ).innerHTML = `
+
+        <span
+            class="mission-status-${(
+                        mission.status ?? ""
+                    ).toLowerCase()}"
+        >
+
+            ${mission.status ?? "-"}
+
+        </span>
+
+    `;
+
+                // ==================================
+                // OVERVIEW SUMMARY
+                // ==================================
+
+                document.getElementById(
+                    "overviewMissionTitle"
+                ).textContent =
+                    `Mission #${mission.mission_id}`;
+
+
+                document.getElementById(
+                    "overviewMissionDate"
+                ).textContent =
+                    formatMissionDate(
+                        mission.start_time
+                    );
+
+
+                document.getElementById(
+                    "overviewMode"
+                ).textContent =
+                    mission.mode ?? "-";
+
+
+                document.getElementById(
+                    "overviewWaypoints"
+                ).textContent =
+                    `${mission.completed_waypoints ?? 0} / ${mission.total_waypoints ?? 0}`;
+
+
+                document.getElementById(
+                    "overviewDistance"
+                ).textContent =
+                    formatDistance(
+                        mission.distance_m
+                    );
+
+
+                document.getElementById(
+                    "overviewSamples"
+                ).textContent =
+                    mission.sensor_samples ?? 0;
+
+
+                document.getElementById(
+                    "overviewStatus"
+                ).textContent =
+                    mission.status ?? "-";
+
+
+                document.getElementById(
+                    "overviewStartTime"
+                ).textContent =
+                    formatMissionDate(
+                        mission.start_time
+                    );
+
+
+                document.getElementById(
+                    "overviewEndTime"
+                ).textContent =
+                    formatMissionDate(
+                        mission.end_time
+                    );
+
+
+                document.getElementById(
+                    "overviewDuration"
+                ).textContent =
+                    calculateMissionDuration(
+                        mission.start_time,
+                        mission.end_time
+                    );
+
+
+                document.getElementById(
+                    "overviewBoat"
+                ).textContent =
+                    mission.boat_id ?? "-";
+
+
+                document.getElementById(
+                    "overviewWaypointSummary"
+                ).textContent =
+                    `${mission.completed_waypoints ?? 0} / ${mission.total_waypoints ?? 0}`;
+
+
+                document.getElementById(
+                    "overviewDistanceSummary"
+                ).textContent =
+                    formatDistance(
+                        mission.distance_m
+                    );
+
+
+                document.getElementById(
+                    "overviewSamplesSummary"
+                ).textContent =
+                    mission.sensor_samples ?? 0;
+
+
+                // SENSOR
+
+                document.getElementById(
+                    "overviewAvgTemp"
+                ).textContent =
+                    formatNumber(
+                        mission.avg_temp
+                    );
+
+
+                document.getElementById(
+                    "overviewAvgPh"
+                ).textContent =
+                    formatNumber(
+                        mission.avg_ph
+                    );
+
+
+                document.getElementById(
+                    "overviewAvgTurbidity"
+                ).textContent =
+                    formatNumber(
+                        mission.avg_turbidity
+                    );
+
+
+                document.getElementById(
+                    "overviewMaxTurbidity"
+                ).textContent =
+                    formatNumber(
+                        mission.max_turbidity
+                    );
+
+
+                document.getElementById(
+                    "overviewMinTurbidity"
+                ).textContent =
+                    formatNumber(
+                        mission.min_turbidity
+                    );
+
+                // ==================================
+                // OVERVIEW MAP
+                // ==================================
+
+                initializeMissionOverviewMap();
+
+                setTimeout(
+                    () => {
+
+                        renderMissionOverviewMap(
+                            currentMissionRoutes
+                        );
+
+                    },
+                    400
+                );
+
+                // ==================================
+                // OVERVIEW WAYPOINT TABLE
+                // ==================================
+
+                renderOverviewWaypoints(
+                    currentMissionRoutes
+                );
+
+            }
+
+            function formatMissionDate(
+                value
+            ) {
+
+                if (!value) {
+                    return "-";
+                }
+
+
+                const date =
+                    new Date(value);
+
+
+                if (
+                    isNaN(
+                        date.getTime()
+                    )
+                ) {
+
+                    return "-";
+
+                }
+
+
+                return date.toLocaleString(
+                    "th-TH"
+                );
+
+            }
+
+            function formatNumber(
+                value
+            ) {
+
+                if (
+                    value === null ||
+                    value === undefined ||
+                    value === ""
+                ) {
+
+                    return "-";
+
+                }
+
+
+                const number =
+                    Number(value);
+
+
+                if (
+                    !Number.isFinite(number)
+                ) {
+
+                    return "-";
+
+                }
+
+
+                return number.toFixed(2);
+
+            }
+
+            function formatDistance(value) {
+
+                const number = Number(value);
+
+                if (!Number.isFinite(number)) {
+                    return "-";
+                }
+
+
+                if (number >= 1000) {
+
+                    return (
+                        (number / 1000)
+                            .toFixed(2)
+                        + " km"
+                    );
+
+                }
+
+
+                return (
+                    number.toFixed(1)
+                    + " m"
+                );
+
+            }
+
+
+            function calculateMissionDuration(
+                start,
+                end
+            ) {
+
+                if (!start || !end) {
+                    return "-";
+                }
+
+
+                const startDate =
+                    new Date(start);
+
+                const endDate =
+                    new Date(end);
+
+
+                if (
+                    isNaN(startDate.getTime()) ||
+                    isNaN(endDate.getTime())
+                ) {
+
+                    return "-";
+
+                }
+
+
+                const seconds =
+                    Math.floor(
+                        (
+                            endDate - startDate
+                        ) / 1000
+                    );
+
+
+                if (seconds < 0) {
+                    return "-";
+                }
+
+
+                const hours =
+                    Math.floor(
+                        seconds / 3600
+                    );
+
+                const minutes =
+                    Math.floor(
+                        (seconds % 3600) / 60
+                    );
+
+                const secs =
+                    seconds % 60;
+
+
+                if (hours > 0) {
+
+                    return `${hours}h ${minutes}m ${secs}s`;
+
+                }
+
+
+                return `${minutes}m ${secs}s`;
+
+            }
+
+            function showMissionTab(
+                tabName,
+                button = null
+            ) {
+
+                // ==================================
+                // HIDE ALL TABS
+                // ==================================
+
+                const tabs =
+                    document.querySelectorAll(
+                        ".mission-tab-content"
+                    );
+
+
+                tabs.forEach(
+                    tab => {
+
+                        tab.style.display =
+                            "none";
+
+                    }
+                );
+
+
+                // ==================================
+                // REMOVE ACTIVE
+                // ==================================
+
+                const buttons =
+                    document.querySelectorAll(
+                        ".mission-tab"
+                    );
+
+
+                buttons.forEach(
+                    btn => {
+
+                        btn.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+
+                // ==================================
+                // SHOW SELECTED
+                // ==================================
+
+                const selectedTab =
+                    document.getElementById(
+                        `missionTab${tabName
+                            .charAt(0)
+                            .toUpperCase()
+                        +
+                        tabName.slice(1)
+                        }`
+                    );
+
+
+                if (selectedTab) {
+
+                    selectedTab.style.display =
+                        "block";
+
+                }
+
+                // ==================================
+                // ACTIVE BUTTON
+                // ==================================
+
+                if (button) {
+
+                    button.classList.add(
+                        "active"
+                    );
+
+                }
+                else {
+
+                    const defaultButton =
+                        document.querySelector(
+                            ".mission-tab"
+                        );
+
+
+                    if (defaultButton) {
+
+                        defaultButton.classList.add(
+                            "active"
+                        );
+
+                    }
+
+                }
+
+
+                // ==================================
+                // ROUTE TAB
+                // ==================================
+
+                if (
+                    tabName === "route"
+                ) {
+
+                    initializeMissionDetailMap();
+
+
+                    setTimeout(
+                        () => {
+
+                            renderMissionRoute(
+                                currentMissionRoutes
+                            );
+
+                        },
+                        300
+                    );
+
+                }
+
+                // ==================================
+                // CHARTS TAB
+                // ==================================
+
+                if (
+                    tabName === "charts"
+                ) {
+
+                    setTimeout(
+                        () => {
+
+                            renderMissionCharts(
+                                currentMissionLogs
+                            );
+
+                        },
+                        300
+                    );
+
+                }
+
+                // ==================================
+                // HEATMAP TAB
+                // ==================================
+
+                if (
+                    tabName === "heatmap"
+                ) {
+
+                    initializeMissionHeatmap();
+
+                    setTimeout(
+                        () => {
+
+                            renderMissionHeatmap(
+                                currentMissionLogs
+                            );
+
+                        },
+                        300
+                    );
+
+                }
+
+                // ==================================
+                // SENSOR TAB
+                // ==================================
+
+                if (
+                    tabName === "sensor"
+                ) {
+
+                    renderMissionSensorData(
+                        currentMissionLogs
+                    );
+
+                }
+
+
+                // ==================================
+                // LOGS TAB
+                // ==================================
+
+                if (
+                    tabName === "logs"
+                ) {
+
+                    renderMissionLogs(
+                        currentMissionLogs
+                    );
+
+                }
+
+            }
+
+
+            // ==========================================
+            // INITIALIZE MISSION OVERVIEW MAP
+            // ==========================================
+
+            function initializeMissionOverviewMap() {
+
+                console.log(
+                    "===== INITIALIZE MISSION OVERVIEW MAP ====="
+                );
+
+                const mapElement =
+                    document.getElementById(
+                        "missionOverviewMap"
+                    );
+
+                if (!mapElement) {
+                    return;
+                }
+
+
+                if (!missionOverviewMap) {
+
+                    missionOverviewMap =
+                        L.map(
+                            "missionOverviewMap",
+                            {
+                                maxZoom: 22
+                            }
+                        ).setView(
+                            [13.7563, 100.5018],
+                            13
+                        );
+
+
+                    L.tileLayer(
+                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        {
+                            maxNativeZoom: 19,
+                            maxZoom: 22,
+                            attribution:
+                                "&copy; OpenStreetMap contributors"
+                        }
+                    ).addTo(
+                        missionOverviewMap
+                    );
+
+                }
+
+
+                setTimeout(() => {
+
+                    if (missionOverviewMap) {
+
+                        missionOverviewMap.invalidateSize(
+                            true
+                        );
+
+                    }
+
+                }, 300);
+
+            }
+
+            // ==========================================
+            // RENDER MISSION OVERVIEW MAP
+            // ==========================================
+
+            function renderMissionOverviewMap(routes) {
+
+                if (!missionOverviewMap) {
+                    return;
+                }
+
+
+                // REMOVE OLD MARKERS
+
+                missionOverviewMarkers.forEach(
+                    marker => {
+
+                        missionOverviewMap.removeLayer(
+                            marker
+                        );
+
+                    }
+                );
+
+                missionOverviewMarkers = [];
+
+
+                // REMOVE OLD LINE
+
+                if (missionOverviewRouteLine) {
+
+                    missionOverviewMap.removeLayer(
+                        missionOverviewRouteLine
+                    );
+
+                    missionOverviewRouteLine = null;
+
+                }
+
+
+                if (
+                    !Array.isArray(routes) ||
+                    routes.length === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                const points = [];
+
+
+                routes.forEach(point => {
+
+                    const lat =
+                        Number(point.latitude);
+
+                    const lng =
+                        Number(point.longitude);
+
+                    const order =
+                        Number(
+                            point.waypoint_order ??
+                            point.order ??
+                            0
+                        );
+
+
+                    if (
+                        !Number.isFinite(lat) ||
+                        !Number.isFinite(lng)
+                    ) {
+                        return;
+                    }
+
+
+                    points.push({
+                        lat,
+                        lng,
+                        order
+                    });
+
+                });
+
+
+                points.sort(
+                    (a, b) =>
+                        a.order - b.order
+                );
+
+
+                // WAYPOINTS
+
+                points.forEach(point => {
+
+                    const marker =
+                        L.circleMarker(
+                            [
+                                point.lat,
+                                point.lng
+                            ],
+                            {
+                                radius: 6,
+                                weight: 2,
+                                color: "#ffffff",
+                                fillColor: "#16a34a",
+                                fillOpacity: 1
+                            }
+                        ).addTo(
+                            missionOverviewMap
+                        );
+
+
+                    marker.bindTooltip(
+                        `WP ${point.order}`,
+                        {
+                            direction: "top"
+                        }
+                    );
+
+
+                    missionOverviewMarkers.push(
+                        marker
+                    );
+
+                });
+
+
+                // ROUTE LINE
+
+                missionOverviewRouteLine =
+                    L.polyline(
+                        points.map(point => [
+                            point.lat,
+                            point.lng
+                        ]),
+                        {
+                            weight: 4,
+                            color: "#2563eb",
+                            opacity: 0.85
+                        }
+                    ).addTo(
+                        missionOverviewMap
+                    );
+
+
+                // FIT
+
+                if (points.length > 0) {
+
+                    missionOverviewMap.fitBounds(
+                        missionOverviewRouteLine.getBounds(),
+                        {
+                            padding: [20, 20],
+                            maxZoom: 18
+                        }
+                    );
+
+                }
+
+            }
+
+            // ==========================================
+            // RENDER OVERVIEW WAYPOINTS
+            // ==========================================
+
+            function renderOverviewWaypoints(
+                routes
+            ) {
+
+                const tbody =
+                    document.getElementById(
+                        "overviewWaypointTable"
+                    );
+
+                if (!tbody) {
+                    return;
+                }
+
+
+                tbody.innerHTML = "";
+
+
+                if (
+                    !Array.isArray(routes) ||
+                    routes.length === 0
+                ) {
+
+                    tbody.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    No waypoint data
+                </td>
+            </tr>
+        `;
+
+                    return;
+                }
+
+
+                const points =
+                    routes
+                        .map(point => {
+
+                            return {
+
+                                order: Number(
+                                    point.waypoint_order ??
+                                    point.order ??
+                                    0
+                                ),
+
+                                latitude: Number(
+                                    point.latitude
+                                ),
+
+                                longitude: Number(
+                                    point.longitude
+                                )
+
+                            };
+
+                        })
+                        .filter(point =>
+                            Number.isFinite(
+                                point.latitude
+                            ) &&
+                            Number.isFinite(
+                                point.longitude
+                            )
+                        )
+                        .sort(
+                            (a, b) =>
+                                a.order - b.order
+                        );
+
+
+                // แสดงแค่ 5 จุดแรกใน Overview
+
+                points
+                    .slice(0, 5)
+                    .forEach(point => {
+
+                        tbody.innerHTML += `
+                <tr>
+
+                    <td>
+                        ${point.order}
+                    </td>
+
+                    <td>
+                        ${point.latitude.toFixed(6)}
+                    </td>
+
+                    <td>
+                        ${point.longitude.toFixed(6)}
+                    </td>
+
+                </tr>
+            `;
+
+                    });
+
+
+                // ถ้ามีมากกว่า 5 จุด
+
+                if (points.length > 5) {
+
+                    tbody.innerHTML += `
+            <tr>
+
+                <td
+                    colspan="3"
+                    style="
+                        text-align:center;
+                        color:#2563eb;
+                        font-weight:600;
+                    "
+                >
+                    + ${points.length - 5}
+                    more waypoints
+                </td>
+
+            </tr>
+        `;
+
+                }
+
+            }
+
+            // ==========================================
+            // INITIALIZE MISSION DETAIL MAP
+            // ==========================================
+
+            function initializeMissionDetailMap() {
+
+                console.log(
+                    "===== INITIALIZE MISSION DETAIL MAP ====="
+                );
+
+
+                const mapElement =
+                    document.getElementById(
+                        "missionDetailMap"
+                    );
+
+
+                if (!mapElement) {
+
+                    console.error(
+                        "missionDetailMap element not found"
+                    );
+
+                    return;
+
+                }
+
+
+                // ==================================
+                // CREATE MAP ONLY ONCE
+                // ==================================
+
+                if (!missionDetailMap) {
+
+                    missionDetailMap =
+                        L.map(
+                            "missionDetailMap",
+                            {
+                                maxZoom: 22
+                            }
+                        ).setView(
+                            [13.7563, 100.5018],
+                            13
+                        );
+
+
+                    // ==================================
+                    // OPEN STREET MAP
+                    // ==================================
+
+                    L.tileLayer(
+                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        {
+                            maxNativeZoom: 19,
+                            maxZoom: 22,
+                            attribution:
+                                "&copy; OpenStreetMap contributors"
+                        }
+                    ).addTo(
+                        missionDetailMap
+                    );
+
+
+                    console.log(
+                        "Mission Detail Map Created"
+                    );
+
+                }
+
+
+                // ==================================
+                // FIX MAP SIZE
+                // ==================================
+
+                setTimeout(
+                    () => {
+
+                        if (
+                            missionDetailMap
+                        ) {
+
+                            missionDetailMap.invalidateSize(
+                                true
+                            );
+
+                        }
+
+                    },
+                    300
+                );
+
+            }
+
+            // ==========================================
+            // RENDER MISSION ROUTE
+            // ==========================================
+
+            function renderMissionRoute(
+                routes
+            ) {
+
+                console.log(
+                    "===== RENDER MISSION ROUTE ====="
+                );
+
+
+                console.log(
+                    "Route Data:",
+                    routes
+                );
+
+
+                // ==================================
+                // CHECK MAP
+                // ==================================
+
+                if (!missionDetailMap) {
+
+                    console.error(
+                        "Mission Detail Map not initialized"
+                    );
+
+                    return;
+
+                }
+
+
+                // ==================================
+                // REMOVE OLD MARKERS
+                // ==================================
+
+                missionDetailMarkers.forEach(
+                    marker => {
+
+                        missionDetailMap.removeLayer(
+                            marker
+                        );
+
+                    }
+                );
+
+
+                missionDetailMarkers = [];
+
+
+                // ==================================
+                // REMOVE OLD LINE
+                // ==================================
+
+                if (
+                    missionDetailRouteLine
+                ) {
+
+                    missionDetailMap.removeLayer(
+                        missionDetailRouteLine
+                    );
+
+                    missionDetailRouteLine = null;
+
+                }
+
+
+                // ==================================
+                // CHECK ROUTE
+                // ==================================
+
+                if (
+                    !Array.isArray(routes) ||
+                    routes.length === 0
+                ) {
+
+                    console.log(
+                        "No route for this mission"
+                    );
+
+                    return;
+
+                }
+
+
+                // ==================================
+                // CONVERT ROUTE
+                // ==================================
+
+                const routePoints = [];
+
+
+                routes.forEach(
+                    point => {
+
+                        const order =
+                            Number(
+                                point.waypoint_order
+                                ??
+                                point.order
+                                ??
+                                0
+                            );
+
+
+                        const lat =
+                            Number(
+                                point.latitude
+                            );
+
+
+                        const lng =
+                            Number(
+                                point.longitude
+                            );
+
+
+                        // ==========================
+                        // CHECK COORDINATE
+                        // ==========================
+
+                        if (
+                            !Number.isFinite(lat) ||
+                            !Number.isFinite(lng)
+                        ) {
+
+                            console.warn(
+                                "Invalid waypoint:",
+                                point
+                            );
+
+                            return;
+
+                        }
+
+
+                        routePoints.push({
+
+                            order: order,
+
+                            lat: lat,
+
+                            lng: lng
+
+                        });
+
+                    }
+                );
+
+
+                // ==================================
+                // SORT BY WAYPOINT ORDER
+                // ==================================
+
+                routePoints.sort(
+                    (a, b) =>
+                        a.order - b.order
+                );
+
+
+                console.log(
+                    "Valid Route Points:",
+                    routePoints
+                );
+
+
+                // ==================================
+                // CREATE MARKERS
+                // ==================================
+
+                routePoints.forEach(
+                    point => {
+
+                        const marker =
+                            L.circleMarker(
+                                [
+                                    point.lat,
+                                    point.lng
+                                ],
+                                {
+
+                                    radius: 7,
+
+                                    weight: 2,
+
+                                    color: "#ffffff",
+
+                                    fillColor: "#2563eb",
+
+                                    fillOpacity: 1
+
+                                }
+                            )
+                                .addTo(
+                                    missionDetailMap
+                                );
+
+
+                        marker.bindTooltip(
+                            `Waypoint ${point.order}`,
+                            {
+
+                                permanent: true,
+
+                                direction: "top",
+
+                                offset: [
+                                    0,
+                                    -8
+                                ]
+
+                            }
+                        );
+
+
+                        marker.bindPopup(
+                            `
+                <strong>
+                    Waypoint ${point.order}
+                </strong>
+                <br>
+                Latitude:
+                ${point.lat.toFixed(6)}
+                <br>
+                Longitude:
+                ${point.lng.toFixed(6)}
+                `
+                        );
+
+
+                        missionDetailMarkers.push(
+                            marker
+                        );
+
+                    }
+                );
+
+
+                // ==================================
+                // CREATE ROUTE LINE
+                // ==================================
+
+                missionDetailRouteLine =
+                    L.polyline(
+
+                        routePoints.map(
+                            point => [
+                                point.lat,
+                                point.lng
+                            ]
+                        ),
+
+                        {
+
+                            weight: 4,
+
+                            color: "#2563eb",
+
+                            opacity: 0.8
+
+                        }
+
+                    ).addTo(
+                        missionDetailMap
+                    );
+
+
+                // ==================================
+                // FIT MAP TO ROUTE
+                // ==================================
+
+                if (
+                    routePoints.length > 0
+                ) {
+
+                    const bounds =
+                        missionDetailRouteLine
+                            .getBounds();
+
+
+                    missionDetailMap.fitBounds(
+                        bounds,
+                        {
+
+                            padding: [
+                                10,
+                                10
+                            ],
+
+                            maxZoom: 20
+
+                        }
+                    );
+
+                }
+
+
+                // ==================================
+                // ZOOM IN MORE
+                // ==================================
+
+                setTimeout(
+                    () => {
+
+                        const currentZoom =
+                            missionDetailMap.getZoom();
+
+
+                        missionDetailMap.setZoom(
+                            Math.min(
+                                currentZoom + 2,
+                                22
+                            )
+                        );
+
+                    },
+                    400
+                );
+
+
+                // ==================================
+                // ROUTE RENDERED LOG
+                // ==================================
+
+                console.log(
+                    "Mission Route Rendered:",
+                    routePoints.length,
+                    "waypoints"
+                );
+
+            }
+
+
+
+            function backToMissionHistory() {
+
+                document.getElementById(
+                    "missionDetailPage"
+                ).style.display = "none";
+
+
+                document.getElementById(
+                    "historyPage"
+                ).style.display = "block";
+
+
+                loadMissionHistory();
+
+            }
+
+            function renderMissionSensorData(
+                logs
+            ) {
+
+                const tbody =
+                    document.getElementById(
+                        "missionSensorTableBody"
+                    );
+
+
+                if (!tbody) {
+                    return;
+                }
+
+
+                tbody.innerHTML = "";
+
+
+                if (
+                    !Array.isArray(logs) ||
+                    logs.length === 0
+                ) {
+
+                    tbody.innerHTML = `
+
+            <tr>
+
+                <td colspan="6">
+
+                    No Sensor Data
+
+                </td>
+
+            </tr>
+
+        `;
+
+                    return;
+
+                }
+
+
+                logs.forEach(
+                    log => {
+
+                        tbody.innerHTML += `
+
+                <tr>
+
+                    <td>
+                        ${formatMissionDate(
+                            log.log_time
+                        )
+                            }
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                                log.temp_c
+                            )
+                            }
+                        °C
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                                log.ph_level
+                            )
+                            }
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                                log.turbidity_ntu
+                            )
+                            }
+                        NTU
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                                log.latitude
+                            )
+                            }
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                                log.longitude
+                            )
+                            }
+                    </td>
+
+                </tr>
+
+            `;
+
+                    }
+                );
+
+            }
+
+
+            // ==========================================
+            // OVERVIEW SENSOR CHART
+            // ==========================================
+
+            function showOverviewChart(
+                type
+            ) {
+
+                const canvas =
+                    document.getElementById(
+                        "overviewSensorChart"
+                    );
+
+
+                if (!canvas) {
+                    return;
+                }
+
+
+                if (
+                    typeof Chart === "undefined"
+                ) {
+
+                    console.error(
+                        "Chart.js is not loaded"
+                    );
+
+                    return;
+
+                }
+
+
+                if (
+                    !Array.isArray(
+                        overviewSensorLogs
+                    ) ||
+                    overviewSensorLogs.length === 0
+                ) {
+
+                    console.log(
+                        "No sensor data for overview chart"
+                    );
+
+                    return;
+
+                }
+
+
+                const labels =
+                    overviewSensorLogs.map(
+                        log =>
+                            formatMissionDate(
+                                log.log_time
+                            )
+                    );
+
+
+                let data = [];
+
+                let label = "";
+
+
+                // ==================================
+                // TEMPERATURE
+                // ==================================
+
+                if (
+                    type === "temperature"
+                ) {
+
+                    data =
+                        overviewSensorLogs.map(
+                            log =>
+                                Number(
+                                    log.temp_c
+                                )
+                        );
+
+                    label =
+                        "Temperature (°C)";
+
+                }
+
+
+                // ==================================
+                // PH
+                // ==================================
+
+                else if (
+                    type === "ph"
+                ) {
+
+                    data =
+                        overviewSensorLogs.map(
+                            log =>
+                                Number(
+                                    log.ph_level
+                                )
+                        );
+
+                    label =
+                        "pH";
+
+                }
+
+
+                // ==================================
+                // TURBIDITY
+                // ==================================
+
+                else if (
+                    type === "turbidity"
+                ) {
+
+                    data =
+                        overviewSensorLogs.map(
+                            log =>
+                                Number(
+                                    log.turbidity_ntu
+                                )
+                        );
+
+                    label =
+                        "Turbidity (NTU)";
+
+                }
+
+
+                // ==================================
+                // DESTROY OLD CHART
+                // ==================================
+
+                if (
+                    overviewSensorChart
+                ) {
+
+                    overviewSensorChart.destroy();
+
+                    overviewSensorChart = null;
+
+                }
+
+
+                // ==================================
+                // CREATE CHART
+                // ==================================
+
+                overviewSensorChart =
+                    new Chart(
+                        canvas,
+                        {
+
+                            type: "line",
+
+                            data: {
+
+                                labels: labels,
+
+                                datasets: [
+
+                                    {
+
+                                        label: label,
+
+                                        data: data,
+
+                                        tension: 0.3,
+
+                                        fill: true,
+
+                                        pointRadius: 2
+
+                                    }
+
+                                ]
+
+                            },
+
+                            options: {
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                plugins: {
+
+                                    legend: {
+
+                                        display: true
+
+                                    }
+
+                                },
+
+                                scales: {
+
+                                    x: {
+
+                                        ticks: {
+
+                                            maxTicksLimit: 8
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+                    );
+
+
+                // ==================================
+                // RESET BUTTONS
+                // ==================================
+
+                const buttons = [
+
+                    "overviewTempBtn",
+
+                    "overviewPhBtn",
+
+                    "overviewTurbidityBtn"
+
+                ];
+
+
+                buttons.forEach(
+                    id => {
+
+                        const btn =
+                            document.getElementById(
+                                id
+                            );
+
+                        if (btn) {
+
+                            btn.style.background =
+                                "#eff6ff";
+
+                            btn.style.color =
+                                "#2563eb";
+
+                        }
+
+                    }
+                );
+
+
+                // ==================================
+                // ACTIVE BUTTON
+                // ==================================
+
+                let activeId =
+                    "overviewTempBtn";
+
+
+                if (
+                    type === "ph"
+                ) {
+
+                    activeId =
+                        "overviewPhBtn";
+
+                }
+
+
+                if (
+                    type === "turbidity"
+                ) {
+
+                    activeId =
+                        "overviewTurbidityBtn";
+
+                }
+
+
+                const activeButton =
+                    document.getElementById(
+                        activeId
+                    );
+
+
+                if (activeButton) {
+
+                    activeButton.style.background =
+                        "#2563eb";
+
+                    activeButton.style.color =
+                        "white";
+
+                }
+
+            }
+
+            // ==========================================
+            // RENDER OVERVIEW RECENT SENSOR
+            // ==========================================
+
+            function renderOverviewRecentSensor(
+                logs
+            ) {
+
+                const tbody =
+                    document.getElementById(
+                        "overviewRecentSensorTable"
+                    );
+
+                if (!tbody) {
+                    return;
+                }
+
+
+                tbody.innerHTML = "";
+
+
+                if (
+                    !Array.isArray(logs) ||
+                    logs.length === 0
+                ) {
+
+                    tbody.innerHTML = `
+            <tr>
+
+                <td colspan="4">
+                    No sensor data
+                </td>
+
+            </tr>
+        `;
+
+                    return;
+                }
+
+
+                // เอา 5 records ล่าสุด
+
+                const recentLogs =
+                    logs
+                        .slice(-5)
+                        .reverse();
+
+
+                recentLogs.forEach(
+                    log => {
+
+                        tbody.innerHTML += `
+                <tr>
+
+                    <td>
+                        ${formatMissionDate(
+                            log.log_time
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                            log.temp_c
+                        )}
+                        °C
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                            log.ph_level
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                            log.turbidity_ntu
+                        )}
+                        NTU
+                    </td>
+
+                </tr>
+            `;
+
+                    }
+                );
+
+            }
+
+            function renderMissionLogs(
+                logs
+            ) {
+
+                const tbody =
+                    document.getElementById(
+                        "missionLogsTableBody"
+                    );
+
+
+                if (!tbody) {
+                    return;
+                }
+
+
+                tbody.innerHTML = "";
+
+
+                if (
+                    !Array.isArray(logs) ||
+                    logs.length === 0
+                ) {
+
+                    tbody.innerHTML = `
+
+            <tr>
+
+                <td colspan="5">
+
+                    No Mission Logs
+
+                </td>
+
+            </tr>
+
+        `;
+
+                    return;
+
+                }
+
+
+                logs.forEach(
+                    log => {
+
+                        tbody.innerHTML += `
+
+                <tr>
+
+                    <td>
+                        ${formatMissionDate(
+                            log.log_time
+                        )
+                            }
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                                log.latitude
+                            )
+                            }
+                    </td>
+
+                    <td>
+                        ${formatNumber(
+                                log.longitude
+                            )
+                            }
+                    </td>
+
+                    <td>
+                        ${log.current_mode
+                            ?? "-"
+                            }
+                    </td>
+
+                    <td>
+                        ${log.stage_intent
+                            ?? "-"
+                            }
+                    </td>
+
+                </tr>
+
+            `;
+
+                    }
+                );
+
+            }
+
+            // ==========================================
+            // RENDER MISSION CHARTS
+            // ==========================================
+
+            function renderMissionCharts(
+                logs
+            ) {
+
+                // ==================================
+                // CHECK CHART.JS
+                // ==================================
+
+                if (
+                    typeof Chart === "undefined"
+                ) {
+
+                    console.error(
+                        "Chart.js is not loaded"
+                    );
+
+                    return;
+
+                }
+
+
+                // ==================================
+                // CHECK DATA
+                // ==================================
+
+                if (
+                    !Array.isArray(logs) ||
+                    logs.length === 0
+                ) {
+
+                    console.log(
+                        "No sensor data for charts"
+                    );
+
+                    return;
+
+                }
+
+
+                // ==================================
+                // PREPARE DATA
+                // ==================================
+
+                const validLogs =
+                    logs.filter(log => {
+
+                        return (
+                            log.log_time &&
+                            (
+                                Number.isFinite(
+                                    Number(log.temp_c)
+                                ) ||
+                                Number.isFinite(
+                                    Number(log.ph_level)
+                                ) ||
+                                Number.isFinite(
+                                    Number(log.turbidity_ntu)
+                                )
+                            )
+                        );
+
+                    });
+
+
+                if (
+                    validLogs.length === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                const labels =
+                    validLogs.map(
+                        log =>
+                            formatMissionDate(
+                                log.log_time
+                            )
+                    );
+
+
+                const temperatures =
+                    validLogs.map(
+                        log =>
+                            Number(log.temp_c)
+                    );
+
+
+                const phValues =
+                    validLogs.map(
+                        log =>
+                            Number(log.ph_level)
+                    );
+
+
+                const turbidityValues =
+                    validLogs.map(
+                        log =>
+                            Number(log.turbidity_ntu)
+                    );
+
+
+                // ==================================
+                // DESTROY OLD CHARTS
+                // ==================================
+
+                if (missionTemperatureChart) {
+
+                    missionTemperatureChart.destroy();
+
+                    missionTemperatureChart = null;
+
+                }
+
+
+                if (missionPhChart) {
+
+                    missionPhChart.destroy();
+
+                    missionPhChart = null;
+
+                }
+
+
+                if (missionTurbidityChart) {
+
+                    missionTurbidityChart.destroy();
+
+                    missionTurbidityChart = null;
+
+                }
+
+
+                // ==================================
+                // TEMPERATURE CHART
+                // ==================================
+
+                const temperatureCanvas =
+                    document.getElementById(
+                        "missionTemperatureChart"
+                    );
+
+
+                if (temperatureCanvas) {
+
+                    missionTemperatureChart =
+                        new Chart(
+                            temperatureCanvas,
+                            {
+                                type: "line",
+
+                                data: {
+
+                                    labels: labels,
+
+                                    datasets: [
+
+                                        {
+                                            label:
+                                                "Temperature (°C)",
+
+                                            data:
+                                                temperatures,
+
+                                            borderWidth: 2,
+
+                                            tension: 0.3,
+
+                                            spanGaps: true
+
+                                        }
+
+                                    ]
+
+                                },
+
+                                options: {
+
+                                    responsive: true,
+
+                                    maintainAspectRatio: false,
+
+                                    interaction: {
+                                        mode: "index",
+                                        intersect: false
+                                    },
+
+                                    scales: {
+
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: "Time"
+                                            }
+                                        },
+
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: "Temperature (°C)"
+                                            }
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+                        );
+
+                }
+
+
+                // ==================================
+                // pH CHART
+                // ==================================
+
+                const phCanvas =
+                    document.getElementById(
+                        "missionPhChart"
+                    );
+
+
+                if (phCanvas) {
+
+                    missionPhChart =
+                        new Chart(
+                            phCanvas,
+                            {
+                                type: "line",
+
+                                data: {
+
+                                    labels: labels,
+
+                                    datasets: [
+
+                                        {
+                                            label:
+                                                "pH",
+
+                                            data:
+                                                phValues,
+
+                                            borderWidth: 2,
+
+                                            tension: 0.3,
+
+                                            spanGaps: true
+
+                                        }
+
+                                    ]
+
+                                },
+
+                                options: {
+
+                                    responsive: true,
+
+                                    maintainAspectRatio: false,
+
+                                    interaction: {
+                                        mode: "index",
+                                        intersect: false
+                                    },
+
+                                    scales: {
+
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: "Time"
+                                            }
+                                        },
+
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: "pH"
+                                            }
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+                        );
+
+                }
+
+
+                // ==================================
+                // TURBIDITY CHART
+                // ==================================
+
+                const turbidityCanvas =
+                    document.getElementById(
+                        "missionTurbidityChart"
+                    );
+
+
+                if (turbidityCanvas) {
+
+                    missionTurbidityChart =
+                        new Chart(
+                            turbidityCanvas,
+                            {
+                                type: "line",
+
+                                data: {
+
+                                    labels: labels,
+
+                                    datasets: [
+
+                                        {
+                                            label:
+                                                "Turbidity (NTU)",
+
+                                            data:
+                                                turbidityValues,
+
+                                            borderWidth: 2,
+
+                                            tension: 0.3,
+
+                                            spanGaps: true
+
+                                        }
+
+                                    ]
+
+                                },
+
+                                options: {
+
+                                    responsive: true,
+
+                                    maintainAspectRatio: false,
+
+                                    interaction: {
+                                        mode: "index",
+                                        intersect: false
+                                    },
+
+                                    scales: {
+
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: "Time"
+                                            }
+                                        },
+
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: "Turbidity (NTU)"
+                                            }
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+                        );
+
+                }
+
+            }
+
+            // ==========================================
+            // INITIALIZE MISSION HEATMAP
+            // ==========================================
+
+            function initializeMissionHeatmap() {
+
+                const mapElement =
+                    document.getElementById(
+                        "missionHeatmapMap"
+                    );
+
+
+                if (!mapElement) {
+                    return;
+                }
+
+
+                if (!missionHeatmapMap) {
+
+                    missionHeatmapMap =
+                        L.map(
+                            "missionHeatmapMap",
+                            {
+                                maxZoom: 22
+                            }
+                        ).setView(
+                            [13.7563, 100.5018],
+                            13
+                        );
+
+
+                    L.tileLayer(
+                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        {
+                            maxNativeZoom: 19,
+                            maxZoom: 22,
+                            attribution:
+                                "&copy; OpenStreetMap contributors"
+                        }
+                    ).addTo(
+                        missionHeatmapMap
+                    );
+
+                }
+
+
+                setTimeout(
+                    () => {
+
+                        if (missionHeatmapMap) {
+
+                            missionHeatmapMap.invalidateSize(
+                                true
+                            );
+
+                        }
+
+                    },
+                    300
+                );
+
+            }
+
+
+            // ==========================================
+            // RENDER MISSION HEATMAP
+            // ==========================================
+
+            function renderMissionHeatmap(
+                logs
+            ) {
+
+                if (!missionHeatmapMap) {
+                    return;
+                }
+
+
+                // REMOVE OLD HEATMAP
+
+                if (missionHeatmapLayer) {
+
+                    missionHeatmapMap.removeLayer(
+                        missionHeatmapLayer
+                    );
+
+                    missionHeatmapLayer = null;
+
+                }
+
+
+                if (
+                    !Array.isArray(logs) ||
+                    logs.length === 0
+                ) {
+
+                    console.log(
+                        "No sensor data for heatmap"
+                    );
+
+                    return;
+
+                }
+
+
+                const heatData = [];
+
+
+                logs.forEach(
+                    log => {
+
+                        const lat =
+                            Number(log.latitude);
+
+                        const lng =
+                            Number(log.longitude);
+
+                        const turbidity =
+                            Number(
+                                log.turbidity_ntu
+                            );
+
+
+                        if (
+                            !Number.isFinite(lat) ||
+                            !Number.isFinite(lng)
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        if (
+                            !Number.isFinite(
+                                turbidity
+                            )
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        heatData.push([
+                            lat,
+                            lng,
+                            Math.max(
+                                turbidity,
+                                0.1
+                            )
+                        ]);
+
+                    }
+                );
+
+
+                if (
+                    heatData.length === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                // CREATE HEATMAP
+
+                missionHeatmapLayer =
+                    L.heatLayer(
+                        heatData,
+                        {
+                            radius: 25,
+                            blur: 18,
+                            maxZoom: 18
+                        }
+                    ).addTo(
+                        missionHeatmapMap
+                    );
+
+
+                // FIT MAP
+
+                const bounds =
+                    L.latLngBounds(
+                        heatData.map(
+                            point => [
+                                point[0],
+                                point[1]
+                            ]
+                        )
+                    );
+
+
+                if (
+                    bounds.isValid()
+                ) {
+
+                    missionHeatmapMap.fitBounds(
+                        bounds,
+                        {
+                            padding: [20, 20],
+                            maxZoom: 18
+                        }
+                    );
+
+                }
+
+            }
+
+            function filterMissionHistory() {
+
+                const input =
+                    document.getElementById(
+                        "missionHistorySearch"
+                    );
+
+
+                if (!input) {
+                    return;
+                }
+
+
+                const keyword =
+                    input.value
+                        .toLowerCase()
+                        .trim();
+
+
+                const rows =
+                    document.querySelectorAll(
+                        ".mission-history-row"
+                    );
+
+
+                rows.forEach(
+                    row => {
+
+                        const text =
+                            row
+                                .getAttribute(
+                                    "data-search"
+                                )
+                                .toLowerCase();
+
+
+                        if (
+                            text.includes(keyword)
+                        ) {
+
+                            row.style.display = "";
+
+                        }
+                        else {
+
+                            row.style.display = "none";
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+
+
             // โหลดตำแหน่งล่าสุด
             async function loadBoat() {
 
@@ -4692,23 +8894,179 @@
 
                     }
 
-                    document.getElementById("progressPercent").innerText =
-                        percent.toFixed(0) + "%";
+                    // =====================================
+                    // MONITOR PROGRESS
+                    // =====================================
 
-                    document.getElementById("missionProgressBar").style.width =
-                        percent + "%";
+                    const monitorProgressBar =
+                        document.getElementById(
+                            "monitorProgressBar"
+                        );
 
-                    document.getElementById("monitorProgressBar").style.width =
-                        percent + "%";
+                    const monitorProgressText =
+                        document.getElementById(
+                            "monitorProgressText"
+                        );
 
-                    document.getElementById("monitorProgressText").innerText =
-                        percent.toFixed(0) + "%";
+
+                    if (monitorProgressBar) {
+
+                        monitorProgressBar.style.width =
+                            percent + "%";
+
+                    }
+
+
+                    if (monitorProgressText) {
+
+                        monitorProgressText.innerText =
+                            percent.toFixed(0) + "%";
+
+                    }
 
                 }
 
                 catch (error) {
 
                     console.log(error);
+
+                }
+
+            }
+
+            // =====================================
+            // LOAD BOAT PATH
+            // =====================================
+
+            async function loadPath() {
+
+                try {
+
+                    const response =
+                        await fetch(`${API_URL}/path`);
+
+                    const data =
+                        await response.json();
+
+                    if (!Array.isArray(data)) {
+
+                        console.log(
+                            "Path data is not array:",
+                            data
+                        );
+
+                        return;
+                    }
+
+
+                    const coords = [];
+
+
+                    data.forEach(point => {
+
+                        const lat =
+                            parseFloat(point.latitude);
+
+                        const lng =
+                            parseFloat(point.longitude);
+
+
+                        if (
+                            Number.isFinite(lat) &&
+                            Number.isFinite(lng)
+                        ) {
+
+                            coords.push([
+                                lat,
+                                lng
+                            ]);
+
+                        }
+
+                    });
+
+
+                    // =====================================
+                    // MAIN MAP PATH
+                    // =====================================
+
+                    if (pathLine) {
+
+                        map.removeLayer(
+                            pathLine
+                        );
+
+                        pathLine = null;
+
+                    }
+
+
+                    if (coords.length > 1) {
+
+                        pathLine =
+                            L.polyline(
+                                coords,
+                                {
+                                    color: "blue",
+                                    weight: 4
+                                }
+                            ).addTo(map);
+
+                    }
+
+
+                    // =====================================
+                    // MONITOR MAP PATH
+                    // =====================================
+
+                    if (
+                        window.monitorMap &&
+                        typeof monitorTrailLine !== "undefined"
+                    ) {
+
+                        if (monitorTrailLine) {
+
+                            window.monitorMap.removeLayer(
+                                monitorTrailLine
+                            );
+
+                            monitorTrailLine = null;
+
+                        }
+
+
+                        if (coords.length > 1) {
+
+                            monitorTrailLine =
+                                L.polyline(
+                                    coords,
+                                    {
+                                        color: "#2563eb",
+                                        weight: 4,
+                                        opacity: 0.8
+                                    }
+                                ).addTo(
+                                    window.monitorMap
+                                );
+
+                        }
+
+                    }
+
+
+                    console.log(
+                        "Path Loaded:",
+                        coords.length,
+                        "points"
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "loadPath ERROR:",
+                        error
+                    );
 
                 }
 
@@ -4995,7 +9353,7 @@
                 const width = originalWidth - (marginLng * 2);
                 const height = originalHeight - (marginLat * 2);
 
-                const spacing = Math.max(width / 12, 0.00002);
+                const spacing = 2.5; // เมตร
 
                 try {
 
@@ -5491,6 +9849,8 @@
 
             }).setView([13.7563, 100.5018], 13);
 
+            window.monitorMap = monitorMap;
+
 
             // =====================================
             // CREATE MONITOR HEATMAP PANE
@@ -5514,6 +9874,8 @@
             heatPane.style.height = "100%";
 
             heatPane.style.pointerEvents = "none";
+
+            heatPane.style.background = "transparent";
 
             console.log(
                 "Heat Pane Created:",
@@ -5607,6 +9969,8 @@
                 keyboard: true
 
             }).setView([13.7563, 100.5018], 13);
+
+            window.miniMap = miniMap;
 
             L.tileLayer(
                 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -5792,13 +10156,88 @@
 
         function showPage(page, menu) {
 
+            // ===============================
+            // UPDATE ACTIVE SIDEBAR
+            // ===============================
+
+            document.querySelectorAll(".menu-item").forEach(item => {
+                item.classList.remove("active");
+            });
+
+            if (menu) {
+                menu.classList.add("active");
+            }
+
             document.getElementById("missionPage").style.display = "none";
             document.getElementById("dashboardPage").style.display = "none";
             document.getElementById("analyticsPage").style.display = "none";
             document.getElementById("historyPage").style.display = "none";
             document.getElementById("monitorPage").style.display = "none";
+            document.getElementById("missionDetailPage").style.display = "none";
 
-            document.getElementById(page).style.display = "block";
+            const targetPage = document.getElementById(page);
+
+            if (targetPage) {
+
+                targetPage.style.display = "block";
+
+                console.log(
+                    "PAGE OPEN:",
+                    page
+                );
+
+            } else {
+
+                console.error(
+                    "PAGE NOT FOUND:",
+                    page
+                );
+
+                return;
+            }
+
+            // =====================================
+            // FIX DASHBOARD MINI MAP SIZE
+            // =====================================
+
+            if (page === "dashboardPage") {
+
+                setTimeout(() => {
+
+                    if (window.miniMap) {
+
+                        window.miniMap.invalidateSize(true);
+
+                        console.log(
+                            "Dashboard Mini Map Size:",
+                            window.miniMap.getSize()
+                        );
+
+                        window.miniMap.eachLayer(layer => {
+
+                            if (layer instanceof L.TileLayer) {
+                                layer.redraw();
+                            }
+
+                        });
+
+                    }
+
+                }, 300);
+
+            }
+
+
+            // ===============================
+            // LOAD MISSION HISTORY
+            // ===============================
+
+            if (page === "historyPage") {
+
+                loadMissionHistory();
+
+            }
+
 
             // ===============================
             // LOAD HISTORY WHEN OPEN HISTORY
@@ -5905,105 +10344,98 @@
 
             }
 
+            // =====================================
+            // FIX MONITOR MAP SIZE
+            // =====================================
+
             if (page === "monitorPage") {
 
-                setTimeout(async () => {
+                setTimeout(() => {
+
+                    console.log(
+                        "===== OPEN MONITOR PAGE ====="
+                    );
+
+
+                    const monitorPage =
+                        document.getElementById(
+                            "monitorPage"
+                        );
+
+
+                    if (!monitorPage) {
+
+                        console.error(
+                            "❌ monitorPage not found"
+                        );
+
+                        return;
+                    }
+
 
                     const mapElement =
-                        document.getElementById("monitorMap");
+                        document.getElementById(
+                            "monitorMap"
+                        );
+
+
+                    if (!mapElement) {
+
+                        console.error(
+                            "❌ monitorMap element not found"
+                        );
+
+                        return;
+                    }
 
 
                     console.log(
-                        "Monitor Map Size:",
+                        "Monitor DOM Size:",
                         mapElement.clientWidth,
                         mapElement.clientHeight
                     );
 
 
-                    if (
-                        mapElement.clientWidth > 0 &&
-                        mapElement.clientHeight > 0
-                    ) {
+                    // =====================================
+                    // FORCE MONITOR MAP SIZE
+                    // =====================================
 
-                        console.log(
-                            "Monitor Map Ready"
+                    if (window.monitorMap) {
+
+                        window.monitorMap.invalidateSize(
+                            true
                         );
-
-
-                        // ==============================
-                        // PREPARE MONITOR MAP
-                        // ==============================
-
-                        monitorMap.invalidateSize(true);
-
-
-                        const mapSize =
-                            monitorMap.getSize();
 
 
                         console.log(
                             "Leaflet Map Size:",
-                            mapSize
+                            window.monitorMap.getSize()
                         );
 
 
-                        // ==============================
-                        // LOAD HEATMAP
-                        // ==============================
+                        window.monitorMap.eachLayer(
+                            layer => {
 
-                        console.log(
-                            "Starting Heatmap..."
-                        );
+                                if (
+                                    layer instanceof L.TileLayer
+                                ) {
 
+                                    layer.redraw();
 
-
-                        console.log(
-                            "Monitor Heatmap Finished"
-                        );
-
-                    }
-                    else {
-
-                        console.log(
-                            "Monitor Map is still 0 size"
-                        );
-
-                    }
-
-                }, 1000);
-
-            }
-
-            document.querySelectorAll(".menu-item").forEach(item => {
-                item.classList.remove("active");
-            });
-
-            if (menu) {
-                menu.classList.add("active");
-            }
-
-            // เพิ่มตรงนี้
-            if (page === "dashboardPage") {
-
-                setTimeout(() => {
-
-                    if (page === "dashboardPage") {
-
-                        setTimeout(() => {
-
-                            miniMap.invalidateSize();
-
-                            if (miniMarker) {
-
-                                miniMap.setView(miniMarker.getLatLng(), 15);
+                                }
 
                             }
-
-                        }, 200);
+                        );
 
                     }
 
-                }, 100);
+
+                    console.log(
+                        "===== MONITOR PAGE READY ====="
+                    );
+
+
+                }, 500);
 
             }
 
