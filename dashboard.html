@@ -252,6 +252,115 @@
 
                             </div>
 
+                            <!-- Sweep spacing control -->
+                            <div style="
+                                margin-top:12px;
+                                padding:10px 12px;
+                                background:#f8fafc;
+                                border:1px solid #e2e8f0;
+                                border-radius:10px;
+                            ">
+
+                                <div style="
+                                    display:flex;
+                                    justify-content:space-between;
+                                    align-items:center;
+                                    margin-bottom:8px;
+                                    font-size:13px;
+                                    color:#475569;
+                                ">
+                                    <span>📏 Sweep Spacing</span>
+
+                                    <strong style="color:#2563eb;">
+                                        <span id="sweepSpacingValue">2.5</span> m
+                                    </strong>
+                                </div>
+
+                                <input id="sweepSpacing" type="range" min="0.5" max="4" step="0.5" value="2.5" oninput="
+                                        document.getElementById('sweepSpacingValue').innerText = Number(this.value).toFixed(1);
+                                        resetSweepSpacingVerification(this.value);
+                                    " style="
+                                        width:100%;
+                                        cursor:pointer;
+                                    ">
+
+                                <div style="
+                                    display:flex;
+                                    justify-content:space-between;
+                                    margin-top:4px;
+                                    font-size:11px;
+                                    color:#94a3b8;
+                                ">
+                                    <span>0.5 m</span>
+                                    <span>4.0 m</span>
+                                </div>
+
+                                <div id="sweepSpacingVerification" style="
+                                    margin-top:10px;
+                                    padding:10px 12px;
+                                    background:#ffffff;
+                                    border:1px solid #dbeafe;
+                                    border-radius:9px;
+                                    font-size:12px;
+                                    color:#475569;
+                                ">
+                                    <div style="
+                                        display:flex;
+                                        justify-content:space-between;
+                                        align-items:center;
+                                        margin-bottom:7px;
+                                    ">
+                                        <strong style="color:#123b69;">
+                                            📐 Actual Spacing Check
+                                        </strong>
+
+                                        <span id="sweepSpacingVerifyStatus" style="
+                                            font-weight:700;
+                                            color:#64748b;
+                                        ">
+                                            Generate to verify
+                                        </span>
+                                    </div>
+
+                                    <div style="
+                                        display:grid;
+                                        grid-template-columns:1fr 1fr;
+                                        gap:5px 12px;
+                                    ">
+                                        <span>
+                                            Selected:
+                                            <b id="sweepSpacingSelected">2.50</b> m
+                                        </span>
+
+                                        <span>
+                                            Actual Avg:
+                                            <b id="sweepSpacingActualAvg">--</b> m
+                                        </span>
+
+                                        <span>
+                                            Minimum:
+                                            <b id="sweepSpacingActualMin">--</b> m
+                                        </span>
+
+                                        <span>
+                                            Maximum:
+                                            <b id="sweepSpacingActualMax">--</b> m
+                                        </span>
+                                    </div>
+
+                                    <div style="
+                                        margin-top:7px;
+                                        font-size:11px;
+                                        color:#94a3b8;
+                                        line-height:1.4;
+                                    ">
+                                        Checks the real distance between adjacent Sweep lines
+                                        using the generated waypoint coordinates.
+                                    </div>
+                                </div>
+
+                            </div>
+
                         </div>
 
                         <div class="button-group">
@@ -353,37 +462,7 @@
                 </div>
 
             </div>
-
-            <div class="legend-card">
-
-                <h3>🗺 Map Legend</h3>
-
-                <div class="legend-grid">
-
-                    <div class="legend-item">
-                        🟢 Boat Position
-                    </div>
-
-                    <div class="legend-item">
-                        🔵 Waypoints
-                    </div>
-
-                    <div class="legend-item">
-                        🔴 Survey Area
-                    </div>
-
-                    <div class="legend-item">
-                        🟣 Predicted Position
-                    </div>
-
-                    <div class="legend-item">
-                        🟦 Route History
-                    </div>
-
-                </div>
-
-            </div>
-
+            
             <br>
 
         </div> <!-- ปิด missionPage -->
@@ -2206,6 +2285,9 @@
 
             let lastHeatmapWaypoint = -1;
 
+            // Heatmap stays OFF until WP1 is reached.
+            let heatmapUnlocked = false;
+
             //==============================
             // Sweep Area
             //==============================
@@ -3452,18 +3534,47 @@
 
                     <td>
 
-                        <button
-                            class="mission-view-btn"
-                            onclick="
-                                openMissionDetail(
-                                    ${mission.mission_id}
-                                )
-                            "
-                        >
+                        <div style="
+                            display:flex;
+                            justify-content:center;
+                            align-items:center;
+                            gap:8px;
+                            flex-wrap:wrap;
+                        ">
 
-                            👁 View
+                            <button
+                                class="mission-view-btn"
+                                onclick="
+                                    openMissionDetail(
+                                        ${mission.mission_id}
+                                    )
+                                "
+                            >
 
-                        </button>
+                                👁 View
+
+                            </button>
+
+                            <button
+                                onclick="deleteMission(${mission.mission_id})"
+                                style="
+                                    border:none;
+                                    background:#ef4444;
+                                    color:white;
+                                    padding:8px 13px;
+                                    border-radius:7px;
+                                    cursor:pointer;
+                                    font-weight:600;
+                                    font-size:13px;
+                                    white-space:nowrap;
+                                "
+                                onmouseover="this.style.background='#dc2626'"
+                                onmouseout="this.style.background='#ef4444'"
+                            >
+                                🗑 Delete
+                            </button>
+
+                        </div>
 
                     </td>
 
@@ -3475,6 +3586,62 @@
                 );
 
             }
+
+            // ==========================================
+            // DELETE MISSION
+            // ==========================================
+
+            async function deleteMission(missionId) {
+
+                const confirmed = confirm(
+                    `Delete Mission #${missionId}?\n\n` +
+                    `Route and sensor data for this mission will also be deleted.`
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                try {
+
+                    const response = await fetch(
+                        `${API_URL}/missions/${missionId}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (!response.ok || data.success !== true) {
+                        throw new Error(
+                            data.message ||
+                            `HTTP Error: ${response.status}`
+                        );
+                    }
+
+                    await loadMissionHistory();
+
+                    alert(
+                        `Mission #${missionId} deleted successfully.`
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "DELETE MISSION ERROR:",
+                        error
+                    );
+
+                    alert(
+                        `Cannot delete Mission #${missionId}: ${error.message}`
+                    );
+
+                }
+
+            }
+
 
             // ==========================================
             // OPEN MISSION DETAIL
@@ -6585,15 +6752,33 @@
                                 currentMonitorWaypoint !== lastHeatmapWaypoint
                             ) {
 
-                                console.log(
-                                    "Updating Heatmap at WP:",
-                                    currentMonitorWaypoint + 1
-                                );
+                                // WP1 is the first point that unlocks
+                                // Heatmap calculation/display.
+                                if (
+                                    currentMonitorWaypoint === 0
+                                ) {
 
-                                await loadHeatMap();
+                                    heatmapUnlocked = true;
 
-                                lastHeatmapWaypoint =
-                                    currentMonitorWaypoint;
+                                    console.log(
+                                        "WP1 reached -> Heatmap unlocked"
+                                    );
+
+                                }
+
+                                if (heatmapUnlocked) {
+
+                                    console.log(
+                                        "Updating Heatmap at WP:",
+                                        currentMonitorWaypoint + 1
+                                    );
+
+                                    await loadHeatMap();
+
+                                    lastHeatmapWaypoint =
+                                        currentMonitorWaypoint;
+
+                                }
 
                             }
 
@@ -8345,6 +8530,68 @@
 
                     missionRunning = true;
 
+                    // ==================================
+                    // NEW MISSION HEATMAP RESET
+                    // No Heatmap before reaching WP1
+                    // ==================================
+
+                    currentMonitorWaypoint = 0;
+                    lastHeatmapWaypoint = -1;
+                    heatmapUnlocked = false;
+
+                    if (heatLayer) {
+
+                        map.removeLayer(
+                            heatLayer
+                        );
+
+                        heatLayer = null;
+
+                    }
+
+                    if (monitorHeatLayer) {
+
+                        monitorMap.removeLayer(
+                            monitorHeatLayer
+                        );
+
+                        monitorHeatLayer = null;
+
+                    }
+
+                    const maxNTUElement =
+                        document.getElementById(
+                            "monitorMaxNTU"
+                        );
+
+                    if (maxNTUElement) {
+
+                        maxNTUElement.innerText = "--";
+
+                    }
+
+                    const avgNTUElement =
+                        document.getElementById(
+                            "monitorAvgNTU"
+                        );
+
+                    if (avgNTUElement) {
+
+                        avgNTUElement.innerText = "--";
+
+                    }
+
+                    const samplesElement =
+                        document.getElementById(
+                            "monitorSamples"
+                        );
+
+                    if (samplesElement) {
+
+                        samplesElement.innerText = "0";
+
+                    }
+
                     updateMissionStatus(data.status);
 
                     console.log(data);
@@ -9296,6 +9543,451 @@
             }
 
             //==============================
+            // Sweep Spacing Verification
+            //==============================
+
+            function resetSweepSpacingVerification(selectedSpacing) {
+
+                const selected =
+                    Number(selectedSpacing);
+
+                const selectedElement =
+                    document.getElementById(
+                        "sweepSpacingSelected"
+                    );
+
+                const avgElement =
+                    document.getElementById(
+                        "sweepSpacingActualAvg"
+                    );
+
+                const minElement =
+                    document.getElementById(
+                        "sweepSpacingActualMin"
+                    );
+
+                const maxElement =
+                    document.getElementById(
+                        "sweepSpacingActualMax"
+                    );
+
+                const statusElement =
+                    document.getElementById(
+                        "sweepSpacingVerifyStatus"
+                    );
+
+                if (selectedElement) {
+
+                    selectedElement.innerText =
+                        Number.isFinite(selected)
+                            ? selected.toFixed(2)
+                            : "--";
+
+                }
+
+                if (avgElement) {
+                    avgElement.innerText = "--";
+                }
+
+                if (minElement) {
+                    minElement.innerText = "--";
+                }
+
+                if (maxElement) {
+                    maxElement.innerText = "--";
+                }
+
+                if (statusElement) {
+
+                    statusElement.innerText =
+                        "Generate to verify";
+
+                    statusElement.style.color =
+                        "#64748b";
+
+                }
+
+            }
+
+
+            function haversineDistanceMeters(
+                lat1,
+                lng1,
+                lat2,
+                lng2
+            ) {
+
+                const earthRadius =
+                    6371000;
+
+                const toRadians =
+                    value =>
+                        value * Math.PI / 180;
+
+                const lat1Rad =
+                    toRadians(lat1);
+
+                const lat2Rad =
+                    toRadians(lat2);
+
+                const deltaLat =
+                    toRadians(
+                        lat2 - lat1
+                    );
+
+                const deltaLng =
+                    toRadians(
+                        lng2 - lng1
+                    );
+
+                const a =
+                    Math.sin(
+                        deltaLat / 2
+                    ) ** 2
+                    +
+                    Math.cos(lat1Rad)
+                    *
+                    Math.cos(lat2Rad)
+                    *
+                    Math.sin(
+                        deltaLng / 2
+                    ) ** 2;
+
+                const c =
+                    2
+                    *
+                    Math.atan2(
+                        Math.sqrt(a),
+                        Math.sqrt(1 - a)
+                    );
+
+                return (
+                    earthRadius * c
+                );
+
+            }
+
+
+            function verifyGeneratedSweepSpacing(
+                selectedSpacing
+            ) {
+
+                const selected =
+                    Number(selectedSpacing);
+
+                const statusElement =
+                    document.getElementById(
+                        "sweepSpacingVerifyStatus"
+                    );
+
+                const avgElement =
+                    document.getElementById(
+                        "sweepSpacingActualAvg"
+                    );
+
+                const minElement =
+                    document.getElementById(
+                        "sweepSpacingActualMin"
+                    );
+
+                const maxElement =
+                    document.getElementById(
+                        "sweepSpacingActualMax"
+                    );
+
+                const selectedElement =
+                    document.getElementById(
+                        "sweepSpacingSelected"
+                    );
+
+
+                if (selectedElement) {
+
+                    selectedElement.innerText =
+                        Number.isFinite(selected)
+                            ? selected.toFixed(2)
+                            : "--";
+
+                }
+
+
+                // Backend keeps the original Sweep logic:
+                // 4 waypoints per Sweep line.
+                if (
+                    !Array.isArray(manualRoute) ||
+                    manualRoute.length < 8
+                ) {
+
+                    if (statusElement) {
+
+                        statusElement.innerText =
+                            "Not enough lines";
+
+                        statusElement.style.color =
+                            "#d97706";
+
+                    }
+
+                    return;
+
+                }
+
+
+                const sweepLineCenters =
+                    [];
+
+
+                for (
+                    let index = 0;
+                    index + 3 < manualRoute.length;
+                    index += 4
+                ) {
+
+                    const line =
+                        manualRoute.slice(
+                            index,
+                            index + 4
+                        );
+
+
+                    const validLine =
+                        line.filter(
+                            point =>
+                                Number.isFinite(
+                                    Number(point.lat)
+                                )
+                                &&
+                                Number.isFinite(
+                                    Number(point.lng)
+                                )
+                        );
+
+
+                    if (
+                        validLine.length !== 4
+                    ) {
+
+                        continue;
+
+                    }
+
+
+                    const centerLat =
+                        validLine.reduce(
+                            (sum, point) =>
+                                sum +
+                                Number(point.lat),
+                            0
+                        )
+                        /
+                        validLine.length;
+
+
+                    const centerLng =
+                        validLine.reduce(
+                            (sum, point) =>
+                                sum +
+                                Number(point.lng),
+                            0
+                        )
+                        /
+                        validLine.length;
+
+
+                    sweepLineCenters.push({
+                        lat: centerLat,
+                        lng: centerLng
+                    });
+
+                }
+
+
+                const distances =
+                    [];
+
+
+                for (
+                    let index = 1;
+                    index < sweepLineCenters.length;
+                    index++
+                ) {
+
+                    const previous =
+                        sweepLineCenters[
+                        index - 1
+                        ];
+
+                    const current =
+                        sweepLineCenters[
+                        index
+                        ];
+
+
+                    const distance =
+                        haversineDistanceMeters(
+                            previous.lat,
+                            previous.lng,
+                            current.lat,
+                            current.lng
+                        );
+
+
+                    if (
+                        Number.isFinite(distance)
+                        &&
+                        distance > 0
+                    ) {
+
+                        distances.push(
+                            distance
+                        );
+
+                    }
+
+                }
+
+
+                if (
+                    distances.length === 0
+                ) {
+
+                    if (statusElement) {
+
+                        statusElement.innerText =
+                            "Unable to verify";
+
+                        statusElement.style.color =
+                            "#dc2626";
+
+                    }
+
+                    return;
+
+                }
+
+
+                const average =
+                    distances.reduce(
+                        (sum, value) =>
+                            sum + value,
+                        0
+                    )
+                    /
+                    distances.length;
+
+
+                const minimum =
+                    Math.min(
+                        ...distances
+                    );
+
+
+                const maximum =
+                    Math.max(
+                        ...distances
+                    );
+
+
+                if (avgElement) {
+
+                    avgElement.innerText =
+                        average.toFixed(2);
+
+                }
+
+
+                if (minElement) {
+
+                    minElement.innerText =
+                        minimum.toFixed(2);
+
+                }
+
+
+                if (maxElement) {
+
+                    maxElement.innerText =
+                        maximum.toFixed(2);
+
+                }
+
+
+                const tolerance =
+                    Math.max(
+                        0.10,
+                        selected * 0.05
+                    );
+
+
+                const verified =
+                    Number.isFinite(selected)
+                    &&
+                    Math.abs(
+                        average - selected
+                    ) <= tolerance;
+
+
+                if (statusElement) {
+
+                    if (verified) {
+
+                        statusElement.innerText =
+                            "✅ Verified";
+
+                        statusElement.style.color =
+                            "#16a34a";
+
+                    }
+                    else {
+
+                        statusElement.innerText =
+                            "⚠ Check spacing";
+
+                        statusElement.style.color =
+                            "#dc2626";
+
+                    }
+
+                }
+
+
+                console.log(
+                    "===== SWEEP SPACING CHECK ====="
+                );
+
+                console.log(
+                    "Selected:",
+                    selected,
+                    "m"
+                );
+
+                console.log(
+                    "Actual Average:",
+                    average,
+                    "m"
+                );
+
+                console.log(
+                    "Minimum:",
+                    minimum,
+                    "m"
+                );
+
+                console.log(
+                    "Maximum:",
+                    maximum,
+                    "m"
+                );
+
+                console.log(
+                    "Distances:",
+                    distances
+                );
+
+            }
+
+
+            //==============================
             // generateSweep
             //==============================
 
@@ -9353,7 +10045,20 @@
                 const width = originalWidth - (marginLng * 2);
                 const height = originalHeight - (marginLat * 2);
 
-                const spacing = 2.5; // เมตร
+                const spacing = Number(
+                    document.getElementById("sweepSpacing").value
+                );
+
+                if (!Number.isFinite(spacing) || spacing <= 0) {
+
+                    showPopup(
+                        "warning",
+                        "⚠ Invalid Spacing",
+                        "Sweep spacing must be greater than 0 meter."
+                    );
+
+                    return;
+                }
 
                 try {
 
@@ -9442,6 +10147,14 @@
                     //==============================
 
                     await loadManualRoute();
+
+                    //==============================
+                    // Verify Actual Sweep Spacing
+                    //==============================
+
+                    verifyGeneratedSweepSpacing(
+                        spacing
+                    );
 
                     //==============================
                     // Remove Preview
