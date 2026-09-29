@@ -462,7 +462,7 @@
                 </div>
 
             </div>
-            
+
             <br>
 
         </div> <!-- ปิด missionPage -->
@@ -2277,6 +2277,73 @@
 
             const API_URL = "http://127.0.0.1:8000";
 
+            // =====================================
+            // SENSOR VALUE HANDLING ONLY
+            // NaN / null / empty = no sensor data
+            // 0 = valid sensor value
+            // =====================================
+
+            function parseSensorValue(value) {
+
+                if (
+                    value === null ||
+                    value === undefined
+                ) {
+                    return null;
+                }
+
+                if (typeof value === "string") {
+
+                    const text =
+                        value.trim();
+
+                    if (
+                        text === "" ||
+                        text.toLowerCase() === "nan"
+                    ) {
+                        return null;
+                    }
+
+                }
+
+                const number =
+                    Number(value);
+
+                return Number.isFinite(number)
+                    ? number
+                    : null;
+
+            }
+
+
+            function displaySensorValue(
+                value
+            ) {
+
+                const number =
+                    parseSensorValue(value);
+
+                return number === null
+                    ? ""
+                    : String(number);
+
+            }
+
+
+            function formatSensorValue(
+                value,
+                digits = 2
+            ) {
+
+                const number =
+                    parseSensorValue(value);
+
+                return number === null
+                    ? ""
+                    : number.toFixed(digits);
+
+            }
+
             //==============================
             // Manual Route
             //==============================
@@ -2287,6 +2354,8 @@
 
             // Heatmap stays OFF until WP1 is reached.
             let heatmapUnlocked = false;
+
+            let heatmapStartLogTime = null;
 
             //==============================
             // Sweep Area
@@ -2484,16 +2553,43 @@
                     // =========================
 
                     const temps =
-                        data.map(x => Number(x.temp_c))
-                            .filter(Number.isFinite);
+                        data
+                            .map(
+                                x =>
+                                    parseSensorValue(
+                                        x.temp_c
+                                    )
+                            )
+                            .filter(
+                                value =>
+                                    value !== null
+                            );
 
                     const phs =
-                        data.map(x => Number(x.ph_level))
-                            .filter(Number.isFinite);
+                        data
+                            .map(
+                                x =>
+                                    parseSensorValue(
+                                        x.ph_level
+                                    )
+                            )
+                            .filter(
+                                value =>
+                                    value !== null
+                            );
 
                     const turbs =
-                        data.map(x => Number(x.turbidity_ntu))
-                            .filter(Number.isFinite);
+                        data
+                            .map(
+                                x =>
+                                    parseSensorValue(
+                                        x.turbidity_ntu
+                                    )
+                            )
+                            .filter(
+                                value =>
+                                    value !== null
+                            );
 
                     console.log("Temperature:", temps);
                     console.log("pH:", phs);
@@ -2767,7 +2863,7 @@
                                             data:
                                                 data.map(
                                                     x =>
-                                                        Number(
+                                                        parseSensorValue(
                                                             x.temp_c
                                                         )
                                                 ),
@@ -2783,6 +2879,8 @@
                                             borderWidth: 3,
 
                                             tension: 0.35,
+
+                                            spanGaps: true,
 
                                             pointRadius: 2,
 
@@ -2895,7 +2993,7 @@
                                             data:
                                                 data.map(
                                                     x =>
-                                                        Number(
+                                                        parseSensorValue(
                                                             x.ph_level
                                                         )
                                                 ),
@@ -3003,7 +3101,7 @@
                                             data:
                                                 data.map(
                                                     x =>
-                                                        Number(
+                                                        parseSensorValue(
                                                             x.turbidity_ntu
                                                         )
                                                 ),
@@ -3095,35 +3193,62 @@
                         data.forEach(item => {
 
                             const temp =
-                                Number(item.temp_c);
+                                parseSensorValue(
+                                    item.temp_c
+                                );
 
                             const ph =
-                                Number(item.ph_level);
+                                parseSensorValue(
+                                    item.ph_level
+                                );
 
                             const turb =
-                                Number(item.turbidity_ntu);
+                                parseSensorValue(
+                                    item.turbidity_ntu
+                                );
 
-                            let quality = "Good";
+                            let quality = "";
+                            let qualityClass = "";
 
                             if (
-                                ph < 6.5 ||
-                                ph > 8.5
+                                ph !== null ||
+                                turb !== null
                             ) {
 
-                                quality = "Warning";
+                                quality = "Good";
+                                qualityClass =
+                                    "good-badge";
+
+                                if (
+                                    ph !== null &&
+                                    (
+                                        ph < 6.5 ||
+                                        ph > 8.5
+                                    )
+                                ) {
+
+                                    quality =
+                                        "Warning";
+
+                                    qualityClass =
+                                        "bad-badge";
+
+                                }
+
+                                if (
+                                    turb !== null &&
+                                    turb > 20
+                                ) {
+
+                                    quality =
+                                        "Poor";
+
+                                    qualityClass =
+                                        "bad-badge";
+
+                                }
 
                             }
-
-                            if (turb > 20) {
-
-                                quality = "Poor";
-
-                            }
-
-                            const qualityClass =
-                                quality === "Good"
-                                    ? "good-badge"
-                                    : "bad-badge";
 
                             historyBody.innerHTML += `
 
@@ -3142,23 +3267,23 @@
                             </td>
 
                             <td>
-                                ${Number.isFinite(temp)
+                                ${temp !== null
                                     ? temp.toFixed(2)
-                                    : "-"
+                                    : ""
                                 }
                             </td>
 
                             <td>
-                                ${Number.isFinite(ph)
+                                ${ph !== null
                                     ? ph.toFixed(2)
-                                    : "-"
+                                    : ""
                                 }
                             </td>
 
                             <td>
-                                ${Number.isFinite(turb)
+                                ${turb !== null
                                     ? turb.toFixed(2)
-                                    : "-"
+                                    : ""
                                 }
                             </td>
 
@@ -5324,25 +5449,16 @@
                     </td>
 
                     <td>
-                        ${formatNumber(
-                                log.temp_c
-                            )
-                            }
+                        ${formatSensorValue(log.temp_c)}
                         °C
                     </td>
 
                     <td>
-                        ${formatNumber(
-                                log.ph_level
-                            )
-                            }
+                        ${formatSensorValue(log.ph_level)}
                     </td>
 
                     <td>
-                        ${formatNumber(
-                                log.turbidity_ntu
-                            )
-                            }
+                        ${formatSensorValue(log.turbidity_ntu)}
                         NTU
                     </td>
 
@@ -5443,7 +5559,7 @@
                     data =
                         overviewSensorLogs.map(
                             log =>
-                                Number(
+                                parseSensorValue(
                                     log.temp_c
                                 )
                         );
@@ -5465,7 +5581,7 @@
                     data =
                         overviewSensorLogs.map(
                             log =>
-                                Number(
+                                parseSensorValue(
                                     log.ph_level
                                 )
                         );
@@ -5487,7 +5603,7 @@
                     data =
                         overviewSensorLogs.map(
                             log =>
-                                Number(
+                                parseSensorValue(
                                     log.turbidity_ntu
                                 )
                         );
@@ -5728,22 +5844,16 @@
                     </td>
 
                     <td>
-                        ${formatNumber(
-                            log.temp_c
-                        )}
+                        ${formatSensorValue(log.temp_c)}
                         °C
                     </td>
 
                     <td>
-                        ${formatNumber(
-                            log.ph_level
-                        )}
+                        ${formatSensorValue(log.ph_level)}
                     </td>
 
                     <td>
-                        ${formatNumber(
-                            log.turbidity_ntu
-                        )}
+                        ${formatSensorValue(log.turbidity_ntu)}
                         NTU
                     </td>
 
@@ -5899,15 +6009,15 @@
                         return (
                             log.log_time &&
                             (
-                                Number.isFinite(
-                                    Number(log.temp_c)
-                                ) ||
-                                Number.isFinite(
-                                    Number(log.ph_level)
-                                ) ||
-                                Number.isFinite(
-                                    Number(log.turbidity_ntu)
-                                )
+                                parseSensorValue(
+                                    log.temp_c
+                                ) !== null ||
+                                parseSensorValue(
+                                    log.ph_level
+                                ) !== null ||
+                                parseSensorValue(
+                                    log.turbidity_ntu
+                                ) !== null
                             )
                         );
 
@@ -5935,21 +6045,27 @@
                 const temperatures =
                     validLogs.map(
                         log =>
-                            Number(log.temp_c)
+                            parseSensorValue(
+                                log.temp_c
+                            )
                     );
 
 
                 const phValues =
                     validLogs.map(
                         log =>
-                            Number(log.ph_level)
+                            parseSensorValue(
+                                log.ph_level
+                            )
                     );
 
 
                 const turbidityValues =
                     validLogs.map(
                         log =>
-                            Number(log.turbidity_ntu)
+                            parseSensorValue(
+                                log.turbidity_ntu
+                            )
                     );
 
 
@@ -6342,7 +6458,7 @@
                             Number(log.longitude);
 
                         const turbidity =
-                            Number(
+                            parseSensorValue(
                                 log.turbidity_ntu
                             );
 
@@ -6358,9 +6474,7 @@
 
 
                         if (
-                            !Number.isFinite(
-                                turbidity
-                            )
+                            turbidity === null
                         ) {
 
                             return;
@@ -6371,10 +6485,7 @@
                         heatData.push([
                             lat,
                             lng,
-                            Math.max(
-                                turbidity,
-                                0.1
-                            )
+                            turbidity
                         ]);
 
                     }
@@ -6511,23 +6622,51 @@
                         data.boat_id;
 
 
+                    const tempSensorValue =
+                        parseSensorValue(
+                            data.temp_c
+                        );
+
+                    const phSensorValue =
+                        parseSensorValue(
+                            data.ph_level
+                        );
+
+                    const turbiditySensorValue =
+                        parseSensorValue(
+                            data.turbidity_ntu
+                        );
+
+
                     document.getElementById("temp").innerText =
-                        data.temp_c;
+                        displaySensorValue(
+                            tempSensorValue
+                        );
 
                     document.getElementById("temp_top").innerText =
-                        data.temp_c;
+                        displaySensorValue(
+                            tempSensorValue
+                        );
 
                     document.getElementById("ph").innerText =
-                        data.ph_level;
+                        displaySensorValue(
+                            phSensorValue
+                        );
 
                     document.getElementById("ph_top").innerText =
-                        data.ph_level;
+                        displaySensorValue(
+                            phSensorValue
+                        );
 
                     document.getElementById("turbidity").innerText =
-                        data.turbidity_ntu + " NTU";
+                        turbiditySensorValue === null
+                            ? ""
+                            : `${turbiditySensorValue}`;
 
                     document.getElementById("turbidity_top").innerText =
-                        data.turbidity_ntu + " NTU";
+                        turbiditySensorValue === null
+                            ? ""
+                            : `${turbiditySensorValue} NTU`;
 
                     let waterStatus = "Good";
                     let badgeClass = "good";
@@ -6597,13 +6736,19 @@
                     //==========================
 
                     document.getElementById("monitorTemp").innerText =
-                        data.temp_c;
+                        displaySensorValue(
+                            tempSensorValue
+                        );
 
                     document.getElementById("monitorPH").innerText =
-                        data.ph_level;
+                        displaySensorValue(
+                            phSensorValue
+                        );
 
                     document.getElementById("monitorNTU").innerText =
-                        data.turbidity_ntu;
+                        displaySensorValue(
+                            turbiditySensorValue
+                        );
 
                     // =========================
                     // MONITOR ALERT
@@ -6617,8 +6762,11 @@
                         let alertMessage = "✓ No Alert";
 
                         if (
-                            Number(data.ph_level) < 6.5 ||
-                            Number(data.ph_level) > 8.5
+                            phSensorValue !== null &&
+                            (
+                                phSensorValue < 6.5 ||
+                                phSensorValue > 8.5
+                            )
                         ) {
 
                             alertMessage =
@@ -6627,7 +6775,8 @@
                         }
 
                         else if (
-                            Number(data.turbidity_ntu) > 30
+                            turbiditySensorValue !== null &&
+                            turbiditySensorValue > 30
                         ) {
 
                             alertMessage =
@@ -6754,15 +6903,16 @@
 
                                 // WP1 is the first point that unlocks
                                 // Heatmap calculation/display.
-                                if (
-                                    currentMonitorWaypoint === 0
-                                ) {
+                                if (currentMonitorWaypoint === 0) {
 
                                     heatmapUnlocked = true;
 
-                                    console.log(
-                                        "WP1 reached -> Heatmap unlocked"
-                                    );
+                                    if (!heatmapStartLogTime) {
+
+                                        heatmapStartLogTime =
+                                            data.log_time || null;
+
+                                    }
 
                                 }
 
@@ -6969,17 +7119,39 @@
 
 
 
-                    if (data.ph_level < 6.5 || data.ph_level > 8.5) {
+                    if (
+                        phSensorValue === null &&
+                        turbiditySensorValue === null
+                    ) {
 
-                        waterStatus = "Warning";
-                        badgeClass = "warning";
+                        waterStatus = "";
+                        badgeClass = "";
 
                     }
+                    else {
 
-                    if (data.turbidity_ntu > 20) {
+                        if (
+                            phSensorValue !== null &&
+                            (
+                                phSensorValue < 6.5 ||
+                                phSensorValue > 8.5
+                            )
+                        ) {
 
-                        waterStatus = "Poor";
-                        badgeClass = "poor";
+                            waterStatus = "Warning";
+                            badgeClass = "warning";
+
+                        }
+
+                        if (
+                            turbiditySensorValue !== null &&
+                            turbiditySensorValue > 20
+                        ) {
+
+                            waterStatus = "Poor";
+                            badgeClass = "poor";
+
+                        }
 
                     }
 
@@ -7052,17 +7224,17 @@
                         <hr style="margin:6px 0">
 
                         🌡 <b>Temperature</b><br>
-                        ${data.temp_c} °C
+                        ${displaySensorValue(tempSensorValue)} °C
 
                         <br><br>
 
                         💧 <b>pH</b><br>
-                        ${data.ph_level}
+                        ${displaySensorValue(phSensorValue)}
 
                         <br><br>
 
                         🌊 <b>Turbidity</b><br>
-                        ${data.turbidity_ntu} NTU
+                        ${displaySensorValue(turbiditySensorValue)} NTU
 
                         <br><br>
 
@@ -7329,13 +7501,15 @@
                             Number(point.longitude);
 
                         const ntu =
-                            Number(point.turbidity_ntu);
+                            parseSensorValue(
+                                point.turbidity_ntu
+                            );
 
 
                         if (
                             !Number.isFinite(lat) ||
                             !Number.isFinite(lng) ||
-                            !Number.isFinite(ntu)
+                            ntu === null
                         ) {
 
                             return;
@@ -8348,7 +8522,7 @@
                     data.forEach(row => {
 
                         csv +=
-                            `${row.log_time},${row.temp_c},${row.ph_level},${row.turbidity_ntu}\n`;
+                            `${row.log_time},${displaySensorValue(row.temp_c)},${displaySensorValue(row.ph_level)},${displaySensorValue(row.turbidity_ntu)}\n`;
 
                     });
 
@@ -8538,6 +8712,7 @@
                     currentMonitorWaypoint = 0;
                     lastHeatmapWaypoint = -1;
                     heatmapUnlocked = false;
+                    heatmapStartLogTime = null;
 
                     if (heatLayer) {
 
