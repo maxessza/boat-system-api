@@ -252,115 +252,6 @@
 
                             </div>
 
-                            <!-- Sweep spacing control -->
-                            <div style="
-                                margin-top:12px;
-                                padding:10px 12px;
-                                background:#f8fafc;
-                                border:1px solid #e2e8f0;
-                                border-radius:10px;
-                            ">
-
-                                <div style="
-                                    display:flex;
-                                    justify-content:space-between;
-                                    align-items:center;
-                                    margin-bottom:8px;
-                                    font-size:13px;
-                                    color:#475569;
-                                ">
-                                    <span>📏 Sweep Spacing</span>
-
-                                    <strong style="color:#2563eb;">
-                                        <span id="sweepSpacingValue">2.5</span> m
-                                    </strong>
-                                </div>
-
-                                <input id="sweepSpacing" type="range" min="0.5" max="4" step="0.5" value="2.5" oninput="
-                                        document.getElementById('sweepSpacingValue').innerText = Number(this.value).toFixed(1);
-                                        resetSweepSpacingVerification(this.value);
-                                    " style="
-                                        width:100%;
-                                        cursor:pointer;
-                                    ">
-
-                                <div style="
-                                    display:flex;
-                                    justify-content:space-between;
-                                    margin-top:4px;
-                                    font-size:11px;
-                                    color:#94a3b8;
-                                ">
-                                    <span>0.5 m</span>
-                                    <span>4.0 m</span>
-                                </div>
-
-                                <div id="sweepSpacingVerification" style="
-                                    margin-top:10px;
-                                    padding:10px 12px;
-                                    background:#ffffff;
-                                    border:1px solid #dbeafe;
-                                    border-radius:9px;
-                                    font-size:12px;
-                                    color:#475569;
-                                ">
-                                    <div style="
-                                        display:flex;
-                                        justify-content:space-between;
-                                        align-items:center;
-                                        margin-bottom:7px;
-                                    ">
-                                        <strong style="color:#123b69;">
-                                            📐 Actual Spacing Check
-                                        </strong>
-
-                                        <span id="sweepSpacingVerifyStatus" style="
-                                            font-weight:700;
-                                            color:#64748b;
-                                        ">
-                                            Generate to verify
-                                        </span>
-                                    </div>
-
-                                    <div style="
-                                        display:grid;
-                                        grid-template-columns:1fr 1fr;
-                                        gap:5px 12px;
-                                    ">
-                                        <span>
-                                            Selected:
-                                            <b id="sweepSpacingSelected">2.50</b> m
-                                        </span>
-
-                                        <span>
-                                            Actual Avg:
-                                            <b id="sweepSpacingActualAvg">--</b> m
-                                        </span>
-
-                                        <span>
-                                            Minimum:
-                                            <b id="sweepSpacingActualMin">--</b> m
-                                        </span>
-
-                                        <span>
-                                            Maximum:
-                                            <b id="sweepSpacingActualMax">--</b> m
-                                        </span>
-                                    </div>
-
-                                    <div style="
-                                        margin-top:7px;
-                                        font-size:11px;
-                                        color:#94a3b8;
-                                        line-height:1.4;
-                                    ">
-                                        Checks the real distance between adjacent Sweep lines
-                                        using the generated waypoint coordinates.
-                                    </div>
-                                </div>
-
-                            </div>
-
                         </div>
 
                         <div class="button-group">
@@ -2357,6 +2248,32 @@
 
             let heatmapStartLogTime = null;
 
+            // =====================================
+            // Progressive Monitor Heatmap Settings
+            // =====================================
+            const HEATMAP_UPDATE_INTERVAL_MS = 2000;
+
+            // Live Monitor uses REAL sensor samples.
+            // Smaller radius prevents one sample from covering too much area.
+            const HEATMAP_SAMPLE_RADIUS_M = 4.0;
+
+            // Avoid drawing many circles on top of each other while the boat
+            // is nearly stationary. A new display point is kept after moving
+            // about this far from the previous displayed sample.
+            const HEATMAP_SAMPLE_SPACING_M = 1.0;
+
+            // =====================================
+            // Final Mission Averaged Heatmap
+            // =====================================
+            // After every waypoint is completed, the mission area is divided
+            // into a 10 x 10 grid. Cells containing real sensor samples use
+            // the REAL average NTU of those samples. Empty cells are filled
+            // by IDW from the mission sensor samples so the final summary
+            // covers the whole sweep area.
+            const FINAL_HEATMAP_GRID_ROWS = 10;
+            const FINAL_HEATMAP_GRID_COLS = 10;
+            const FINAL_HEATMAP_IDW_POWER = 2;
+
             //==============================
             // Sweep Area
             //==============================
@@ -2401,13 +2318,17 @@
                     keyboard: true
                 }).setView([13.7563, 100.5018], 13);
 
-            L.tileLayer(
-                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                {
-                    attribution: '© OpenStreetMap',
-                    maxZoom: 20
-                }
-            ).addTo(map);
+
+            const missionBaseTile =
+                L.tileLayer(
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    {
+                        attribution: '© OpenStreetMap',
+                        maxZoom: 20
+                    }
+                );
+
+            missionBaseTile.addTo(map);
 
 
             // ======================================
@@ -2778,7 +2699,9 @@
                                     day: "2-digit",
                                     month: "2-digit",
                                     hour: "2-digit",
-                                    minute: "2-digit"
+                                    minute: "2-digit",
+                                    second: "2-digit",
+                                    hour12: false
                                 }
                             );
 
@@ -2929,7 +2852,7 @@
 
                                             y: {
 
-                                                beginAtZero: false
+                                                beginAtZero: true
 
                                             }
 
@@ -3009,6 +2932,8 @@
                                             borderWidth: 3,
 
                                             tension: 0.35,
+
+                                            spanGaps: true,
 
                                             pointRadius: 2,
 
@@ -6417,132 +6342,253 @@
                     return;
                 }
 
-
-                // REMOVE OLD HEATMAP
-
+                // Remove previous Mission heatmap
                 if (missionHeatmapLayer) {
-
                     missionHeatmapMap.removeLayer(
                         missionHeatmapLayer
                     );
-
                     missionHeatmapLayer = null;
-
                 }
-
 
                 if (
                     !Array.isArray(logs) ||
                     logs.length === 0
                 ) {
-
                     console.log(
-                        "No sensor data for heatmap"
+                        "No sensor data for Mission heatmap"
                     );
-
                     return;
-
                 }
 
+                // ==========================================
+                // 1. Sensor points from THIS mission only
+                // ==========================================
+                const sensorPoints = [];
+
+                logs.forEach(log => {
+
+                    const lat = Number(log.latitude);
+                    const lng = Number(log.longitude);
+                    const ntu = parseSensorValue(
+                        log.turbidity_ntu
+                    );
+
+                    if (
+                        !Number.isFinite(lat) ||
+                        !Number.isFinite(lng) ||
+                        ntu === null
+                    ) {
+                        return;
+                    }
+
+                    sensorPoints.push({
+                        lat: lat,
+                        lng: lng,
+                        ntu: ntu
+                    });
+                });
+
+                if (sensorPoints.length === 0) {
+                    console.log(
+                        "No valid turbidity points for Mission heatmap"
+                    );
+                    return;
+                }
+
+                // ==========================================
+                // 2. Boundary = route of selected Mission
+                //    Fallback = sensor-data boundary
+                // ==========================================
+                const routePoints =
+                    Array.isArray(currentMissionRoutes)
+                        ? currentMissionRoutes
+                            .map(point => ({
+                                lat: Number(point.latitude),
+                                lng: Number(point.longitude)
+                            }))
+                            .filter(point =>
+                                Number.isFinite(point.lat) &&
+                                Number.isFinite(point.lng)
+                            )
+                        : [];
+
+                const boundaryPoints =
+                    routePoints.length >= 4
+                        ? routePoints
+                        : sensorPoints;
+
+                const boundaryLats =
+                    boundaryPoints.map(point => point.lat);
+
+                const boundaryLngs =
+                    boundaryPoints.map(point => point.lng);
+
+                const minLat = Math.min(...boundaryLats);
+                const maxLat = Math.max(...boundaryLats);
+                const minLng = Math.min(...boundaryLngs);
+                const maxLng = Math.max(...boundaryLngs);
+
+                if (
+                    !Number.isFinite(minLat) ||
+                    !Number.isFinite(maxLat) ||
+                    !Number.isFinite(minLng) ||
+                    !Number.isFinite(maxLng) ||
+                    minLat === maxLat ||
+                    minLng === maxLng
+                ) {
+                    console.log(
+                        "Mission heatmap boundary is invalid"
+                    );
+                    return;
+                }
+
+                // ==========================================
+                // 3. Same IDW settings as Monitor
+                // ==========================================
+                const gridRows = 40;
+                const gridCols = 40;
+                const power = 2;
 
                 const heatData = [];
 
+                for (
+                    let row = 0;
+                    row < gridRows;
+                    row++
+                ) {
 
-                logs.forEach(
-                    log => {
+                    const lat =
+                        minLat +
+                        (maxLat - minLat) *
+                        row /
+                        (gridRows - 1);
 
-                        const lat =
-                            Number(log.latitude);
+                    for (
+                        let col = 0;
+                        col < gridCols;
+                        col++
+                    ) {
 
                         const lng =
-                            Number(log.longitude);
+                            minLng +
+                            (maxLng - minLng) *
+                            col /
+                            (gridCols - 1);
 
-                        const turbidity =
-                            parseSensorValue(
-                                log.turbidity_ntu
+                        let weightedValue = 0;
+                        let totalWeight = 0;
+                        let exactValue = null;
+
+                        sensorPoints.forEach(sensor => {
+
+                            const dLat = lat - sensor.lat;
+                            const dLng = lng - sensor.lng;
+
+                            const distance = Math.sqrt(
+                                dLat * dLat +
+                                dLng * dLng
                             );
 
+                            if (distance < 1e-12) {
+                                exactValue = sensor.ntu;
+                                return;
+                            }
 
-                        if (
-                            !Number.isFinite(lat) ||
-                            !Number.isFinite(lng)
-                        ) {
+                            const weight =
+                                1 / Math.pow(
+                                    distance,
+                                    power
+                                );
 
-                            return;
+                            weightedValue +=
+                                sensor.ntu * weight;
 
+                            totalWeight += weight;
+                        });
+
+                        const interpolatedNTU =
+                            exactValue !== null
+                                ? exactValue
+                                : weightedValue / totalWeight;
+
+                        if (!Number.isFinite(interpolatedNTU)) {
+                            continue;
                         }
 
-
-                        if (
-                            turbidity === null
-                        ) {
-
-                            return;
-
-                        }
-
+                        // Fixed 0–40+ NTU scale
+                        const intensity =
+                            Math.min(
+                                Math.max(
+                                    interpolatedNTU / 40,
+                                    0
+                                ),
+                                1
+                            );
 
                         heatData.push([
                             lat,
                             lng,
-                            turbidity
+                            intensity
                         ]);
-
                     }
-                );
-
-
-                if (
-                    heatData.length === 0
-                ) {
-
-                    return;
-
                 }
 
+                if (heatData.length === 0) {
+                    return;
+                }
 
-                // CREATE HEATMAP
-
+                // ==========================================
+                // 4. Draw using the same visual scale
+                // ==========================================
                 missionHeatmapLayer =
                     L.heatLayer(
                         heatData,
                         {
-                            radius: 25,
+                            radius: 22,
                             blur: 18,
-                            maxZoom: 18
+                            maxZoom: 18,
+                            minOpacity: 0.25,
+                            max: 1,
+
+                            gradient: {
+                                0.00: "#2563eb", // 0 NTU
+                                0.25: "#22c55e", // 10 NTU
+                                0.50: "#facc15", // 20 NTU
+                                0.75: "#f97316", // 30 NTU
+                                1.00: "#ef4444"  // 40+ NTU
+                            }
                         }
                     ).addTo(
                         missionHeatmapMap
                     );
 
-
-                // FIT MAP
-
+                // Fit to selected Mission route/area
                 const bounds =
                     L.latLngBounds(
-                        heatData.map(
-                            point => [
-                                point[0],
-                                point[1]
-                            ]
-                        )
+                        boundaryPoints.map(point => [
+                            point.lat,
+                            point.lng
+                        ])
                     );
 
-
-                if (
-                    bounds.isValid()
-                ) {
-
+                if (bounds.isValid()) {
                     missionHeatmapMap.fitBounds(
                         bounds,
                         {
-                            padding: [20, 20],
+                            padding: [30, 30],
                             maxZoom: 18
                         }
                     );
-
                 }
 
+                console.log(
+                    "Mission IDW Heatmap rendered:",
+                    {
+                        sensorPoints: sensorPoints.length,
+                        gridPoints: heatData.length,
+                        routeBoundary: routePoints.length
+                    }
+                );
             }
 
             function filterMissionHistory() {
@@ -6847,18 +6893,53 @@
                         const target =
                             manualRoute[currentMonitorWaypoint];
 
-                        // คำนวณระยะจากเรือ → Target Waypoint
-                        const latDiff =
-                            target.lat - Number(data.latitude);
-
-                        const lngDiff =
-                            target.lng - Number(data.longitude);
-
                         const distance =
-                            Math.sqrt(
-                                (latDiff * latDiff) +
-                                (lngDiff * lngDiff)
+                            haversineDistanceMeters(
+                                Number(data.latitude),
+                                Number(data.longitude),
+                                Number(target.lat),
+                                Number(target.lng)
                             );
+
+                        // =====================================
+                        // RELEASE WAYPOINT LOCK
+                        // =====================================
+
+                        if (
+                            waypointDetectionLocked &&
+                            lastReachedWaypointPosition
+                        ) {
+
+                            const distanceFromLastReached =
+                                haversineDistanceMeters(
+                                    Number(data.latitude),
+                                    Number(data.longitude),
+                                    lastReachedWaypointPosition.lat,
+                                    lastReachedWaypointPosition.lng
+                                );
+
+                            console.log(
+                                "Distance from last reached WP:",
+                                distanceFromLastReached.toFixed(2),
+                                "meters"
+                            );
+
+                            if (
+                                distanceFromLastReached >=
+                                WAYPOINT_RELEASE_RADIUS_M
+                            ) {
+
+                                waypointDetectionLocked = false;
+
+                                lastReachedWaypointPosition = null;
+
+                                console.log(
+                                    "Waypoint Lock Released"
+                                );
+
+                            }
+
+                        }
 
                         console.log(
                             "Current WP:",
@@ -6878,20 +6959,50 @@
                         );
 
                         console.log(
-                            "Distance:",
-                            distance
+                            "Distance to WP:",
+                            distance.toFixed(2),
+                            "meters"
                         );
 
                         // =========================
                         // ถึง Waypoint แล้ว
+                        // Radius = 2.5 meters
                         // =========================
 
-                        if (distance < 0.00005) {
+                        if (
+                            !waypointDetectionLocked &&
+                            distance <= WAYPOINT_REACHED_RADIUS_M
+                        ) {
 
                             console.log(
                                 "Reached WP:",
                                 currentMonitorWaypoint + 1
                             );
+
+                            // =====================================
+                            // MARK WAYPOINT AS COMPLETED
+                            // =====================================
+
+                            completedMonitorWaypoints =
+                                Math.max(
+                                    completedMonitorWaypoints,
+                                    currentMonitorWaypoint + 1
+                                );
+
+
+                            // =====================================
+                            // LOCK UNTIL BOAT LEAVES THIS WP
+                            // =====================================
+
+                            lastReachedWaypointPosition = {
+
+                                lat: Number(target.lat),
+
+                                lng: Number(target.lng)
+
+                            };
+
+                            waypointDetectionLocked = true;
 
                             // =========================
                             // UPDATE HEATMAP
@@ -6950,6 +7061,91 @@
 
                             }
 
+                            await syncMissionProgressToBackend();
+
+                            // =====================================
+                            // AUTO COMPLETE AT LAST WAYPOINT
+                            // =====================================
+
+                            if (
+                                completedMonitorWaypoints >=
+                                manualRoute.length &&
+                                manualRoute.length > 0 &&
+                                !missionCompletionSent
+                            ) {
+
+                                missionCompletionSent = true;
+
+                                try {
+
+                                    // All waypoints are complete. Freeze the
+                                    // live sensor blobs and replace them with
+                                    // the final 10 x 10 averaged grid heatmap.
+                                    // This runs BEFORE /mission/complete so
+                                    // /logs still belongs to the active mission.
+                                    heatmapUnlocked = false;
+
+                                    await buildFinalAverageHeatmap();
+
+                                    const completeResponse =
+                                        await fetch(
+                                            `${API_URL}/mission/complete`,
+                                            {
+                                                method: "POST"
+                                            }
+                                        );
+
+                                    const completeData =
+                                        await completeResponse.json();
+
+                                    if (
+                                        !completeResponse.ok ||
+                                        !completeData.success
+                                    ) {
+
+                                        throw new Error(
+                                            completeData.message ||
+                                            "Mission complete failed"
+                                        );
+
+                                    }
+
+                                    missionRunning = false;
+
+                                    updateMissionStatus(
+                                        "Completed"
+                                    );
+
+                                    await loadMissionStatus();
+
+                                    if (
+                                        typeof loadMissionHistory ===
+                                        "function"
+                                    ) {
+
+                                        await loadMissionHistory();
+
+                                    }
+
+                                    console.log(
+                                        "Mission Completed:",
+                                        completeData
+                                    );
+
+                                }
+                                catch (error) {
+
+                                    missionCompletionSent = false;
+
+                                    console.error(
+                                        "Mission Complete Error:",
+                                        error
+                                    );
+
+                                }
+
+                            }
+
                         }
 
                         // =========================
@@ -6979,8 +7175,10 @@
                     if (manualRoute.length > 0) {
 
                         percent =
-                            ((currentMonitorWaypoint + 1) /
-                                manualRoute.length) * 100;
+                            (
+                                completedMonitorWaypoints /
+                                manualRoute.length
+                            ) * 100;
 
                     }
 
@@ -7047,48 +7245,11 @@
                     //=========================
                     // Boat Trail
                     //=========================
-
-                    monitorTrail.push([
-
-                        data.latitude,
-
-                        data.longitude
-
-                    ]);
-
-                    if (monitorTrail.length > 300) {
-
-                        monitorTrail.shift();
-
-                    }
-
-                    if (monitorTrailLine) {
-
-                        monitorMap.removeLayer(
-
-                            monitorTrailLine
-
-                        );
-
-                    }
-
-                    monitorTrailLine =
-
-                        L.polyline(
-
-                            monitorTrail,
-
-                            {
-
-                                color: "#2563eb",
-
-                                weight: 5,
-
-                                opacity: 0.8
-
-                            }
-
-                        ).addTo(monitorMap);
+                    // IMPORTANT:
+                    // The Monitor path is rendered only by loadPath() using
+                    // backend /path data. Do not redraw monitorTrailLine here,
+                    // otherwise loadBoat() and loadPath() overwrite each other
+                    // and the path flickers between two different shapes.
 
                     monitorBoatMarker.bindPopup(
 
@@ -7451,48 +7612,100 @@
             // REAL TURBIDITY HEATMAP + IDW
             // ======================================
 
+            // ======================================
+            // LIVE TURBIDITY HEATMAP
+            // - starts after WP1
+            // - uses REAL sensor samples
+            // - color is based directly on NTU value
+            // - does NOT sum heat intensity like Leaflet.heat
+            // ======================================
+
             async function loadHeatMap() {
 
                 try {
 
-                    console.log("===== LOAD REAL HEATMAP =====");
+                    if (!heatmapUnlocked) {
+                        return;
+                    }
 
+                    console.log(
+                        "===== LOAD SENSOR-VALUE HEATMAP ====="
+                    );
 
                     // ==================================
-                    // 1. GET SENSOR LOGS
+                    // 1. GET CURRENT MISSION SENSOR LOGS
                     // ==================================
 
                     const response =
                         await fetch(`${API_URL}/logs`);
 
-
                     if (!response.ok) {
-
                         throw new Error(
                             `HTTP Error: ${response.status}`
                         );
-
                     }
-
 
                     const data =
                         await response.json();
 
-
-                    console.log(
-                        "Heatmap Logs:",
-                        data
-                    );
-
+                    if (!Array.isArray(data)) {
+                        return;
+                    }
 
                     // ==================================
-                    // 2. CREATE SENSOR POINTS
+                    // 2. USE ONLY DATA AFTER WP1
                     // ==================================
+
+                    const normalizeLogTime = value => {
+
+                        if (!value) {
+                            return NaN;
+                        }
+
+                        const text =
+                            String(value)
+                                .trim()
+                                .replace(" ", "T");
+
+                        return new Date(text).getTime();
+                    };
+
+                    const startTimeMs =
+                        normalizeLogTime(
+                            heatmapStartLogTime
+                        );
 
                     const sensorPoints = [];
 
-
                     data.forEach(point => {
+
+                        if (!heatmapStartLogTime) {
+                            return;
+                        }
+
+                        const pointTimeMs =
+                            normalizeLogTime(
+                                point.log_time
+                            );
+
+                        let isAfterStart = false;
+
+                        if (
+                            Number.isFinite(startTimeMs) &&
+                            Number.isFinite(pointTimeMs)
+                        ) {
+                            isAfterStart =
+                                pointTimeMs >= startTimeMs;
+                        }
+                        else if (point.log_time) {
+                            isAfterStart =
+                                String(point.log_time) >=
+                                String(heatmapStartLogTime);
+                        }
+
+                        if (!isAfterStart) {
+                            return;
+                        }
 
                         const lat =
                             Number(point.latitude);
@@ -7505,210 +7718,36 @@
                                 point.turbidity_ntu
                             );
 
-
                         if (
                             !Number.isFinite(lat) ||
                             !Number.isFinite(lng) ||
                             ntu === null
                         ) {
-
                             return;
-
                         }
-
 
                         sensorPoints.push({
-
                             lat: lat,
-
                             lng: lng,
-
                             ntu: ntu
-
                         });
-
                     });
 
-
-                    console.log(
-                        "IDW Sensor Points:",
-                        sensorPoints
-                    );
-
-                    console.table(sensorPoints);
-
-                    // ==================================
-                    // 3. CHECK SENSOR DATA
-                    // ==================================
-
-                    if (
-                        sensorPoints.length === 0
-                    ) {
-
-                        console.log(
-                            "No valid sensor points"
-                        );
-
+                    if (sensorPoints.length === 0) {
                         return;
-
                     }
 
-
                     // ==================================
-                    // 4. FIND AREA
-                    //    USE WAYPOINT BOUNDARY
-                    // ==================================
-
-                    let minLat;
-                    let maxLat;
-                    let minLng;
-                    let maxLng;
-
-
-                    // ==================================
-                    // USE WAYPOINT BOUNDARY
-                    // ==================================
-
-                    if (
-                        manualRoute &&
-                        manualRoute.length >= 4
-                    ) {
-
-                        const routeLats =
-                            manualRoute
-                                .map(
-                                    p => Number(p.lat)
-                                )
-                                .filter(
-                                    Number.isFinite
-                                );
-
-                        const routeLngs =
-                            manualRoute
-                                .map(
-                                    p => Number(p.lng)
-                                )
-                                .filter(
-                                    Number.isFinite
-                                );
-
-
-                        minLat =
-                            Math.min(
-                                ...routeLats
-                            );
-
-                        maxLat =
-                            Math.max(
-                                ...routeLats
-                            );
-
-                        minLng =
-                            Math.min(
-                                ...routeLngs
-                            );
-
-                        maxLng =
-                            Math.max(
-                                ...routeLngs
-                            );
-
-
-                        console.log(
-                            "Heatmap Area = WAYPOINT BOUNDARY"
-                        );
-
-                    }
-
-
-                    // ==================================
-                    // FALLBACK
-                    // ==================================
-
-                    else {
-
-                        const lats =
-                            sensorPoints.map(
-                                p => p.lat
-                            );
-
-                        const lngs =
-                            sensorPoints.map(
-                                p => p.lng
-                            );
-
-
-                        minLat =
-                            Math.min(
-                                ...lats
-                            );
-
-                        maxLat =
-                            Math.max(
-                                ...lats
-                            );
-
-                        minLng =
-                            Math.min(
-                                ...lngs
-                            );
-
-                        maxLng =
-                            Math.max(
-                                ...lngs
-                            );
-
-
-                        console.log(
-                            "Heatmap Area = SENSOR DATA"
-                        );
-
-                    }
-
-
-                    // ==================================
-                    // DEBUG
-                    // ==================================
-
-                    console.log(
-                        "IDW Area:",
-                        {
-                            minLat,
-                            maxLat,
-                            minLng,
-                            maxLng
-                        }
-                    );
-
-
-                    // ==================================
-                    // 5. NTU RANGE
+                    // 3. HEATMAP SUMMARY
                     // ==================================
 
                     const ntuValues =
                         sensorPoints.map(
-                            p => p.ntu
+                            point => point.ntu
                         );
-
-
-                    const minNTU =
-                        Math.min(...ntuValues);
-
 
                     const maxNTU =
                         Math.max(...ntuValues);
-
-
-                    console.log(
-                        "NTU Range:",
-                        minNTU,
-                        "→",
-                        maxNTU
-                    );
-
-                    // =========================
-                    // HEATMAP SUMMARY
-                    // =========================
 
                     const avgNTU =
                         ntuValues.reduce(
@@ -7716,582 +7755,268 @@
                             0
                         ) / ntuValues.length;
 
-
-                    // Maximum NTU
                     const maxNTUElement =
-                        document.getElementById("monitorMaxNTU");
+                        document.getElementById(
+                            "monitorMaxNTU"
+                        );
 
                     if (maxNTUElement) {
-
                         maxNTUElement.innerText =
                             maxNTU.toFixed(2) + " NTU";
-
                     }
 
-
-                    // Average NTU
                     const avgNTUElement =
-                        document.getElementById("monitorAvgNTU");
+                        document.getElementById(
+                            "monitorAvgNTU"
+                        );
 
                     if (avgNTUElement) {
-
                         avgNTUElement.innerText =
                             avgNTU.toFixed(2) + " NTU";
-
                     }
 
-
-                    // Sample Points
                     const samplesElement =
-                        document.getElementById("monitorSamples");
+                        document.getElementById(
+                            "monitorSamples"
+                        );
 
                     if (samplesElement) {
-
                         samplesElement.innerText =
-                            ntuValues.length;
-
+                            sensorPoints.length;
                     }
 
-
                     // ==================================
-                    // 6. IDW SETTINGS
-                    // ==================================
-
-                    const gridRows = 25;
-
-                    const gridCols = 25;
-
-                    const power = 3;
-
-
-                    // ==================================
-                    // 7. CREATE IDW GRID
+                    // 4. REDUCE GPS OVERLAP
+                    //    Keep roughly one display point / 1 m.
+                    //    If the boat stays in the same place,
+                    //    use the latest sensor value there.
                     // ==================================
 
-                    const heatData = [];
+                    const displayPoints = [];
 
-                    let highNTUCount = 0;
+                    sensorPoints.forEach(point => {
 
-
-                    for (
-                        let row = 0;
-                        row < gridRows;
-                        row++
-                    ) {
-
-
-                        const lat =
-                            minLat +
-                            (
-                                (maxLat - minLat) *
-                                row /
-                                (gridRows - 1)
-                            );
-
-
-                        for (
-                            let col = 0;
-                            col < gridCols;
-                            col++
-                        ) {
-
-
-                            const lng =
-                                minLng +
-                                (
-                                    (maxLng - minLng) *
-                                    col /
-                                    (gridCols - 1)
-                                );
-
-
-                            let weightedValue = 0;
-
-                            let totalWeight = 0;
-
-
-                            // ==================================
-                            // IDW CALCULATION
-                            // ==================================
-
-                            sensorPoints.forEach(
-                                sensor => {
-
-
-                                    const dLat =
-                                        lat -
-                                        sensor.lat;
-
-
-                                    const dLng =
-                                        lng -
-                                        sensor.lng;
-
-
-                                    const distance =
-                                        Math.sqrt(
-                                            dLat * dLat +
-                                            dLng * dLng
-                                        );
-
-
-                                    // Grid ตรงกับ Sensor
-                                    if (
-                                        distance === 0
-                                    ) {
-
-                                        weightedValue =
-                                            sensor.ntu;
-
-                                        totalWeight = 1;
-
-                                        return;
-
-                                    }
-
-
-                                    const weight =
-                                        1 /
-                                        Math.pow(
-                                            distance,
-                                            power
-                                        );
-
-
-                                    weightedValue +=
-                                        sensor.ntu *
-                                        weight;
-
-
-                                    totalWeight +=
-                                        weight;
-
-                                }
-                            );
-
-
-                            const interpolatedNTU =
-                                weightedValue /
-                                totalWeight;
-
-                            if (interpolatedNTU > 30) {
-
-                                highNTUCount++;
-
-                            }
-
-
-                            // ==================================
-                            // NTU → INTENSITY
-                            // ==================================
-
-                            // ==================================
-                            // NTU → HEATMAP INTENSITY
-                            // ==================================
-
-                            let intensity = 0;
-
-                            if (maxNTU > minNTU) {
-
-                                intensity =
-                                    (
-                                        interpolatedNTU - minNTU
-                                    ) /
-                                    (
-                                        maxNTU - minNTU
-                                    );
-
-                            }
-
-                            // เพิ่ม contrast
-                            intensity =
-                                Math.pow(intensity, 1.8);
-
-                            intensity =
-                                Math.min(
-                                    Math.max(
-                                        intensity,
-                                        0
-                                    ),
-                                    1
-                                );
-
-
-                            intensity =
-                                Math.min(
-                                    Math.max(
-                                        intensity,
-                                        0
-                                    ),
-                                    1
-                                );
-
-
-                            heatData.push([
-
-                                lat,
-
-                                lng,
-
-                                intensity
-
-                            ]);
-
+                        if (displayPoints.length === 0) {
+                            displayPoints.push({ ...point });
+                            return;
                         }
 
+                        const previous =
+                            displayPoints[
+                                displayPoints.length - 1
+                            ];
+
+                        const distance =
+                            haversineDistanceMeters(
+                                previous.lat,
+                                previous.lng,
+                                point.lat,
+                                point.lng
+                            );
+
+                        if (
+                            distance >=
+                            HEATMAP_SAMPLE_SPACING_M
+                        ) {
+                            displayPoints.push({ ...point });
+                        }
+                        else {
+                            // Same small area: keep the latest
+                            // measured position/value instead of
+                            // stacking another heat intensity.
+                            displayPoints[
+                                displayPoints.length - 1
+                            ] = { ...point };
+                        }
+                    });
+
+                    // ==================================
+                    // 5. NTU -> COLOR
+                    // Fixed legend:
+                    // 0  Blue
+                    // 10 Green
+                    // 20 Yellow
+                    // 30 Orange
+                    // 40 Red
+                    // ==================================
+
+                    const colorStops = [
+                        { value: 0,  rgb: [37, 99, 235] },
+                        { value: 10, rgb: [34, 197, 94] },
+                        { value: 20, rgb: [250, 204, 21] },
+                        { value: 30, rgb: [249, 115, 22] },
+                        { value: 40, rgb: [239, 68, 68] }
+                    ];
+
+                    function turbidityColor(value) {
+
+                        const ntu =
+                            Math.min(
+                                Math.max(
+                                    Number(value),
+                                    0
+                                ),
+                                40
+                            );
+
+                        for (
+                            let i = 0;
+                            i < colorStops.length - 1;
+                            i++
+                        ) {
+
+                            const a = colorStops[i];
+                            const b = colorStops[i + 1];
+
+                            if (
+                                ntu >= a.value &&
+                                ntu <= b.value
+                            ) {
+
+                                const t =
+                                    (ntu - a.value) /
+                                    (b.value - a.value);
+
+                                const rgb =
+                                    a.rgb.map(
+                                        (channel, index) =>
+                                            Math.round(
+                                                channel +
+                                                (
+                                                    b.rgb[index] -
+                                                    channel
+                                                ) * t
+                                            )
+                                    );
+
+                                return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+                            }
+                        }
+
+                        return "rgb(239,68,68)";
                     }
 
-
-                    console.log(
-                        "IDW Heatmap Points:",
-                        heatData.length
-                    );
-
-                    console.log(
-                        "Points > 30 NTU:",
-                        highNTUCount
-                    );
-
-
                     // ==================================
-                    // 8. CHECK HEATMAP DATA
-                    // ==================================
-
-                    if (
-                        heatData.length === 0
-                    ) {
-
-                        console.log(
-                            "No Heatmap Data"
-                        );
-
-                        return;
-
-                    }
-
-
-                    // ==================================
-                    // 9. CHECK MONITOR MAP
-                    // ==================================
-
-                    const monitorElement =
-                        document.getElementById(
-                            "monitorMap"
-                        );
-
-
-                    if (!monitorElement) {
-
-                        console.error(
-                            "Monitor Map Element Not Found"
-                        );
-
-                        return;
-
-                    }
-
-
-                    if (
-                        monitorElement.clientWidth <= 0 ||
-                        monitorElement.clientHeight <= 0
-                    ) {
-
-                        console.error(
-                            "Monitor Map Size Invalid"
-                        );
-
-                        return;
-
-                    }
-
-
-                    monitorMap.invalidateSize(
-                        true
-                    );
-
-
-                    console.log(
-                        "Monitor Map:",
-                        monitorMap.getSize()
-                    );
-
-
-                    // ==================================
-                    // 10. REMOVE OLD HEATMAP
+                    // 6. REMOVE PREVIOUS LIVE HEATMAP
                     // ==================================
 
                     if (heatLayer) {
-
-                        map.removeLayer(
-                            heatLayer
-                        );
-
+                        map.removeLayer(heatLayer);
                         heatLayer = null;
-
                     }
 
-
                     if (monitorHeatLayer) {
-
                         monitorMap.removeLayer(
                             monitorHeatLayer
                         );
-
                         monitorHeatLayer = null;
-
                     }
 
-
                     // ==================================
-                    // 11. DASHBOARD HEATMAP
-                    // ==================================
-
-                    heatLayer =
-                        L.heatLayer(
-                            heatData,
-                            {
-
-                                radius: 30,
-
-                                blur: 20,
-
-                                maxZoom: 18,
-
-                                minOpacity: 0.45,
-
-                                max: 1,
-
-
-                                gradient: {
-
-                                    0.0:
-                                        "#0066ff",
-
-                                    0.25:
-                                        "#00ccff",
-
-                                    0.45:
-                                        "#00ff66",
-
-                                    0.60:
-                                        "#ffff00",
-
-                                    0.75:
-                                        "#ff9900",
-
-                                    1.0:
-                                        "#ff0000"
-
-                                }
-
-                            }
-                        );
-
-
-                    heatLayer.addTo(
-                        map
-                    );
-
-
-                    // ==================================
-                    // 12. MONITOR HEATMAP
+                    // 7. DRAW SMALL SENSOR BLOBS
+                    //    Three nested circles create a
+                    //    soft heat-like appearance.
+                    //    Color is NEVER accumulated.
                     // ==================================
 
-                    console.log(
-                        "===== CREATE MONITOR HEATMAP ====="
-                    );
+                    function createSensorHeatGroup(
+                        targetMap,
+                        points
+                    ) {
 
-                    monitorHeatLayer =
-                        L.heatLayer(
-                            heatData,
-                            {
-                                radius: 10,
-                                blur: 6,
-                                maxZoom: 18,
-                                minOpacity: 0.35,
-                                max: 1,
-                                pane: "heatPane",
+                        const group =
+                            L.layerGroup();
 
-                                gradient: {
-                                    0.0: "#0066ff",
-                                    0.25: "#00ccff",
-                                    0.45: "#00ff66",
-                                    0.60: "#ffff00",
-                                    0.75: "#ff9900",
-                                    1.0: "#ff0000"
-                                }
-                            }
-                        );
+                        points.forEach(point => {
 
-
-                    console.log(
-                        "Monitor Heatmap Object:",
-                        monitorHeatLayer
-                    );
-
-
-                    // ==================================
-                    // 13. ADD HEATMAP
-                    // ==================================
-
-                    monitorHeatLayer.addTo(
-                        monitorMap
-                    );
-
-                    clipMonitorHeatmapToWaypoints();
-
-
-
-                    console.log(
-                        "Monitor Heatmap Added:",
-                        monitorMap.hasLayer(
-                            monitorHeatLayer
-                        )
-                    );
-
-
-                    // ==================================
-                    // 14. CHECK CANVAS
-                    // ==================================
-
-                    const canvas =
-                        monitorHeatLayer._canvas;
-
-
-                    console.log(
-                        "Heat Canvas:",
-                        canvas
-                    );
-
-
-                    if (!canvas) {
-
-                        console.error(
-                            "Heat Canvas NOT CREATED"
-                        );
-
-                        return;
-
-                    }
-
-
-                    console.log(
-                        "Canvas Internal Size:",
-                        canvas.width,
-                        canvas.height
-                    );
-
-
-                    console.log(
-                        "Canvas Rect:",
-                        canvas.getBoundingClientRect()
-                    );
-
-
-                    // ==================================
-                    // 15. REDRAW
-                    // ==================================
-
-                    setTimeout(() => {
-
-                        console.log(
-                            "===== FINAL HEATMAP DRAW ====="
-                        );
-
-
-                        monitorMap.invalidateSize(
-                            true
-                        );
-
-
-                        if (
-                            monitorHeatLayer &&
-                            monitorHeatLayer._canvas
-                        ) {
-
-                            monitorHeatLayer._reset();
-
-                            monitorHeatLayer._redraw();
-
-                            clipMonitorHeatmapToWaypoints();
-
-
-                            console.log(
-                                "Heatmap Redrawn"
-                            );
-
-
-                            console.log(
-                                "Final Canvas:",
-                                monitorHeatLayer
-                                    ._canvas
-                                    .getBoundingClientRect()
-                            );
-
-                        }
-
-                    }, 500);
-
-
-                    console.log(
-                        "===== REAL HEATMAP LOADED ====="
-                    );
-
-                    // ==================================
-                    // KEEP CLIP AFTER ZOOM / MOVE
-                    // ==================================
-
-                    if (monitorMap) {
-
-                        if (
-                            monitorMap.__heatmapClipHandler
-                        ) {
-
-                            monitorMap.off(
-                                "zoomend",
-                                monitorMap.__heatmapClipHandler
-                            );
-
-                            monitorMap.off(
-                                "moveend",
-                                monitorMap.__heatmapClipHandler
-                            );
-
-                        }
-
-
-                        monitorMap.__heatmapClipHandler =
-                            function () {
-
-                                setTimeout(
-                                    () => {
-
-                                        clipMonitorHeatmapToWaypoints();
-
-                                    },
-                                    50
+                            const color =
+                                turbidityColor(
+                                    point.ntu
                                 );
 
-                            };
+                            // Soft outer edge
+                            L.circle(
+                                [point.lat, point.lng],
+                                {
+                                    radius:
+                                        HEATMAP_SAMPLE_RADIUS_M,
+                                    stroke: false,
+                                    fillColor: color,
+                                    fillOpacity: 0.10,
+                                    interactive: false
+                                }
+                            ).addTo(group);
 
+                            // Middle area
+                            L.circle(
+                                [point.lat, point.lng],
+                                {
+                                    radius:
+                                        HEATMAP_SAMPLE_RADIUS_M * 0.68,
+                                    stroke: false,
+                                    fillColor: color,
+                                    fillOpacity: 0.18,
+                                    interactive: false
+                                }
+                            ).addTo(group);
 
-                        monitorMap.on(
-                            "zoomend",
-                            monitorMap.__heatmapClipHandler
-                        );
+                            // Core = strongest representation
+                            // of the actual measured NTU value.
+                            L.circle(
+                                [point.lat, point.lng],
+                                {
+                                    radius:
+                                        HEATMAP_SAMPLE_RADIUS_M * 0.38,
+                                    stroke: false,
+                                    fillColor: color,
+                                    fillOpacity: 0.30,
+                                    interactive: false
+                                }
+                            ).addTo(group);
+                        });
 
-                        monitorMap.on(
-                            "moveend",
-                            monitorMap.__heatmapClipHandler
-                        );
+                        group.addTo(targetMap);
 
+                        return group;
                     }
+
+                    // Main Mission map
+                    heatLayer =
+                        createSensorHeatGroup(
+                            map,
+                            displayPoints
+                        );
+
+                    // Monitor map
+                    monitorMap.invalidateSize(true);
+
+                    monitorHeatLayer =
+                        createSensorHeatGroup(
+                            monitorMap,
+                            displayPoints
+                        );
+
+                    console.log(
+                        "Sensor-value Heatmap Updated:",
+                        {
+                            rawSamples:
+                                sensorPoints.length,
+                            displayedSamples:
+                                displayPoints.length,
+                            latestNTU:
+                                sensorPoints[
+                                    sensorPoints.length - 1
+                                ].ntu,
+                            radiusMeters:
+                                HEATMAP_SAMPLE_RADIUS_M
+                        }
+                    );
 
                 }
                 catch (error) {
 
                     console.error(
-                        "Heatmap ERROR:",
+                        "loadHeatMap ERROR:",
                         error
                     );
 
@@ -8299,140 +8024,617 @@
 
             }
 
-            //====================================
-            // Load Manual Route
-            //====================================
 
-            async function loadManualRoute() {
+            // ======================================
+            // FINAL AVERAGED GRID HEATMAP
+            // Runs once after ALL waypoints are completed.
+            // - 10 x 10 grid over the whole mission route area
+            // - real average NTU for cells that contain samples
+            // - IDW only for empty cells
+            // - replaces the live sensor blobs with one final map
+            // ======================================
+
+            async function buildFinalAverageHeatmap() {
 
                 try {
 
+                    console.log(
+                        "===== BUILD FINAL AVERAGED HEATMAP ====="
+                    );
+
                     const response =
-                        await fetch(`${API_URL}/route`);
+                        await fetch(`${API_URL}/logs`);
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `HTTP Error: ${response.status}`
+                        );
+                    }
 
                     const data =
                         await response.json();
 
-                    console.log("Route Data :", data);
-
-                    if (data.length === 0) {
-
-                        console.log("Route Empty");
-
-                        return;
-
+                    if (!Array.isArray(data)) {
+                        return false;
                     }
 
-                    console.log("Route Length =", data.length);
+                    // ----------------------------------
+                    // Use only sensor data collected from WP1 onward.
+                    // ----------------------------------
+                    const normalizeLogTime = value => {
 
-                    manualRoute = [];
+                        if (!value) {
+                            return NaN;
+                        }
 
-                    manualMarkers.forEach(m => map.removeLayer(m));
+                        return new Date(
+                            String(value)
+                                .trim()
+                                .replace(" ", "T")
+                        ).getTime();
+                    };
 
-                    manualMarkers = [];
+                    const startTimeMs =
+                        normalizeLogTime(
+                            heatmapStartLogTime
+                        );
 
-                    if (manualPolyline) {
-                        map.removeLayer(manualPolyline);
-                    }
+                    const sensorPoints = [];
 
                     data.forEach(point => {
 
-                        // รองรับทั้ง Object และ Array
-                        const order = point.waypoint_order ?? point[0];
-                        const lat = Number(point.latitude ?? point[1]);
-                        const lng = Number(point.longitude ?? point[2]);
+                        if (!heatmapStartLogTime) {
+                            return;
+                        }
 
-                        manualRoute.push({
-                            lat: lat,
-                            lng: lng
+                        const pointTimeMs =
+                            normalizeLogTime(
+                                point.log_time
+                            );
+
+                        let isAfterStart = false;
+
+                        if (
+                            Number.isFinite(startTimeMs) &&
+                            Number.isFinite(pointTimeMs)
+                        ) {
+                            isAfterStart =
+                                pointTimeMs >= startTimeMs;
+                        }
+                        else if (point.log_time) {
+                            isAfterStart =
+                                String(point.log_time) >=
+                                String(heatmapStartLogTime);
+                        }
+
+                        if (!isAfterStart) {
+                            return;
+                        }
+
+                        const lat =
+                            Number(point.latitude);
+
+                        const lng =
+                            Number(point.longitude);
+
+                        const ntu =
+                            parseSensorValue(
+                                point.turbidity_ntu
+                            );
+
+                        if (
+                            !Number.isFinite(lat) ||
+                            !Number.isFinite(lng) ||
+                            ntu === null
+                        ) {
+                            return;
+                        }
+
+                        sensorPoints.push({
+                            lat,
+                            lng,
+                            ntu
                         });
-
-                        console.log("Waypoint :", order, lat, lng);
-
-                        const marker =
-                            L.marker([lat, lng])
-                                .addTo(map)
-                                .bindTooltip(
-                                    String(order),
-                                    {
-                                        permanent: true,
-                                        direction: "top",
-                                        offset: [0, -15]
-                                    }
-                                );
-
-                        manualMarkers.push(marker);
-
                     });
 
-                    manualPolyline =
-                        L.polyline(
-                            manualRoute.map(p => [p.lat, p.lng]),
-                            {
-                                color: "green",
-                                weight: 4
-                            }
-                        ).addTo(map);
-
-                    //========================
-                    // Monitor Route
-                    //========================
-
-                    if (monitorRouteLine) {
-
-                        monitorMap.removeLayer(monitorRouteLine);
-
+                    if (sensorPoints.length === 0) {
+                        console.log(
+                            "No sensor samples for final heatmap"
+                        );
+                        return false;
                     }
 
-                    monitorRouteLine =
-                        L.polyline(
+                    // ----------------------------------
+                    // Mission boundary = all route waypoints.
+                    // Fallback to sensor-data boundary if needed.
+                    // ----------------------------------
+                    const routePoints =
+                        Array.isArray(manualRoute)
+                            ? manualRoute
+                                .map(point => ({
+                                    lat: Number(point.lat),
+                                    lng: Number(point.lng)
+                                }))
+                                .filter(point =>
+                                    Number.isFinite(point.lat) &&
+                                    Number.isFinite(point.lng)
+                                )
+                            : [];
 
-                            manualRoute.map(p => [p.lat, p.lng]),
+                    const boundaryPoints =
+                        routePoints.length >= 2
+                            ? routePoints
+                            : sensorPoints;
 
-                            {
-
-                                color: "#00e5ff",
-
-                                weight: 5
-
-                            }
-
-                        ).addTo(monitorMap);
-
-                    updateMonitorWaypoints();
-
-                    if (manualRoute.length > 0) {
-
-                        monitorMap.fitBounds(
-
-                            monitorRouteLine.getBounds(),
-
-                            {
-
-                                padding: [40, 40]
-
-                            }
-
+                    let minLat =
+                        Math.min(
+                            ...boundaryPoints.map(
+                                point => point.lat
+                            )
                         );
 
+                    let maxLat =
+                        Math.max(
+                            ...boundaryPoints.map(
+                                point => point.lat
+                            )
+                        );
+
+                    let minLng =
+                        Math.min(
+                            ...boundaryPoints.map(
+                                point => point.lng
+                            )
+                        );
+
+                    let maxLng =
+                        Math.max(
+                            ...boundaryPoints.map(
+                                point => point.lng
+                            )
+                        );
+
+                    if (
+                        !Number.isFinite(minLat) ||
+                        !Number.isFinite(maxLat) ||
+                        !Number.isFinite(minLng) ||
+                        !Number.isFinite(maxLng)
+                    ) {
+                        return false;
                     }
 
-                    console.log("Manual Route Loaded");
+                    // Very small safety padding only when a dimension collapses.
+                    if (minLat === maxLat) {
+                        minLat -= 0.00001;
+                        maxLat += 0.00001;
+                    }
 
-                    console.log(manualRoute);
+                    if (minLng === maxLng) {
+                        minLng -= 0.00001;
+                        maxLng += 0.00001;
+                    }
 
+                    const rows =
+                        FINAL_HEATMAP_GRID_ROWS;
+
+                    const cols =
+                        FINAL_HEATMAP_GRID_COLS;
+
+                    const latStep =
+                        (maxLat - minLat) / rows;
+
+                    const lngStep =
+                        (maxLng - minLng) / cols;
+
+                    // Each grid cell stores REAL sensor values first.
+                    const grid =
+                        Array.from(
+                            { length: rows },
+                            () =>
+                                Array.from(
+                                    { length: cols },
+                                    () => []
+                                )
+                        );
+
+                    sensorPoints.forEach(point => {
+
+                        let row = Math.floor(
+                            (point.lat - minLat) /
+                            latStep
+                        );
+
+                        let col = Math.floor(
+                            (point.lng - minLng) /
+                            lngStep
+                        );
+
+                        row = Math.min(
+                            rows - 1,
+                            Math.max(0, row)
+                        );
+
+                        col = Math.min(
+                            cols - 1,
+                            Math.max(0, col)
+                        );
+
+                        grid[row][col].push(
+                            point.ntu
+                        );
+                    });
+
+                    // ----------------------------------
+                    // Distance in meters for IDW.
+                    // ----------------------------------
+                    function distanceMeters(
+                        lat1,
+                        lng1,
+                        lat2,
+                        lng2
+                    ) {
+
+                        const R = 6371000;
+                        const toRad = value =>
+                            value * Math.PI / 180;
+
+                        const dLat =
+                            toRad(lat2 - lat1);
+
+                        const dLng =
+                            toRad(lng2 - lng1);
+
+                        const a =
+                            Math.sin(dLat / 2) ** 2 +
+                            Math.cos(toRad(lat1)) *
+                            Math.cos(toRad(lat2)) *
+                            Math.sin(dLng / 2) ** 2;
+
+                        return R * 2 * Math.atan2(
+                            Math.sqrt(a),
+                            Math.sqrt(1 - a)
+                        );
+                    }
+
+                    function idwValue(lat, lng) {
+
+                        let weightedSum = 0;
+                        let weightSum = 0;
+
+                        for (const point of sensorPoints) {
+
+                            const distance =
+                                distanceMeters(
+                                    lat,
+                                    lng,
+                                    point.lat,
+                                    point.lng
+                                );
+
+                            if (distance < 0.20) {
+                                return point.ntu;
+                            }
+
+                            const weight =
+                                1 /
+                                Math.pow(
+                                    Math.max(distance, 0.20),
+                                    FINAL_HEATMAP_IDW_POWER
+                                );
+
+                            weightedSum +=
+                                weight * point.ntu;
+
+                            weightSum += weight;
+                        }
+
+                        return weightSum > 0
+                            ? weightedSum / weightSum
+                            : null;
+                    }
+
+                    // ----------------------------------
+                    // Fixed 0 / 10 / 20 / 30 / 40+ NTU color scale.
+                    // ----------------------------------
+                    const colorStops = [
+                        { value: 0,  rgb: [37, 99, 235] },
+                        { value: 10, rgb: [34, 197, 94] },
+                        { value: 20, rgb: [250, 204, 21] },
+                        { value: 30, rgb: [249, 115, 22] },
+                        { value: 40, rgb: [239, 68, 68] }
+                    ];
+
+                    function finalTurbidityColor(value) {
+
+                        const ntu =
+                            Math.min(
+                                Math.max(
+                                    Number(value),
+                                    0
+                                ),
+                                40
+                            );
+
+                        for (
+                            let i = 0;
+                            i < colorStops.length - 1;
+                            i++
+                        ) {
+
+                            const a = colorStops[i];
+                            const b = colorStops[i + 1];
+
+                            if (
+                                ntu >= a.value &&
+                                ntu <= b.value
+                            ) {
+
+                                const t =
+                                    (ntu - a.value) /
+                                    (b.value - a.value);
+
+                                const rgb =
+                                    a.rgb.map(
+                                        (channel, index) =>
+                                            Math.round(
+                                                channel +
+                                                (
+                                                    b.rgb[index] -
+                                                    channel
+                                                ) * t
+                                            )
+                                    );
+
+                                return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+                            }
+                        }
+
+                        return "rgb(239,68,68)";
+                    }
+
+                    // ----------------------------------
+                    // Build the 10 x 10 final grid.
+                    // ----------------------------------
+                    const finalCells = [];
+                    let directAverageCells = 0;
+                    let idwFilledCells = 0;
+
+                    for (
+                        let row = 0;
+                        row < rows;
+                        row++
+                    ) {
+
+                        for (
+                            let col = 0;
+                            col < cols;
+                            col++
+                        ) {
+
+                            const south =
+                                minLat +
+                                row * latStep;
+
+                            const north =
+                                minLat +
+                                (row + 1) * latStep;
+
+                            const west =
+                                minLng +
+                                col * lngStep;
+
+                            const east =
+                                minLng +
+                                (col + 1) * lngStep;
+
+                            const values =
+                                grid[row][col];
+
+                            let value = null;
+                            let source = "IDW";
+
+                            if (values.length > 0) {
+
+                                value =
+                                    values.reduce(
+                                        (sum, item) =>
+                                            sum + item,
+                                        0
+                                    ) / values.length;
+
+                                source = "Average";
+                                directAverageCells++;
+                            }
+                            else {
+
+                                value =
+                                    idwValue(
+                                        (south + north) / 2,
+                                        (west + east) / 2
+                                    );
+
+                                if (value !== null) {
+                                    idwFilledCells++;
+                                }
+                            }
+
+                            if (!Number.isFinite(value)) {
+                                continue;
+                            }
+
+                            finalCells.push({
+                                south,
+                                north,
+                                west,
+                                east,
+                                value,
+                                source,
+                                samples: values.length
+                            });
+                        }
+                    }
+
+                    if (finalCells.length === 0) {
+                        return false;
+                    }
+
+                    // ----------------------------------
+                    // Replace LIVE heatmap with FINAL averaged grid.
+                    // Use the same heatLayer / monitorHeatLayer variables so
+                    // the normal new-mission reset already removes it.
+                    // ----------------------------------
+                    if (heatLayer) {
+                        map.removeLayer(heatLayer);
+                        heatLayer = null;
+                    }
+
+                    if (monitorHeatLayer) {
+                        monitorMap.removeLayer(
+                            monitorHeatLayer
+                        );
+                        monitorHeatLayer = null;
+                    }
+
+                    function createFinalGridGroup(
+                        targetMap,
+                        useHeatPane
+                    ) {
+
+                        const group = L.layerGroup();
+
+                        finalCells.forEach(cell => {
+
+                            const options = {
+                                stroke: true,
+                                color: "#ffffff",
+                                weight: 0.35,
+                                opacity: 0.18,
+                                fillColor:
+                                    finalTurbidityColor(
+                                        cell.value
+                                    ),
+                                fillOpacity: 0.58,
+                                interactive: false
+                            };
+
+                            // Keep the Monitor final heatmap BELOW the
+                            // blue route/path line, matching the path fix.
+                            if (useHeatPane) {
+                                options.pane = "heatPane";
+                            }
+
+                            L.rectangle(
+                                [
+                                    [
+                                        cell.south,
+                                        cell.west
+                                    ],
+                                    [
+                                        cell.north,
+                                        cell.east
+                                    ]
+                                ],
+                                options
+                            ).addTo(group);
+                        });
+
+                        group.addTo(targetMap);
+                        return group;
+                    }
+
+                    heatLayer =
+                        createFinalGridGroup(
+                            map,
+                            false
+                        );
+
+                    monitorMap.invalidateSize(true);
+
+                    monitorHeatLayer =
+                        createFinalGridGroup(
+                            monitorMap,
+                            true
+                        );
+
+                    // Summary remains based on REAL mission samples,
+                    // not on IDW-filled cells.
+                    const ntuValues =
+                        sensorPoints.map(
+                            point => point.ntu
+                        );
+
+                    const maxNTU =
+                        Math.max(...ntuValues);
+
+                    const avgNTU =
+                        ntuValues.reduce(
+                            (sum, value) =>
+                                sum + value,
+                            0
+                        ) / ntuValues.length;
+
+                    const maxNTUElement =
+                        document.getElementById(
+                            "monitorMaxNTU"
+                        );
+
+                    if (maxNTUElement) {
+                        maxNTUElement.innerText =
+                            maxNTU.toFixed(2) + " NTU";
+                    }
+
+                    const avgNTUElement =
+                        document.getElementById(
+                            "monitorAvgNTU"
+                        );
+
+                    if (avgNTUElement) {
+                        avgNTUElement.innerText =
+                            avgNTU.toFixed(2) + " NTU";
+                    }
+
+                    const samplesElement =
+                        document.getElementById(
+                            "monitorSamples"
+                        );
+
+                    if (samplesElement) {
+                        samplesElement.innerText =
+                            sensorPoints.length;
+                    }
+
+                    console.log(
+                        "Final Averaged Heatmap Ready:",
+                        {
+                            grid:
+                                `${rows}x${cols}`,
+                            samples:
+                                sensorPoints.length,
+                            directAverageCells,
+                            idwFilledCells,
+                            totalCells:
+                                finalCells.length,
+                            missionAverageNTU:
+                                avgNTU.toFixed(2),
+                            missionMaxNTU:
+                                maxNTU.toFixed(2)
+                        }
+                    );
+
+                    return true;
                 }
-
                 catch (error) {
 
-                    console.log(error);
+                    console.error(
+                        "buildFinalAverageHeatmap ERROR:",
+                        error
+                    );
 
+                    return false;
                 }
-
             }
 
 
-            // โหลดตำแหน่งคาดการณ์
             async function loadPrediction() {
 
                 try {
@@ -8453,50 +8655,6 @@
                     const lng =
                         parseFloat(latest.predicted_lng);
 
-                    if (!predictionMarker) {
-
-                        predictionMarker =
-                            L.marker(
-                                [lat, lng],
-                                {
-                                    icon: purpleIcon
-                                }
-                            ).addTo(map);
-
-                    } else {
-
-                        predictionMarker.setLatLng([lat, lng]);
-
-                    }
-                    if (marker) {
-
-                        const currentLat = marker.getLatLng().lat;
-                        const currentLng = marker.getLatLng().lng;
-
-                        if (predictionLine) {
-                            map.removeLayer(predictionLine);
-                        }
-
-                        predictionLine = L.polyline(
-                            [
-                                [currentLat, currentLng],
-                                [lat, lng]
-                            ],
-                            {
-                                color: 'purple',
-                                weight: 3,
-                                dashArray: '10,10'
-                            }
-                        ).addTo(map);
-                    }
-
-
-                    predictionMarker.bindPopup(
-                        `
-            <b>🔴 Predicted Position</b><br>
-            Lat: ${lat}<br>
-            Lng: ${lng}
-            `);
 
                 }
                 catch (error) {
@@ -8710,8 +8868,21 @@
                     // ==================================
 
                     currentMonitorWaypoint = 0;
+
+                    completedMonitorWaypoints = 0;
+
+                    monitorProgressInitializedFromBackend = false;
+
+                    missionCompletionSent = false;
+
+                    waypointDetectionLocked = false;
+
+                    lastReachedWaypointPosition = null;
+
                     lastHeatmapWaypoint = -1;
+
                     heatmapUnlocked = false;
+
                     heatmapStartLogTime = null;
 
                     if (heatLayer) {
@@ -9295,62 +9466,115 @@
                     const data =
                         await response.json();
 
+                    if (
+                        !monitorProgressInitializedFromBackend &&
+                        manualRoute.length > 0 &&
+                        Number(data.current_waypoint) > 0
+                    ) {
+
+                        currentMonitorWaypoint =
+                            Math.min(
+                                Math.max(
+                                    Number(data.current_waypoint) - 1,
+                                    0
+                                ),
+                                manualRoute.length - 1
+                            );
+
+
+                        completedMonitorWaypoints =
+                            Math.min(
+                                Math.max(
+                                    Number(
+                                        data.completed_waypoints
+                                    ) || 0,
+                                    0
+                                ),
+                                manualRoute.length
+                            );
+
+
+                        monitorProgressInitializedFromBackend =
+                            true;
+
+
+                        updateMonitorWaypoints();
+
+
+                        console.log(
+                            "Monitor Progress Restored:",
+                            {
+                                target:
+                                    currentMonitorWaypoint + 1,
+
+                                completed:
+                                    completedMonitorWaypoints
+                            }
+                        );
+
+                    }
+
                     document.getElementById("currentWaypoint").innerText =
                         `${data.current_waypoint} / ${data.total_waypoints}`;
 
-                    document.getElementById("monitorCurrentWP").innerText =
-                        data.current_waypoint;
-
-                    document.getElementById("monitorTotalWP").innerText =
-                        data.total_waypoints;
-
                     document.getElementById("routeSummary").innerText =
                         `${data.total_waypoints} WP`;
-
-                    let percent = 0;
-
-                    if (data.total_waypoints > 0) {
-
-                        percent =
-                            (data.current_waypoint / data.total_waypoints) * 100;
-
-                    }
-
-                    // =====================================
-                    // MONITOR PROGRESS
-                    // =====================================
-
-                    const monitorProgressBar =
-                        document.getElementById(
-                            "monitorProgressBar"
-                        );
-
-                    const monitorProgressText =
-                        document.getElementById(
-                            "monitorProgressText"
-                        );
-
-
-                    if (monitorProgressBar) {
-
-                        monitorProgressBar.style.width =
-                            percent + "%";
-
-                    }
-
-
-                    if (monitorProgressText) {
-
-                        monitorProgressText.innerText =
-                            percent.toFixed(0) + "%";
-
-                    }
 
                 }
 
                 catch (error) {
 
                     console.log(error);
+
+                }
+
+            }
+
+            async function syncMissionProgressToBackend() {
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `${API_URL}/mission/progress/update`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+
+                                    current_waypoint:
+                                        currentMonitorWaypoint + 1,
+
+                                    completed_waypoints:
+                                        completedMonitorWaypoints
+
+                                })
+
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    console.log(
+                        "Mission Progress Synced:",
+                        data
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Mission Progress Sync Error:",
+                        error
+                    );
 
                 }
 
@@ -9721,70 +9945,6 @@
             // Sweep Spacing Verification
             //==============================
 
-            function resetSweepSpacingVerification(selectedSpacing) {
-
-                const selected =
-                    Number(selectedSpacing);
-
-                const selectedElement =
-                    document.getElementById(
-                        "sweepSpacingSelected"
-                    );
-
-                const avgElement =
-                    document.getElementById(
-                        "sweepSpacingActualAvg"
-                    );
-
-                const minElement =
-                    document.getElementById(
-                        "sweepSpacingActualMin"
-                    );
-
-                const maxElement =
-                    document.getElementById(
-                        "sweepSpacingActualMax"
-                    );
-
-                const statusElement =
-                    document.getElementById(
-                        "sweepSpacingVerifyStatus"
-                    );
-
-                if (selectedElement) {
-
-                    selectedElement.innerText =
-                        Number.isFinite(selected)
-                            ? selected.toFixed(2)
-                            : "--";
-
-                }
-
-                if (avgElement) {
-                    avgElement.innerText = "--";
-                }
-
-                if (minElement) {
-                    minElement.innerText = "--";
-                }
-
-                if (maxElement) {
-                    maxElement.innerText = "--";
-                }
-
-                if (statusElement) {
-
-                    statusElement.innerText =
-                        "Generate to verify";
-
-                    statusElement.style.color =
-                        "#64748b";
-
-                }
-
-            }
-
-
             function haversineDistanceMeters(
                 lat1,
                 lng1,
@@ -9838,325 +9998,6 @@
 
                 return (
                     earthRadius * c
-                );
-
-            }
-
-
-            function verifyGeneratedSweepSpacing(
-                selectedSpacing
-            ) {
-
-                const selected =
-                    Number(selectedSpacing);
-
-                const statusElement =
-                    document.getElementById(
-                        "sweepSpacingVerifyStatus"
-                    );
-
-                const avgElement =
-                    document.getElementById(
-                        "sweepSpacingActualAvg"
-                    );
-
-                const minElement =
-                    document.getElementById(
-                        "sweepSpacingActualMin"
-                    );
-
-                const maxElement =
-                    document.getElementById(
-                        "sweepSpacingActualMax"
-                    );
-
-                const selectedElement =
-                    document.getElementById(
-                        "sweepSpacingSelected"
-                    );
-
-
-                if (selectedElement) {
-
-                    selectedElement.innerText =
-                        Number.isFinite(selected)
-                            ? selected.toFixed(2)
-                            : "--";
-
-                }
-
-
-                // Backend keeps the original Sweep logic:
-                // 4 waypoints per Sweep line.
-                if (
-                    !Array.isArray(manualRoute) ||
-                    manualRoute.length < 8
-                ) {
-
-                    if (statusElement) {
-
-                        statusElement.innerText =
-                            "Not enough lines";
-
-                        statusElement.style.color =
-                            "#d97706";
-
-                    }
-
-                    return;
-
-                }
-
-
-                const sweepLineCenters =
-                    [];
-
-
-                for (
-                    let index = 0;
-                    index + 3 < manualRoute.length;
-                    index += 4
-                ) {
-
-                    const line =
-                        manualRoute.slice(
-                            index,
-                            index + 4
-                        );
-
-
-                    const validLine =
-                        line.filter(
-                            point =>
-                                Number.isFinite(
-                                    Number(point.lat)
-                                )
-                                &&
-                                Number.isFinite(
-                                    Number(point.lng)
-                                )
-                        );
-
-
-                    if (
-                        validLine.length !== 4
-                    ) {
-
-                        continue;
-
-                    }
-
-
-                    const centerLat =
-                        validLine.reduce(
-                            (sum, point) =>
-                                sum +
-                                Number(point.lat),
-                            0
-                        )
-                        /
-                        validLine.length;
-
-
-                    const centerLng =
-                        validLine.reduce(
-                            (sum, point) =>
-                                sum +
-                                Number(point.lng),
-                            0
-                        )
-                        /
-                        validLine.length;
-
-
-                    sweepLineCenters.push({
-                        lat: centerLat,
-                        lng: centerLng
-                    });
-
-                }
-
-
-                const distances =
-                    [];
-
-
-                for (
-                    let index = 1;
-                    index < sweepLineCenters.length;
-                    index++
-                ) {
-
-                    const previous =
-                        sweepLineCenters[
-                        index - 1
-                        ];
-
-                    const current =
-                        sweepLineCenters[
-                        index
-                        ];
-
-
-                    const distance =
-                        haversineDistanceMeters(
-                            previous.lat,
-                            previous.lng,
-                            current.lat,
-                            current.lng
-                        );
-
-
-                    if (
-                        Number.isFinite(distance)
-                        &&
-                        distance > 0
-                    ) {
-
-                        distances.push(
-                            distance
-                        );
-
-                    }
-
-                }
-
-
-                if (
-                    distances.length === 0
-                ) {
-
-                    if (statusElement) {
-
-                        statusElement.innerText =
-                            "Unable to verify";
-
-                        statusElement.style.color =
-                            "#dc2626";
-
-                    }
-
-                    return;
-
-                }
-
-
-                const average =
-                    distances.reduce(
-                        (sum, value) =>
-                            sum + value,
-                        0
-                    )
-                    /
-                    distances.length;
-
-
-                const minimum =
-                    Math.min(
-                        ...distances
-                    );
-
-
-                const maximum =
-                    Math.max(
-                        ...distances
-                    );
-
-
-                if (avgElement) {
-
-                    avgElement.innerText =
-                        average.toFixed(2);
-
-                }
-
-
-                if (minElement) {
-
-                    minElement.innerText =
-                        minimum.toFixed(2);
-
-                }
-
-
-                if (maxElement) {
-
-                    maxElement.innerText =
-                        maximum.toFixed(2);
-
-                }
-
-
-                const tolerance =
-                    Math.max(
-                        0.10,
-                        selected * 0.05
-                    );
-
-
-                const verified =
-                    Number.isFinite(selected)
-                    &&
-                    Math.abs(
-                        average - selected
-                    ) <= tolerance;
-
-
-                if (statusElement) {
-
-                    if (verified) {
-
-                        statusElement.innerText =
-                            "✅ Verified";
-
-                        statusElement.style.color =
-                            "#16a34a";
-
-                    }
-                    else {
-
-                        statusElement.innerText =
-                            "⚠ Check spacing";
-
-                        statusElement.style.color =
-                            "#dc2626";
-
-                    }
-
-                }
-
-
-                console.log(
-                    "===== SWEEP SPACING CHECK ====="
-                );
-
-                console.log(
-                    "Selected:",
-                    selected,
-                    "m"
-                );
-
-                console.log(
-                    "Actual Average:",
-                    average,
-                    "m"
-                );
-
-                console.log(
-                    "Minimum:",
-                    minimum,
-                    "m"
-                );
-
-                console.log(
-                    "Maximum:",
-                    maximum,
-                    "m"
-                );
-
-                console.log(
-                    "Distances:",
-                    distances
                 );
 
             }
@@ -10220,21 +10061,6 @@
                 const width = originalWidth - (marginLng * 2);
                 const height = originalHeight - (marginLat * 2);
 
-                const spacing = Number(
-                    document.getElementById("sweepSpacing").value
-                );
-
-                if (!Number.isFinite(spacing) || spacing <= 0) {
-
-                    showPopup(
-                        "warning",
-                        "⚠ Invalid Spacing",
-                        "Sweep spacing must be greater than 0 meter."
-                    );
-
-                    return;
-                }
-
                 try {
 
                     const response = await fetch(`${API_URL}/generate_sweep`, {
@@ -10252,8 +10078,6 @@
 
                             width: width,
                             height: height,
-
-                            spacing: spacing,
 
                             orientation: "vertical"
 
@@ -10318,18 +10142,105 @@
                     }
 
                     //==============================
-                    // Load Generated Sweep Route
+                    // Draw Generated Sweep Route
                     //==============================
 
-                    await loadManualRoute();
+                    manualRoute = [];
 
-                    //==============================
-                    // Verify Actual Sweep Spacing
-                    //==============================
+                    manualMarkers.forEach(marker => {
+                        map.removeLayer(marker);
+                    });
 
-                    verifyGeneratedSweepSpacing(
-                        spacing
+                    manualMarkers = [];
+
+                    if (manualPolyline) {
+                        map.removeLayer(manualPolyline);
+                        manualPolyline = null;
+                    }
+
+                    data.forEach((point, index) => {
+
+                        const order =
+                            point.waypoint_order ??
+                            point.order ??
+                            (index + 1);
+
+                        const lat = Number(point.latitude);
+                        const lng = Number(point.longitude);
+
+                        if (
+                            !Number.isFinite(lat) ||
+                            !Number.isFinite(lng)
+                        ) {
+                            console.log("Invalid waypoint:", point);
+                            return;
+                        }
+
+                        manualRoute.push({
+                            lat: lat,
+                            lng: lng
+                        });
+
+                        const marker =
+                            L.marker([lat, lng])
+                                .addTo(map)
+                                .bindTooltip(
+                                    String(order),
+                                    {
+                                        permanent: true,
+                                        direction: "top",
+                                        offset: [0, -15]
+                                    }
+                                );
+
+                        manualMarkers.push(marker);
+                    });
+
+                    manualPolyline =
+                        L.polyline(
+                            manualRoute.map(p => [p.lat, p.lng]),
+                            {
+                                color: "green",
+                                weight: 4
+                            }
+                        ).addTo(map);
+
+                    if (manualRoute.length > 0) {
+
+                        map.fitBounds(
+                            manualPolyline.getBounds(),
+                            {
+                                padding: [70, 70],
+                                maxZoom: 20
+                            }
+                        );
+                    }
+
+                    updateMonitorWaypoints();
+
+                    console.log(
+                        "Generated Sweep Waypoints:",
+                        manualRoute
                     );
+
+                    //==============================
+                    // Show Generated Sweep Clearly
+                    //==============================
+
+                    if (
+                        manualPolyline &&
+                        manualRoute.length > 0
+                    ) {
+
+                        map.fitBounds(
+                            manualPolyline.getBounds(),
+                            {
+                                padding: [70, 70],
+                                maxZoom: 20
+                            }
+                        );
+
+                    }
 
                     //==============================
                     // Remove Preview
@@ -10749,7 +10660,7 @@
             const heatPane =
                 monitorMap.getPane("heatPane");
 
-            heatPane.style.zIndex = 450;
+            heatPane.style.zIndex = 350;
 
             heatPane.style.position = "absolute";
 
@@ -10840,6 +10751,25 @@
 
             let currentMonitorWaypoint = 0;
 
+            // จำนวน Waypoint ที่ผ่านจริงแล้ว
+            let completedMonitorWaypoints = 0;
+
+            let monitorProgressInitializedFromBackend =
+                false;
+
+            let missionCompletionSent = false;
+
+            // Radius สำหรับถือว่า "ถึง Waypoint"
+            const WAYPOINT_REACHED_RADIUS_M = 2.5;
+
+            // ต้องออกจาก WP เดิมอย่างน้อย 2.7 m
+            // ก่อนอนุญาตให้ตรวจ WP ถัดไป
+            const WAYPOINT_RELEASE_RADIUS_M = 2.7;
+
+            let waypointDetectionLocked = false;
+
+            let lastReachedWaypointPosition = null;
+
             const miniMap = L.map('miniMap', {
 
                 zoomControl: true,
@@ -10885,13 +10815,13 @@
 
                 console.log("Route Loaded");
 
-                await loadBoat();
-
-                console.log("Boat Loaded");
-
                 await loadMissionStatus();
 
                 await loadMissionProgress();
+
+                await loadBoat();
+
+                console.log("Boat Loaded");
 
                 await loadPath();
 
@@ -10908,7 +10838,7 @@
 
             initializeDashboard();
 
-            setInterval(loadBoat, 5000);
+            setInterval(loadBoat, 1000);
 
             setInterval(loadMissionStatus, 2000);
 
@@ -10918,7 +10848,7 @@
 
             setInterval(loadHistory, 30000);
 
-            // setInterval(loadHeatMap, 30000);
+            setInterval(loadHeatMap, HEATMAP_UPDATE_INTERVAL_MS);
 
             //setInterval(loadManualRoute, 5000);
 
@@ -11112,6 +11042,37 @@
                     }
 
                 }, 300);
+
+            }
+
+
+            // =====================================
+            // FIX MISSION MAP SIZE / TILE
+            // =====================================
+
+            if (page === "missionPage") {
+
+                setTimeout(() => {
+
+                    map.invalidateSize(true);
+
+                    missionBaseTile.redraw();
+
+                    console.log(
+                        "Mission Map Size:",
+                        map.getSize()
+                    );
+
+                }, 300);
+
+
+                setTimeout(() => {
+
+                    map.invalidateSize(true);
+
+                    missionBaseTile.redraw();
+
+                }, 800);
 
             }
 

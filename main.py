@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 import pymysql
 import os
 import math
+from datetime import datetime, timezone, timedelta
 
 app = FastAPI()
 
@@ -28,6 +29,8 @@ boat_state = "Idle"
 mission_command = "IDLE"
 
 current_waypoint = 0
+
+completed_waypoints_runtime = 0
 
 total_waypoints = 0
 
@@ -109,12 +112,17 @@ class SweepArea(BaseModel):
     start_lng: float
     width: float
     height: float
-    spacing: float
+    spacing: float | None = None
     orientation: str = "vertical"
 
 
 class MissionRequest(BaseModel):
     mode: str
+
+
+class MissionProgressUpdate(BaseModel):
+    current_waypoint: int
+    completed_waypoints: int
 
 # ✅ เช็ค API
 @app.get("/")
@@ -170,6 +178,17 @@ def receive_data(data: SensorData):
     flow_v_lat = clean_float(data.flow_v_lat)
     flow_v_lng = clean_float(data.flow_v_lng)
     battery = clean_float(data.battery)
+
+    # ====================================
+    # REAL RECEIVE TIME (THAILAND)
+    # ====================================
+    THAILAND_TZ = timezone(
+    timedelta(hours=7)
+    ) 
+
+    received_at = datetime.now(
+    THAILAND_TZ
+    ).replace(tzinfo=None)
 
     if data.current_mode is not None:
         current_boat_mode = data.current_mode
@@ -228,7 +247,7 @@ def receive_data(data: SensorData):
             (
                 %s,
                 %s,
-                NOW(),
+                %s,
                 %s,
                 %s,
                 %s,
@@ -241,6 +260,7 @@ def receive_data(data: SensorData):
         """, (
             data.boat_id,
             current_mission_id,
+            received_at,
             latitude,
             longitude,
             heading,
@@ -280,7 +300,7 @@ def receive_data(data: SensorData):
             )
             VALUES
             (
-                NOW(),
+                %s,
                 %s,
                 %s,
                 %s,
@@ -291,6 +311,7 @@ def receive_data(data: SensorData):
                 %s
             )
         """, (
+            received_at,
             latitude,
             longitude,
             predicted_lat,
@@ -342,25 +363,52 @@ def receive_data(data: SensorData):
 # ✅ ดูข้อมูล sensor_logs ล่าสุด 100 รายการ
 @app.get("/logs")
 def get_logs():
+
+    global current_mission_id
+
+    conn = None
+    cursor = None
+
     try:
+
+        if current_mission_id is None:
+            return []
+
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM sensor_logs LIMIT 100")
+        cursor.execute(
+            """
+            SELECT *
+            FROM sensor_logs
+            WHERE mission_id = %s
+            ORDER BY id ASC
+            LIMIT 1000
+            """,
+            (
+                current_mission_id,
+            )
+        )
 
         data = cursor.fetchall()
 
         return data
 
     except Exception as e:
-        return {"error": str(e)}
+
+        return {
+            "error": str(e)
+        }
 
     finally:
-        try:
+
+        if cursor:
             cursor.close()
+
+        if conn:
             conn.close()
-        except:
-            pass
+
+
 
 # ✅ ดูข้อมูล prediction ล่าสุด 100 รายการ
 @app.get("/predictions")
@@ -386,31 +434,55 @@ def get_predictions():
             pass
 
 
-# ✅ ดูเส้นทางเรือทั้งหมด
+# ✅ ดูเส้นทางเรือของ Mission ปัจจุบัน
 @app.get("/path")
 def get_path():
+
+    global current_mission_id
+
+    conn = None
+    cursor = None
+
     try:
+
+        if current_mission_id is None:
+            return []
+
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT latitude, longitude
+        cursor.execute(
+            """
+            SELECT
+                latitude,
+                longitude
             FROM sensor_logs
-        """)
+            WHERE mission_id = %s
+            ORDER BY id ASC
+            """,
+            (
+                current_mission_id,
+            )
+        )
 
         data = cursor.fetchall()
 
         return data
 
     except Exception as e:
-        return {"error": str(e)}
+
+        return {
+            "error": str(e)
+        }
 
     finally:
-        try:
+
+        if cursor:
             cursor.close()
+
+        if conn:
             conn.close()
-        except:
-            pass
+
 
 
 # ✅ ดูข้อมูลล่าสุด 1 รายการ (ใช้กับ Dashboard)
@@ -966,6 +1038,7 @@ def startMission(request: MissionRequest):
     global mission_command
     global current_mission_id
     global current_waypoint
+    global completed_waypoints_runtime
     global total_waypoints
 
     # ====================================
@@ -1088,7 +1161,13 @@ def startMission(request: MissionRequest):
 
         mission_command = "START"
 
-        current_waypoint = 0
+        current_waypoint = (
+            1
+            if total_waypoints > 0
+            else 0
+        )
+
+        completed_waypoints_runtime = 0
 
         print(
             "===================================="
@@ -1170,6 +1249,7 @@ def completeMission():
     global mission_command
     global current_mission_id
     global current_waypoint
+    global completed_waypoints_runtime
 
     conn = None
     cursor = None
@@ -1206,20 +1286,16 @@ def completeMission():
         sensor_stats = cursor.fetchone()
 
         # ==============================
-        # COUNT COMPLETED WAYPOINTS
+        # COMPLETED WAYPOINTS
         # ==============================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM routes
-            WHERE mission_id = %s
-        """, (
-            current_mission_id,
-        ))
-
-        route_stats = cursor.fetchone()
-
-        completed_waypoints = route_stats["total"]
+        completed_waypoints = min(
+            max(
+                completed_waypoints_runtime,
+                0
+            ),
+            total_waypoints
+        )
 
         # ==============================
         # UPDATE MISSION
@@ -1260,6 +1336,7 @@ def completeMission():
 
         current_mission_id = None
         current_waypoint = 0
+        completed_waypoints_runtime = 0
 
         return {
             "success": True,
@@ -1428,11 +1505,118 @@ def missionProgress():
 
     return {
 
-        "current_waypoint": current_waypoint,
+        "current_waypoint":
+            current_waypoint,
 
-        "total_waypoints": total_waypoints
+        "completed_waypoints":
+            completed_waypoints_runtime,
 
-    }    
+        "total_waypoints":
+            total_waypoints
+
+    }
+
+
+@app.post("/mission/progress/update")
+def updateMissionProgress(
+    progress: MissionProgressUpdate
+):
+
+    global current_waypoint
+    global completed_waypoints_runtime
+    global current_mission_id
+    global total_waypoints
+
+    if current_mission_id is None:
+
+        return {
+            "success": False,
+            "message": "No active mission"
+        }
+
+    if total_waypoints <= 0:
+
+        return {
+            "success": False,
+            "message": "No route available"
+        }
+
+    current_waypoint = max(
+        1,
+        min(
+            progress.current_waypoint,
+            total_waypoints
+        )
+    )
+
+    completed_waypoints_runtime = max(
+        0,
+        min(
+            progress.completed_waypoints,
+            total_waypoints
+        )
+    )
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE missions
+            SET completed_waypoints = %s
+            WHERE mission_id = %s
+            """,
+            (
+                completed_waypoints_runtime,
+                current_mission_id
+            )
+        )
+
+        conn.commit()
+
+        return {
+
+            "success": True,
+
+            "mission_id":
+                current_mission_id,
+
+            "current_waypoint":
+                current_waypoint,
+
+            "completed_waypoints":
+                completed_waypoints_runtime,
+
+            "total_waypoints":
+                total_waypoints
+
+        }
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+
 
     
 #====================================
@@ -1494,12 +1678,12 @@ def generateSweep(area: SweepArea):
     cursor = conn.cursor()
 
     # ==============================
-    # Clear Old Route
+    # Clear Old Draft Route
     # ==============================
 
     cursor.execute("""
-       DELETE FROM routes
-       WHERE mission_id IS NULL
+        DELETE FROM routes
+        WHERE mission_id IS NULL
     """)
 
     route = []
@@ -1509,7 +1693,46 @@ def generateSweep(area: SweepArea):
     count = 0
 
     # ==============================
-    # Function: Add Waypoint
+    # Distance Checker
+    # Terminal display only
+    # ==============================
+
+    def calculate_distance_m(
+        lat1,
+        lng1,
+        lat2,
+        lng2
+    ):
+
+        earth_radius = 6371000.0
+
+        lat1_rad = math.radians(lat1)
+        lat2_rad = math.radians(lat2)
+
+        delta_lat = math.radians(
+            lat2 - lat1
+        )
+
+        delta_lng = math.radians(
+            lng2 - lng1
+        )
+
+        a = (
+            math.sin(delta_lat / 2) ** 2
+            + math.cos(lat1_rad)
+            * math.cos(lat2_rad)
+            * math.sin(delta_lng / 2) ** 2
+        )
+
+        c = 2 * math.atan2(
+            math.sqrt(a),
+            math.sqrt(1 - a)
+        )
+
+        return earth_radius * c
+
+    # ==============================
+    # Add Waypoint
     # ==============================
 
     def add_waypoint(lat, lng):
@@ -1556,11 +1779,6 @@ def generateSweep(area: SweepArea):
             f"Lng={lng}"
         )
 
-        # ==================================
-        # REAL DISTANCE FROM PREVIOUS WP
-        # Display only - route is unchanged
-        # ==================================
-
         if previous_point is not None:
 
             actual_distance_m = (
@@ -1581,490 +1799,118 @@ def generateSweep(area: SweepArea):
 
         order += 1
 
-    # ==============================
-    # Area
-    # ==============================
-
     start_lng = area.start_lng
     end_lng = area.start_lng + area.width
 
     start_lat = area.start_lat
     end_lat = area.start_lat + area.height
 
-    # ==============================
-    # Sweep Line Spacing (meters)
-    # Selected from Dashboard slider
-    # Keep original logic: 4 waypoints per loop
-    # ==============================
-
-    spacing_m = float(area.spacing)
-
-    # Safety: spacing must be > 0 and slider supports 0.5 - 4.0 m
-    if not math.isfinite(spacing_m) or spacing_m <= 0:
-        spacing_m = 0.5
-
-    spacing_m = min(max(spacing_m, 0.5), 4.0)
-
-    meters_per_degree_lat = 111320.0
+    middle_lng = (start_lng + end_lng) / 2
 
     middle_lat = (start_lat + end_lat) / 2
 
-    meters_per_degree_lng = (
-        111320.0
-        * math.cos(math.radians(middle_lat))
-    )
+    lng_25 = (start_lng+ (end_lng - start_lng) * 0.25)
 
-    lat_step = spacing_m / meters_per_degree_lat
-    lng_step = spacing_m / meters_per_degree_lng
+    lng_75 = (start_lng+ (end_lng - start_lng) * 0.75)
 
-    print(
-        "Sweep line spacing:",
-        spacing_m,
-        "meters"
-    )
+    lat_25 = (start_lat+ (end_lat - start_lat) * 0.25)
 
-    # ==============================
-    # Actual Distance Checker
-    # Used only for Terminal display
-    # Does NOT change generated route
-    # ==============================
+    lat_75 = (start_lat+ (end_lat - start_lat) * 0.75)
 
-    def calculate_distance_m(
-        lat1,
-        lng1,
-        lat2,
-        lng2
-    ):
+    # ==================================================
+    # AUTO SWEEP LAYOUT
+    #
+    # 5 Sweep lines
+    # 3 Waypoints per line
+    # Total = 15 Waypoints
+    # ==================================================
 
-        earth_radius = 6371000.0
+    if area.orientation == "horizontal":
 
-        lat1_rad = math.radians(lat1)
-        lat2_rad = math.radians(lat2)
+        sweep_lines = [
+            start_lat,
+            lat_25,
+            middle_lat,
+            lat_75,
+            end_lat
+        ]
 
-        delta_lat = math.radians(
-            lat2 - lat1
-        )
+        line_points = [
+            start_lng,
+            middle_lng, 
+            end_lng
+        ]
 
-        delta_lng = math.radians(
-            lng2 - lng1
-        )
-
-        a = (
-            math.sin(delta_lat / 2) ** 2
-            + math.cos(lat1_rad)
-            * math.cos(lat2_rad)
-            * math.sin(delta_lng / 2) ** 2
-        )
-
-        c = 2 * math.atan2(
-            math.sqrt(a),
-            math.sqrt(1 - a)
-        )
-
-        return earth_radius * c
-
-    # ==============================
-    # Exact Turn Spacing Helpers
-    # ==============================
-
-    def longitude_delta_for_distance(
-        latitude,
-        distance_m
-    ):
-        """
-        Return longitude difference in degrees so that two points
-        on the same latitude are distance_m apart (great-circle).
-        """
-
-        earth_radius = 6371000.0
-        lat_rad = math.radians(latitude)
-        central_angle = distance_m / earth_radius
-
-        cos_lat = math.cos(lat_rad)
-
-        if abs(cos_lat) < 1e-12:
-            return 0.0
-
-        cos_delta_lng = (
-            math.cos(central_angle)
-            - math.sin(lat_rad) ** 2
-        ) / (cos_lat ** 2)
-
-        # Protect acos from tiny floating-point overflow.
-        cos_delta_lng = min(
-            1.0,
-            max(-1.0, cos_delta_lng)
-        )
-
-        return math.degrees(
-            math.acos(cos_delta_lng)
-        )
-
-
-    def latitude_delta_for_distance(
-        distance_m
-    ):
-        """
-        Return latitude difference in degrees for distance_m.
-        """
-
-        earth_radius = 6371000.0
-
-        return math.degrees(
-            distance_m / earth_radius
-        )
-
-    # ==============================
-    # VERTICAL SWEEP
-    # ==============================
-
-    if area.orientation == "vertical":
-
-        lng = start_lng
-        previous_lng = None
-
-        while lng <= end_lng + (lng_step * 0.01):
+        for lat in sweep_lines:
 
             count += 1
 
-            print(f"Loop {count}")
-            print(f"Current Lng : {lng}")
-
-            if previous_lng is None:
-
-                print(
-                    "Actual Sweep Spacing : START"
-                )
-
-            else:
-
-                actual_spacing_m = (
-                    calculate_distance_m(
-                        middle_lat,
-                        previous_lng,
-                        middle_lat,
-                        lng
-                    )
-                )
-
-                print(
-                    "Actual Sweep Spacing : "
-                    f"{actual_spacing_m:.2f} meters"
-                )
-
-            previous_lng = lng
-
-            # --------------------------
-            # Bottom -> Top
-            # --------------------------
+            print(
+                f"Loop {count} "
+                f"(Horizontal)"
+            )
 
             if direction == 1:
-
-                # 0%
-                add_waypoint(
-                    start_lat,
-                    lng
-                )
-
-                # 33%
-                add_waypoint(
-                    start_lat + (area.height * 1 / 3),
-                    lng
-                )
-
-                # 66%
-                add_waypoint(
-                    start_lat + (area.height * 2 / 3),
-                    lng
-                )
-
-                # 100%
-                add_waypoint(
-                    end_lat,
-                    lng
-                )
-
-            # --------------------------
-            # Top -> Bottom
-            # --------------------------
-
+                point_order = line_points
             else:
+                point_order = list(reversed(line_points))
 
-                # 100%
-                add_waypoint(
-                    end_lat,
-                    lng
-                )
+            for lng in point_order:
 
-                # 66%
-                add_waypoint(
-                    start_lat + (area.height * 2 / 3),
-                    lng
-                )
+                add_waypoint(lat,lng)
 
-                # 33%
-                add_waypoint(
-                    start_lat + (area.height * 1 / 3),
-                    lng
-                )
-
-                # 0%
-                add_waypoint(
-                    start_lat,
-                    lng
-                )
-
-            # ==================================
-            # Exact spacing at the turning point
-            # Example: WP4 -> WP5, WP8 -> WP9
-            # ==================================
-
-            turn_lat = (
-                end_lat
-                if direction == 1
-                else start_lat
-            )
-
-            turn_lng_step = (
-                longitude_delta_for_distance(
-                    turn_lat,
-                    spacing_m
-                )
-            )
-
-            next_lng = (
-                lng + turn_lng_step
-            )
-
-            # Print only when another Sweep line
-            # will actually be generated.
-            if (
-                next_lng
-                <= end_lng
-                + (turn_lng_step * 0.01)
-            ):
-
-                turn_distance_m = (
-                    calculate_distance_m(
-                        turn_lat,
-                        lng,
-                        turn_lat,
-                        next_lng
-                    )
-                )
-
-                current_last_wp = (
-                    order - 1
-                )
-
-                next_first_wp = order
-
-                turn_ok = (
-                    abs(
-                        turn_distance_m
-                        - spacing_m
-                    )
-                    <= 0.05
-                )
-
-                turn_status = (
-                    "OK"
-                    if turn_ok
-                    else "CHECK"
-                )
-
-                print(
-                    f"Turn WP "
-                    f"{current_last_wp} -> "
-                    f"{next_first_wp} : "
-                    f"{turn_distance_m:.2f} meters "
-                    f"[{turn_status}]"
-                )
-
-            # Reverse direction
             direction *= -1
-
-            # Move to next vertical Sweep line.
-            # This step is calculated at the actual
-            # turning latitude so the turn gap matches
-            # the selected spacing in meters.
-            lng = next_lng
-
-    # ==============================
-    # HORIZONTAL SWEEP
-    # ==============================
 
     else:
 
-        lat = start_lat
-        previous_lat = None
-        middle_lng = (
-            start_lng + end_lng
-        ) / 2
+        sweep_lines = [
+            start_lng,
+            lng_25,
+            middle_lng,
+            lng_75,
+            end_lng
+        ]
 
-        while lat <= end_lat + (lat_step * 0.01):
+        line_points = [
+            start_lat,
+            middle_lat,
+            end_lat
+        ]
+
+        for lng in sweep_lines:
 
             count += 1
 
-            print(f"Loop {count}")
-            print(f"Current Lat : {lat}")
-
-            if previous_lat is None:
-
-                print(
-                    "Actual Sweep Spacing : START"
-                )
-
-            else:
-
-                actual_spacing_m = (
-                    calculate_distance_m(
-                        previous_lat,
-                        middle_lng,
-                        lat,
-                        middle_lng
-                    )
-                )
-
-                print(
-                    "Actual Sweep Spacing : "
-                    f"{actual_spacing_m:.2f} meters"
-                )
-
-            previous_lat = lat
-
-            # --------------------------
-            # Left -> Right
-            # --------------------------
+            print(
+                f"Loop {count} "
+                f"(Vertical)"
+            )
 
             if direction == 1:
-
-                add_waypoint(
-                    lat,
-                    start_lng
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 1 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 2 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    end_lng
-                )
-
-            # --------------------------
-            # Right -> Left
-            # --------------------------
-
+                point_order = line_points
             else:
+                point_order = list(
+                    reversed(line_points)
+                )
+
+            for lat in point_order:
 
                 add_waypoint(
                     lat,
-                    end_lng
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 2 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng + (area.width * 1 / 3)
-                )
-
-                add_waypoint(
-                    lat,
-                    start_lng
-                )
-
-            # ==================================
-            # Exact spacing at the turning point
-            # Example: WP4 -> WP5, WP8 -> WP9
-            # ==================================
-
-            turn_lng = (
-                end_lng
-                if direction == 1
-                else start_lng
-            )
-
-            turn_lat_step = (
-                latitude_delta_for_distance(
-                    spacing_m
-                )
-            )
-
-            next_lat = (
-                lat + turn_lat_step
-            )
-
-            # Print only when another Sweep line
-            # will actually be generated.
-            if (
-                next_lat
-                <= end_lat
-                + (turn_lat_step * 0.01)
-            ):
-
-                turn_distance_m = (
-                    calculate_distance_m(
-                        lat,
-                        turn_lng,
-                        next_lat,
-                        turn_lng
-                    )
-                )
-
-                current_last_wp = (
-                    order - 1
-                )
-
-                next_first_wp = order
-
-                turn_ok = (
-                    abs(
-                        turn_distance_m
-                        - spacing_m
-                    )
-                    <= 0.05
-                )
-
-                turn_status = (
-                    "OK"
-                    if turn_ok
-                    else "CHECK"
-                )
-
-                print(
-                    f"Turn WP "
-                    f"{current_last_wp} -> "
-                    f"{next_first_wp} : "
-                    f"{turn_distance_m:.2f} meters "
-                    f"[{turn_status}]"
+                    lng
                 )
 
             direction *= -1
-
-            # Move to next horizontal Sweep line.
-            # Latitude step is derived directly
-            # from the selected distance in meters.
-            lat = next_lat
 
     # ==============================
     # Finish
     # ==============================
 
     print("===========================")
-    print("Total Loop :", count)
-    print("Total Waypoints :", len(route))
+    print("Sweep Layout : AUTO")
+    print("Sweep Lines  :", count)
+    print("WP Per Line  : 3")
+    print("Total WP     :", len(route))
     print("===========================")
 
     conn.commit()
@@ -2073,7 +1919,8 @@ def generateSweep(area: SweepArea):
     conn.close()
 
     return route
-    
+
+
 #====================================
 # Save Manual Route
 #====================================

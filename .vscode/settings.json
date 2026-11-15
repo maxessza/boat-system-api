@@ -15,5 +15,6 @@
             "database": "railway",
             "username": "root"
         }
-    ]
+    ],
+    "liveServer.settings.port": 5501
 }
